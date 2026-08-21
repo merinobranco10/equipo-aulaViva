@@ -45,7 +45,7 @@ Las columnas del tablero son:
 
 ## Comunicación
 
-El canal principal de comunicación del equipo será Slack.
+El canal principal de comunicación del equipo será Discord.
 
 Las decisiones importantes del proyecto serán documentadas en GitHub mediante Issues, Pull Requests o documentos dentro del repositorio.
 
