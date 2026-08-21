@@ -1,4 +1,4 @@
-# CHARTER — Aula Viva
+# CHARTER — AulaViva
 
 ## 1. Propósito
 
@@ -10,7 +10,7 @@ El equipo trabajará de manera colaborativa, manteniendo como prioridad la calid
 
 ## 2. Integrantes
 
-| Integrante | Rol |
+| Integrantes | Rol |
 
 * | Branco Merino | PO |
 * | Matías Diaz | Tech Lead |
