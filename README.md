@@ -19,11 +19,11 @@ El MVP de AulaViva contempla:
 ## Equipo
 
 | Integrante | Rol |
-| Branco Merino | PO |
-| Matías Díaz | Tech Lead |
-| Valentina León | DevSecOps |
-| Gerardo González | AI/Data |
-| Gerardo González | QA |
+* | Branco Merino | PO |
+* | Matías Díaz | Tech Lead |
+* | Valentina León | DevSecOps |
+* | Gerardo González | AI/Data |
+* | Gerardo González | QA |
 
 ## Organización del proyecto
 
