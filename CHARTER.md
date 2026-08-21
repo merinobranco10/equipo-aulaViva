@@ -12,11 +12,11 @@ El equipo trabajará de manera colaborativa, manteniendo como prioridad la calid
 
 | Integrante | Rol |
 
-| Branco Merino | PO |
-| Matías Diaz | Tech Lead |
-| Valentina León | DevSecOps |
-| Gerardo González | AI/Data |
-| Alexander Ruiz-Tagle | QA |
+* | Branco Merino | PO |
+* | Matías Diaz | Tech Lead |
+* | Valentina León | DevSecOps |
+* | Gerardo González | AI/Data |
+* | Alexander Ruiz-Tagle | QA |
 
 ## 3. Roles
 
