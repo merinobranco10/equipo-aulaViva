@@ -40,7 +40,7 @@ Las columnas del tablero son:
 
 ## Documentación
 
-- [Charter del equipo](../../issues/)
+- [Charter del equipo]([../../issues/](https://github.com/merinobranco10/equipo-aulaViva/blob/main/CHARTER.md))
 - ADRs: `docs/adr/`
 
 ## Comunicación
