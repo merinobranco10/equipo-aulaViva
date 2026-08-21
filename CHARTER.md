@@ -105,11 +105,11 @@ Debido a que AulaViva puede trabajar con información de estudiantes y menores:
 - Se deberá verificar la calidad y pertinencia de los resultados generados por IA.
 - El equipo será responsable de las decisiones y entregables, aunque estos hayan sido asistidos por IA.
 
-## 8. Canal Slack
+## 8. Canal de Comunicación
 
-El canal principal de comunicación del equipo será **Slack**.
+El canal principal de comunicación del equipo será **Discord**.
 
-Slack será utilizado para:
+Discord será utilizado para:
 
 - Coordinar actividades.
 - Informar avances.
