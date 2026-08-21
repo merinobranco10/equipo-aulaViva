@@ -18,7 +18,7 @@ El MVP de AulaViva contempla:
 
 ## Equipo
 
-| Integrante | Rol |
+| Integrantes | Rol |
 * | Branco Merino | PO |
 * | Matías Díaz | Tech Lead |
 * | Valentina León | DevSecOps |
