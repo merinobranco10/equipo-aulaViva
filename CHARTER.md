@@ -1,4 +1,4 @@
-# CHARTER — AulaViva
+# CHARTER — Aula Viva
 
 ## 1. Propósito
 
