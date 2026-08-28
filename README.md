@@ -23,7 +23,7 @@ El MVP de AulaViva contempla:
 * | Matías Díaz | Tech Lead |
 * | Valentina León | DevSecOps |
 * | Gerardo González | AI/Data |
-* | Gerardo González | QA |
+* | Alexander Ruiz-Tagle | QA |
 
 ## Organización del proyecto
 
