@@ -13,6 +13,7 @@ menores.
 - **Estudiante**
 
 *Actores adicionales mapeados para contexto completo del negocio:*
+
 Coordinador académico · Apoderado · Sostenedor.
 
 ## Mapa Actor → Impact → Deliverable
