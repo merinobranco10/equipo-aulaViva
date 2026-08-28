@@ -1,5 +1,4 @@
 # Uso de herramientas de IA — AulaViva
-
 Se utilizó herramienta de IA (Claude) como apoyo durante la construcción del backlog inicial,
 en las siguientes etapas:
 
