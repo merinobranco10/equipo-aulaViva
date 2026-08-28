@@ -21,6 +21,7 @@ Coordinador académico · Apoderado · Sostenedor.
 ### 1. Docente
 **Impact:** Deja de invertir horas corrigiendo evaluaciones manualmente y gana
 visibilidad real del avance de su curso.
+
 **Deliverables:**
 - Motor de evaluaciones auto-corregidas con feedback.
 - Panel de gestión de cursos y estudiantes con RBAC.
@@ -28,6 +29,7 @@ visibilidad real del avance de su curso.
 ### 2. Estudiante
 **Impact:** Recibe apoyo de estudio inmediato y personalizado, sin salirse del
 currículum de su curso.
+
 **Deliverables:**
 - Tutor IA con RAG sobre los apuntes de cada curso.
 - Evaluaciones auto-corregidas con feedback instantáneo.
@@ -35,6 +37,7 @@ currículum de su curso.
 ### 3. Coordinador académico
 **Impact:** Verifica que el contenido y las respuestas del tutor IA respeten
 el currículum MINEDUC a través de múltiples tenants.
+
 **Deliverables:**
 - Panel de administración multi-tenant.
 - RBAC de gestión de cursos / docentes / estudiantes.
@@ -42,16 +45,14 @@ el currículum MINEDUC a través de múltiples tenants.
 ### 4. Apoderado
 **Impact:** Sigue el avance académico de su hijo/a en tiempo real y otorga
 consentimiento informado sobre el uso de sus datos.
+
 **Deliverables:**
 - Panel del apoderado con seguimiento de avance.
 
 ### 5. Sostenedor
 **Impact:** Escala la plataforma a múltiples colegios controlando costos de
 LLM y garantizando aislamiento de datos entre tenants.
+
 **Deliverables:**
 - Arquitectura multi-tenant (1 colegio = 1 tenant aislado lógicamente).
 
-## Regla de oro aplicada
-Cada deliverable listado traza una línea directa a un impacto medible en un
-actor concreto, y ese impacto contribuye al goal. Se descartaron entregables
-sin trazabilidad clara en esta etapa por no tener un impacto directo justificable hoy.
