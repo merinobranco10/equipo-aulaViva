@@ -64,26 +64,26 @@ permitir aumentar las instancias de los servicios.
 
 **Prioridad:** Alta
 
-El tutor IA utiliza RAG para responder utilizando los apuntes y el contexto
-curricular de cada curso. Por ello, no basta con que el sistema esté
-disponible: las respuestas deben ser coherentes con las fuentes autorizadas
-y evitar información no sustentada.
+El tutor IA debe generar respuestas utilizando información proveniente de
+fuentes educativas autorizadas, como las bases curriculares, libros escolares
+del MINEDUC y material proporcionado por los docentes. El uso de RAG permite
+recuperar el contenido relevante antes de generar la respuesta.
 
 **Escenario medible:**
 
 Ante una consulta de un estudiante, el tutor debe recuperar información
-relevante del contenido autorizado del curso y generar una respuesta basada
-en dicho contexto. Si no existe información suficiente, debe evitar presentar
-una respuesta no sustentada como un hecho.
+relevante de las fuentes autorizadas correspondientes a su tenant, curso y
+asignatura. La respuesta debe basarse en dicho contexto y, cuando no exista
+información suficiente, indicar que no dispone de evidencia suficiente para
+responder.
 
 **Indicadores:**
 
 - ≥ 90% de respuestas evaluadas deben estar respaldadas por el contexto
   recuperado.
 - 0 respuestas deben utilizar contenido perteneciente a otro tenant.
+- Las respuestas deben poder asociarse al contenido utilizado como contexto.
 - Las consultas sin evidencia suficiente deben ser identificadas como tales.
-- Se deben registrar las fuentes/contextos utilizados para generar cada
-  respuesta IA.
 
 ## Priorización
 
@@ -93,9 +93,9 @@ La prioridad se establece según el impacto que tendría una falla:
    de menores y datos de múltiples colegios.
 2. **Escalabilidad y rendimiento:** una caída de rendimiento durante períodos
    de evaluación afecta directamente la continuidad del servicio.
-3. **Fiabilidad y precisión del tutor IA:** respuestas incorrectas o fuera del
-   currículo reducen la utilidad educativa y pueden inducir a los estudiantes
-   a aprender información errónea.
+3. **Fiabilidad y precisión del tutor IA:** respuestas incorrectas o fuera de la
+   malla currícular reducen la utilidad educativa y pueden inducir a los
+   estudiantes a aprender información errónea.
 
 Estos NFR deben utilizarse posteriormente como criterios para evaluar las
 decisiones arquitectónicas y las tecnologías seleccionadas.
