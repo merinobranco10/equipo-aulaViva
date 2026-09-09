@@ -17,3 +17,16 @@ El contenido de este backlog fue definido y redactado inicialmente por el equipo
 Pulir la redacción final de los documentos, buscando claridad y un tono profesional para que sean comprensibles por todo el equipo (técnico y no técnico).
 
 Todo el contenido de este backlog (impact map, historias, escenarios y priorización) fue revisado y verificado por el equipo antes de su inclusión final en el PR.
+
+## Aporte AI/Data — S04 (12-Factor y estilo cloud)
+
+Se utilizó IA generativa como apoyo para:
+
+- Redactar el análisis de los factores 2 (Dependencies) y 4 (Backing services)
+  del checklist 12-Factor, enfocados en los componentes de IA del sistema
+  (Base de Datos Vectorial y Servicio de IA/LLM externo).
+- Proponer alternativas de servicios gestionados para pgvector y para el LLM,
+  comparando ventajas y riesgos de cada una.
+
+El contenido fue revisado por el responsable de AI/Data antes de subirlo, y
+se ajustó a los contenedores reales definidos en el C4 L2 del proyecto.
