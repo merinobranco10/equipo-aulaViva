@@ -30,3 +30,20 @@ Se utilizó IA generativa como apoyo para:
 
 El contenido fue revisado por el responsable de AI/Data antes de subirlo, y
 se ajustó a los contenedores reales definidos en el C4 L2 del proyecto.
+
+
+---
+
+## Aporte QA — Alexander Ruiz-Tagle
+
+**Fecha:** 10 de septiembre de 2026
+**Rol:** QA Lead
+
+**Resumen del uso de IA:**
+
+Durante la S04 se utilizó ChatGPT como herramienta de apoyo para auditar los factores X (Dev/Prod Parity) y XII (Admin Processes) del manifiesto 12-Factor contra la arquitectura real de AulaViva. Se usó para identificar acciones concretas para cada factor no cumplido, redactar el borrador del aporte QA al ADR 0003 y revisar coherencia con los NFR priorizados (seguridad/privacidad, escalabilidad y fiabilidad del Tutor IA/RAG) y con las decisiones del ADR 0002.
+
+La IA se empleó únicamente como fuente de información y generación de borradores. Las decisiones finales, la adaptación al contexto de AulaViva y la validación técnica fueron realizadas por el responsable.
+
+**Firma:**
+Alexander Ruiz-Tagle — QA Lead
