@@ -6,9 +6,9 @@ workspace "AulaViva" "Arquitectura C4 de AulaViva" {
         profesor = person "Profesor" "Gestiona contenidos, cursos y evaluaciones."
         coordinador = person "Coordinador Académico" "Supervisa la actividad académica."
         apoderado = person "Apoderado" "Consulta el progreso académico del estudiante."
-        sostenedor = person "Sostenedor" "Supervisa la gestión de los establecimientos."
+        sostenedor = person "Sostenedor" "Supervisa la gestión de los establecimientos e incorpora documentación curricular oficial a AulaViva."
 
-        mineduc = softwareSystem "Sitio Web MINEDUC" "Sitio web externo utilizado como fuente de información y referencias del currículo oficial chileno." "External"
+        mineduc = softwareSystem "Sitio Web MINEDUC" "Fuente externa desde la cual el sostenedor descarga manualmente libros y documentos del currículo oficial chileno." "External"
 
         ia = softwareSystem "Servicio de IA / LLM (Anthropic Claude)" "Servicio gestionado utilizado por el Tutor IA para generar respuestas a partir del contexto recuperado mediante RAG." "External"
 
@@ -24,16 +24,22 @@ workspace "AulaViva" "Arquitectura C4 de AulaViva" {
 
             vectorDB = container "Base de Datos Vectorial" "Almacena embeddings del contenido curricular y permite búsquedas vectoriales utilizadas por el sistema RAG." "Amazon RDS for PostgreSQL + pgvector"
 
-            storage = container "Almacenamiento de Objetos" "Almacena documentos, archivos y contenidos educativos utilizados por AulaViva." "Amazon S3"
+            storage = container "Almacenamiento de Objetos" "Almacena documentos, archivos y contenidos educativos, incluidos los documentos curriculares descargados manualmente desde MINEDUC." "Amazon S3"
 
             broker = container "Message Broker" "Permite procesamiento asíncrono y comunicación mediante eventos entre los componentes de AulaViva." "Amazon MSK (Apache Kafka)"
         }
 
         estudiante -> web "Accede a contenidos, evaluaciones y Tutor IA"
+
         profesor -> web "Gestiona cursos, contenidos y evaluaciones"
+
         coordinador -> web "Supervisa la actividad académica"
+
         apoderado -> web "Consulta el progreso académico"
-        sostenedor -> web "Supervisa la gestión de los establecimientos"
+
+        sostenedor -> web "Supervisa los establecimientos e incorpora documentos curriculares"
+
+        sostenedor -> mineduc "Descarga manualmente libros y documentos curriculares" "HTTPS"
 
         web -> backend "Realiza solicitudes" "HTTPS/REST"
 
@@ -47,8 +53,6 @@ workspace "AulaViva" "Arquitectura C4 de AulaViva" {
 
         backend -> identidad "Autentica usuarios y gestiona identidad" "HTTPS"
 
-        backend -> mineduc "Consulta información y referencias del currículo oficial" "HTTPS"
-
         backend -> ia "Envía contexto recuperado por RAG y solicita generación de respuestas" "HTTPS/API"
     }
 
@@ -56,6 +60,7 @@ workspace "AulaViva" "Arquitectura C4 de AulaViva" {
 
         container aulaViva "C4-Nivel2" {
             include *
+            include mineduc
             autolayout lr
             title "AulaViva - C4 Nivel 2: Contenedores y Servicios Gestionados"
         }
