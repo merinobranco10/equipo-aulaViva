@@ -1,7 +1,7 @@
 # ADR 0003 — Proveedor Cloud
 
-**Estado:** Propuesto\
-**Fecha:** 10-09-2026\
+**Estado:** Aceptado\
+**Fecha:** 11-09-2026\
 **Autor:** Matías Díaz Tech Lead
 ## Contexto
 
@@ -39,9 +39,21 @@ La selección debe considerar además la capacidad del proveedor para acompañar
 
 Se selecciona **Amazon Web Services (AWS)** como proveedor Cloud objetivo para AulaViva.
 
-La elección de AWS se fundamenta en su capacidad para cubrir los principales requisitos previstos para AulaViva relacionados con **escalabilidad, ejecución de aplicaciones contenerizadas, persistencia administrada, CI/CD, observabilidad, procesamiento asíncrono e integración con servicios de inteligencia artificial y datos.**
+La elección de AWS se fundamenta en su capacidad para cubrir los principales requisitos previstos para AulaViva relacionados con **escalabilidad, ejecución de aplicaciones contenerizadas, persistencia administrada, CI/CD, observabilidad y procesamiento asíncrono, además de permitir la integración con servicios externos como Anthropic Claude.**
 
 También permitirá disponer de un ecosistema de servicios que pueda acompañar la evolución de AulaViva desde el MVP hacia una arquitectura con componentes independientes, sin establecer desde el inicio una arquitectura de microservicios.
+
+Como parte de esta decisión, se utilizarán servicios gestionados de AWS
+para los principales componentes definidos en el C4 Nivel 2:
+
+- **Amazon RDS for PostgreSQL** para la Base de Datos.
+- **Amazon RDS for PostgreSQL + pgvector** para la Base de Datos Vectorial.
+- **Amazon S3** para el almacenamiento de objetos.
+- **Amazon MSK con Apache Kafka** para el Message Broker.
+- **Amazon Cognito** para la gestión de identidad y autenticación.
+
+Para el Tutor IA/RAG se utilizará **Anthropic Claude mediante API**
+como servicio LLM externo.
 
 ## Alternativas
 
