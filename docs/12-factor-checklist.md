@@ -155,6 +155,60 @@ Los logs deberían permitir identificar, entre otros elementos:
 No se recomienda depender de archivos locales dentro de los contenedores, ya que estos pueden perderse cuando una instancia sea reiniciada o reemplazada.
 
 
+---
+
+## Factor X — Dev/Prod Parity
+
+**Estado:** Pendiente de implementación
+
+AulaViva debe mantener dev, staging y producción lo más similares posible. Al ser SaaS multi-tenant con Tutor IA/RAG sobre PostgreSQL + pgvector, la paridad es crítica: si el esquema vectorial, la versión del LLM o el broker difieren entre ambientes, el comportamiento del tutor puede cambiar sin que las pruebas lo detecten.
+
+### Propuesta
+
+- Desplegar la misma imagen de contenedor versionada (backend Spring Boot + frontend React) en dev, staging y prod, cambiando solo variables de entorno.
+- Gestionar infraestructura con IaC (Terraform sobre AWS) para replicar RDS PostgreSQL + pgvector, MSK, S3 y Cognito.
+- Usar versiones idénticas de PostgreSQL, pgvector, Kafka y endpoint del LLM en cada ambiente.
+- Documentar diferencias permitidas solo de capacidad (tamaño de instancia, réplicas), nunca de comportamiento.
+- Para desarrollo local: docker-compose con PostgreSQL + pgvector, Kafka y MinIO (S3-compatible).
+
+### Acción
+
+* Definir matriz de servicios por ambiente (dev / staging / prod).
+* Versionar infraestructura con Terraform.
+* Promover la misma imagen entre ambientes (build once, deploy many) vía CI/CD.
+* Smoke tests post-despliegue en cada ambiente.
+* Validar flujo completo del Tutor IA/RAG en staging antes de promover a producción.
+
+**Responsable:** Alexander Ruiz-Tagle — QA Lead, con apoyo de Valentina León (DevSecOps).
+
+---
+
+## Factor XII — Admin Processes
+
+**Estado:** Pendiente de implementación
+
+AulaViva requiere tareas administrativas fuera del flujo normal: migraciones de esquema, reindexación de embeddings del Tutor IA cuando se actualiza el currículo MINEDUC, seeds por tenant, backfills académicos y limpieza de datos. Deben ejecutarse como procesos one-off en el mismo entorno que la app, con el mismo código y credenciales.
+
+### Propuesta
+
+- Ejecutar procesos administrativos como Jobs efímeros (Kubernetes Jobs en EKS) o tareas del pipeline CI/CD, reutilizando la imagen del backend.
+- Migraciones con Flyway o Liquibase, como paso previo al deploy del backend.
+- Reindexación de embeddings y regeneración de vectores como Jobs independientes contra la misma base vectorial.
+- NO ejecutar migraciones ni seeds automáticos al arrancar la aplicación.
+- Registrar cada ejecución en logs centralizados: tenant, operación, usuario responsable, resultado.
+
+### Acción
+
+* Definir migraciones con Flyway/Liquibase como paso previo al deploy.
+* Implementar Jobs one-off para tareas IA/Data (reindexación, backfill).
+* Evitar migraciones/seeds automáticos al inicio del backend.
+* Usar mismas credenciales y variables de entorno que la app.
+* Registrar cada ejecución en logs con trazabilidad.
+* Documentar catálogo de procesos administrativos.
+
+**Responsable:** Alexander Ruiz-Tagle — QA Lead, con apoyo de Gerardo González (AI/Data) y Matías Díaz (Tech Lead).
+
+
 
 
 
