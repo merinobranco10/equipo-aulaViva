@@ -142,30 +142,36 @@ del sistema RAG.
   - Ventaja: escalamiento automático y menor mantenimiento.
   - Riesgo: mayor costo y menor control sobre los datos.
 
----
+### Servicio IA / LLM
 
-Además de los cuatro servicios seleccionados, el C4 Nivel 2
-contempla componentes específicos asociados al Tutor IA/RAG,
-los cuales son analizados por el área AI/Data.
+El Tutor IA de AulaViva requiere un servicio de LLM para
+generar respuestas utilizando el contexto recuperado mediante
+el sistema RAG.
 
-### Base de Datos Vectorial (pgvector)
-
-El componente Base de Datos Vectorial está basado en
-PostgreSQL + pgvector y deberá considerar los requerimientos
-del sistema RAG.
+La selección del servicio deberá considerar aspectos como
+capacidades del modelo, costos, integración con RAG,
+rendimiento, privacidad de los datos y dependencia del
+proveedor.
 
 **Alternativas consideradas:**
 
-- **Opción A: PostgreSQL gestionado con pgvector**
-  (ej. Amazon RDS o Supabase).
-  - Ventaja: mayor control del esquema y costo predecible.
-  - Riesgo: requiere gestionar la configuración de pgvector.
+- **Opción A: API gestionada de un proveedor**
+  (ej. Anthropic u OpenAI).
+  - Ventaja: no requiere administrar infraestructura propia.
+  - Riesgo: costo variable y dependencia de la disponibilidad
+    del proveedor externo.
 
-- **Opción B: Base de datos vectorial dedicada**
-  (ej. Pinecone).
-  - Ventaja: escalamiento automático y menor mantenimiento.
-  - Riesgo: mayor costo y menor control sobre los datos.
-    
+- **Opción B: Modelo autoalojado.**
+  - Ventaja: mayor control sobre el modelo, infraestructura
+    y privacidad de los datos.
+  - Riesgo: requiere infraestructura propia, recursos GPU
+    y mayor mantenimiento.
+
+Estas alternativas deberán ser evaluadas por el área AI/Data
+antes de establecer una decisión definitiva para la
+arquitectura de AulaViva.
+
+---
 ---
 
 ## Riesgos generales
