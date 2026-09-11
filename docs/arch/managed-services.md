@@ -203,20 +203,6 @@ El sitio web de **MINEDUC** será utilizado como fuente externa
 para obtener libros y documentos asociados al currículo oficial
 chileno.
 
-Los documentos serán **descargados manualmente por el equipo** y
-posteriormente incorporados a AulaViva para su almacenamiento y
-procesamiento.
-
-Estos documentos podrán ser almacenados en **Amazon S3** y
-procesados para generar los embeddings utilizados por el sistema
-RAG en **Amazon RDS for PostgreSQL + pgvector**.
-
-Por lo tanto, AulaViva no contempla inicialmente una integración
-automática o API con MINEDUC.
-
-MINEDUC no corresponde a un servicio gestionado de la
-infraestructura de AulaViva, sino a una fuente externa de
-contenido curricular.
 ---
 
 ## Riesgos generales
