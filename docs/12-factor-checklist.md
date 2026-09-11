@@ -8,6 +8,43 @@ Debido a que el proyecto se encuentra actualmente en una etapa inicial de planif
 
 ---
 
+## Factor I Codebase
+
+**Estado: Cumple**
+
+AulaViva utiliza Git como sistema de control de versiones y GitHub como repositorio central del proyecto. El código fuente se mantiene versionado y los cambios pueden gestionarse mediante ramas y Pull Requests.
+
+### Justificación
+
+El código fuente de AulaViva se encuentra centralizado en un repositorio GitHub y gestionado mediante Git, permitiendo controlar versiones, registrar cambios y mantener una fuente única del código.
+
+**Responsable:** Matías Díaz — TechLead.
+
+## Factor II Dependencies
+
+**Estado: No cumple**
+
+En el diseño actual todavía no se ha formalizado completamente una estrategia para asegurar y controlar las versiones de todas las dependencias utilizadas durante el desarrollo y despliegue.
+
+### Justificación
+
+Si bien las dependencias pueden ser declaradas mediante los gestores correspondientes, todavía se requiere formalizar su versionado y control de vulnerabilidades para asegurar una construcción reproducible.
+
+### Acción
+
+1. Utilizar Maven o Gradle para administrar las dependencias del
+   backend.
+2. Utilizar `package.json` y `package-lock.json` para el frontend.
+3. Mantener versiones controladas de las dependencias.
+4. Ejecutar la instalación de dependencias automáticamente durante
+   el proceso de construcción.
+5. Incorporar análisis de vulnerabilidades de dependencias en el
+   pipeline CI/CD.
+   
+**Responsable:** Matías Díaz — TechLead.
+
+---
+
 ## Factor III — Config
 
 **Estado:** Pendiente de implementación
@@ -83,6 +120,23 @@ La configuración específica de cada ambiente deberá mantenerse separada del c
 **Responsable:** Valentina León — DevSecOps.
 
 ---
+## Factor VI Processes
+
+**Estado: No cumple**
+
+El diseño contempla una arquitectura compatible con procesos stateless mediante servicios externos como PostgreSQL y PostgreSQL + pgvector, pero el requisito todavía no está explícitamente definido.
+
+### Justificación
+
+La arquitectura aún no especifica explícitamente que el Backend AulaViva deba ejecutarse como un proceso stateless ni establece restricciones para evitar el almacenamiento de información persistente en memoria local o en el sistema de archivos del proceso.
+
+## Acción
+
+Definir explícitamente que el Backend AulaViva se ejecutará como un proceso stateless, de modo que ninguna instancia almacene información persistente de usuarios, sesiones, archivos o estado de negocio en su memoria local o sistema de archivos.
+
+**Responsable:** Matías Díaz — TechLead.
+
+---
 
 ## Factor VII — Port Binding
 
@@ -107,7 +161,38 @@ En caso de utilizar contenedores, el puerto interno de la aplicación deberá se
 **Responsable:** Valentina León — DevSecOps.
 
 ---
+## Factor VIII Concurrency
 
+**Estado: Cumple**
+
+El diseño de AulaViva contempla el escalamiento horizontal del Backend, permitiendo ejecutar múltiples instancias de la aplicación de manera concurrente.
+
+Esto permite aumentar la capacidad del sistema durante períodos de alta demanda, como evaluaciones, sin depender de una única instancia.
+
+### Justificación
+
+El diseño contempla el escalamiento horizontal y la distribución de carga entre instancias.
+
+**Responsable:** Matías Díaz — TechLead.
+
+---
+## Factor IX Disposability
+
+**Estado: No cumple**
+
+El backend está diseñado para ejecutarse en instancias reemplazables, pero todavía no se han formalizado mecanismos para comprobar su disponibilidad y realizar una terminación segura.
+
+### Justificación
+
+Actualmente no se encuentran implementados los mecanismos necesarios para garantizar el inicio, detención y reemplazo seguro de las instancias.
+
+### Acción concreta
+
+Incorporar health checks y graceful shutdown, además de asegurar que las instancias no almacenen información persistente localmente. De esta manera, una instancia podrá ser reemplazada sin pérdida de información.
+
+**Responsable:** Matías Díaz — TechLead.
+
+---
 ## Factor XI — Logs
 
 **Estado:** Pendiente de implementación
@@ -143,10 +228,15 @@ No se recomienda depender de archivos locales dentro de los contenedores, ya que
 
 | Factor                 | Estado    | Acción principal                                                          | Responsable    |
 | ---------------------- | --------- | ------------------------------------------------------------------------- | -------------- |
+| I. Codebase            | Cumple    |                                                                           | Matías Díaz    |
+| II. Dependencies       | No cumple | Formalizar su versionado y control de vulnerabilidades                    | Matías Díaz    |
 | III. Config            | Pendiente | Implementar variables de entorno y gestión segura de secretos             | Valentina León |
 | IV. Backing Services   | Pendiente | Desacoplar y parametrizar los servicios externos                          | Valentina León |
 | V. Build, Release, Run | Pendiente | Separar y automatizar las etapas de construcción, preparación y ejecución | Valentina León |
+| VI. Processes          | No cumple | Definir explícitamente que el Backend AulaViva se ejecutará como un proceso stateless, de modo que ninguna instancia almacene información persistente de usuarios, sesiones, archivos o estado de negocio en su memoria local o sistema de archivos. | Matías Díaz |
 | VII. Port Binding      | Pendiente | Configurar y documentar la exposición de puertos                          | Valentina León |
+| VIII. Concurrency      | Cumple    |                                                                           | Matías Díaz    |
+| IX. Disposability      | No cumple | Implementar mecanismos necesarios para garantizar el inicio, detención y reemplazo seguro de las instancias. |Matías Díaz     |
 | XI. Logs               | Pendiente | Implementar logs estructurados y centralizados                            | Valentina León |
 
 ## Criterio de evaluación
