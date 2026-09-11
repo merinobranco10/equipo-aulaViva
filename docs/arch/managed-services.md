@@ -16,7 +16,7 @@ La selección se enfoca principalmente en los componentes relacionados con DevSe
 | ------------------------- | ----------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Base de Datos             | Amazon RDS for PostgreSQL     | AWS       | Permite utilizar PostgreSQL como servicio gestionado, reduciendo la administración de infraestructura y facilitando tareas como backups, actualizaciones y monitoreo. |
 | Almacenamiento de Objetos | Amazon S3                     | AWS       | Proporciona almacenamiento de objetos escalable para documentos y archivos educativos de AulaViva.                                                                    |
-| Message Broker            | Amazon MSK                    | AWS       | Permite utilizar Kafka como servicio gestionado para la comunicación y procesamiento asíncrono entre componentes.                                                     |
+| Message Broker            | Amazon MSK para Kafka         | AWS       | Permite utilizar Kafka como servicio gestionado para la comunicación y procesamiento asíncrono entre componentes.                                                     |
 | Servicio de Identidad     | Amazon Cognito                | AWS       | Permite gestionar autenticación e identidad de usuarios sin implementar toda la infraestructura de identidad directamente en la aplicación.                           |
 
 ---
@@ -39,9 +39,10 @@ Amazon RDS permitiría utilizar PostgreSQL como un servicio administrado, reduci
 
 ### Consideraciones
 
-* Dependencia del proveedor cloud.
 * Costos asociados al uso y almacenamiento.
+* Dependencia del proveedor cloud.
 * Se debe configurar correctamente el acceso a la base de datos y las credenciales.
+* Garantizar el aislamiento de datos entre los distintos colegios.
 
 ---
 
@@ -56,15 +57,17 @@ Amazon S3 puede utilizarse para almacenar documentos y archivos educativos de Au
 ### Beneficios
 
 * Alta escalabilidad.
-* Disponibilidad del almacenamiento.
-* Integración con aplicaciones y servicios cloud.
+* Alta Disponibilidad.
+* Integración con otros servicios AWS.
 * Posibilidad de configurar políticas de acceso y ciclo de vida.
 
 ### Consideraciones
 
+* Evitar el acceso público por defecto.
 * Se deben definir correctamente los permisos de acceso.
 * Es necesario proteger los archivos que contengan información sensible.
-* Los costos dependen del almacenamiento y transferencia utilizados.
+* Considerar el aislamiento de información entre tenants.
+* Controlar los costos de almacenamiento y transferencia.
 
 ---
 
@@ -85,9 +88,10 @@ Amazon MSK permitiría utilizar Kafka como servicio gestionado para implementar 
 
 ### Consideraciones
 
-* Mayor dependencia de AWS.
-* Costos asociados a la infraestructura utilizada.
-* La elección entre Kafka y RabbitMQ debe validarse según los requerimientos funcionales del sistema.
+* Mayor dependencia del proveedor cloud (AWS).
+* Costos asociados al servicio.
+* La elección entre Kafka y RabbitMQ aún debe ser validada.
+* Considerar el volumen de eventos y la demanda esperada.
 
 ---
 
@@ -107,56 +111,90 @@ Amazon Cognito puede utilizarse para gestionar la autenticación de los usuarios
 
 ### Consideraciones
 
-* Dependencia del proveedor.
 * Se deben definir correctamente los roles y permisos.
-* La configuración debe cumplir con los requisitos de seguridad y privacidad de AulaViva.
+* Garantizar que la autorización respete el aislamiento entre colegios.
+* Proteger la información asociada a estudiantes menores de edad.
+* Configurar adecuadamente las políticas de seguridad.
 
 ---
 
-## Servicios relacionados con AI/Data
+## Análisis complementario — Servicios AI/Data
 
-Los componentes relacionados con inteligencia artificial y datos serán complementados por el área AI/Data.
+Además de los cuatro servicios seleccionados, el C4 Nivel 2
+contempla componentes específicos asociados al Tutor IA/RAG,
+los cuales son analizados por el área AI/Data.
 
-En particular, el componente **Base de Datos Vectorial**, basado en PostgreSQL + pgvector, deberá ser analizado considerando los requerimientos del sistema RAG y las alternativas de servicios gestionados disponibles.
+### Base de Datos Vectorial (pgvector)
 
-El servicio de **LLM** también será evaluado por el área AI/Data, considerando aspectos como capacidades del modelo, costos, integración, rendimiento y dependencia del proveedor.
+El componente Base de Datos Vectorial está basado en
+PostgreSQL + pgvector y deberá considerar los requerimientos
+del sistema RAG.
 
+**Alternativas consideradas:**
+
+- **Opción A: PostgreSQL gestionado con pgvector**
+  (ej. Amazon RDS o Supabase).
+  - Ventaja: mayor control del esquema y costo predecible.
+  - Riesgo: requiere gestionar la configuración de pgvector.
+
+- **Opción B: Base de datos vectorial dedicada**
+  (ej. Pinecone).
+  - Ventaja: escalamiento automático y menor mantenimiento.
+  - Riesgo: mayor costo y menor control sobre los datos.
+
+---
+
+Además de los cuatro servicios seleccionados, el C4 Nivel 2
+contempla componentes específicos asociados al Tutor IA/RAG,
+los cuales son analizados por el área AI/Data.
+
+### Base de Datos Vectorial (pgvector)
+
+El componente Base de Datos Vectorial está basado en
+PostgreSQL + pgvector y deberá considerar los requerimientos
+del sistema RAG.
+
+**Alternativas consideradas:**
+
+- **Opción A: PostgreSQL gestionado con pgvector**
+  (ej. Amazon RDS o Supabase).
+  - Ventaja: mayor control del esquema y costo predecible.
+  - Riesgo: requiere gestionar la configuración de pgvector.
+
+- **Opción B: Base de datos vectorial dedicada**
+  (ej. Pinecone).
+  - Ventaja: escalamiento automático y menor mantenimiento.
+  - Riesgo: mayor costo y menor control sobre los datos.
+    
 ---
 
 ## Riesgos generales
 
-La utilización de servicios gestionados permite reducir la carga operacional y facilita la escalabilidad, pero también genera algunas consideraciones:
+La utilización de servicios gestionados permite reducir la
+carga operacional y facilita la escalabilidad, pero también
+genera algunas consideraciones:
 
-* Dependencia del proveedor cloud.
-* Costos variables según el consumo.
-* Posibles dificultades para migrar entre proveedores.
-* Necesidad de configurar correctamente seguridad, permisos y acceso.
-* Dependencia de la disponibilidad de los servicios externos.
-
----
+- Dependencia del proveedor cloud.
+- Costos variables según el consumo.
+- Posibles dificultades para migrar entre proveedores.
+- Necesidad de configurar correctamente seguridad,
+  permisos y acceso.
+- Dependencia de la disponibilidad de servicios externos.
 
 ## Conclusión
 
-Como propuesta inicial, AWS presenta servicios gestionados que pueden cubrir los principales componentes de infraestructura definidos para AulaViva.
+Como propuesta inicial, AWS presenta servicios gestionados
+que pueden cubrir los principales componentes de
+infraestructura seleccionados para AulaViva.
 
-La propuesta considera **Amazon RDS for PostgreSQL, Amazon S3, Amazon MSK y Amazon Cognito** para los componentes relacionados con base de datos, almacenamiento, mensajería e identidad.
+La propuesta considera **Amazon RDS for PostgreSQL,
+Amazon S3, Amazon MSK y Amazon Cognito** para los
+componentes de base de datos, almacenamiento, mensajería
+e identidad.
 
-Esta selección es **preliminar** y deberá ser validada por el equipo antes de considerarse una decisión definitiva. Los componentes específicos de inteligencia artificial y datos serán complementados por el área AI/Data.
+Esta selección es **preliminar** y deberá ser validada por
+el equipo antes de considerarse una decisión definitiva.
 
-## Alternativas de servicios gestionados — Componentes de IA
-
-**Para la Base de Datos Vectorial (pgvector):**
-- Opción A: PostgreSQL gestionado con extensión pgvector (ej. Amazon RDS,
-  Supabase). Ventaja: control total del esquema y costo predecible.
-  Riesgo: mantenimiento propio de la configuración de pgvector.
-- Opción B: Servicio de vector DB dedicado (ej. Pinecone). Ventaja: escala
-  automáticamente y menos mantenimiento. Riesgo: mayor costo y menor
-  control sobre los datos.
-
-**Para el LLM:**
-- Opción A: API gestionada de un proveedor (ej. Anthropic, OpenAI).
-  Ventaja: cero mantenimiento de infraestructura. Riesgo: costo variable
-  y dependencia de disponibilidad externa.
-- Opción B: Modelo autoalojado. Ventaja: más control y privacidad de
-  datos. Riesgo: requiere infraestructura propia (GPU) y mantenimiento.
-
+Adicionalmente, AI/Data ha identificado alternativas para
+la Base de Datos Vectorial y el servicio de LLM, las cuales
+deberán evaluarse según los requerimientos del Tutor IA/RAG.
