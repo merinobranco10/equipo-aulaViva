@@ -44,6 +44,9 @@ paths:
       description: Permite a un profesor crear una evaluación para un curso.
       operationId: createEvaluation
 
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+
       requestBody:
         required: true
         content:
@@ -60,13 +63,13 @@ paths:
                 $ref: '#/components/schemas/EvaluationCreatedResponse'
 
         '400':
-          description: Datos de entrada inválidos
+          $ref: '#/components/responses/BadRequest'
 
         '401':
-          description: Usuario no autenticado
+          $ref: '#/components/responses/Unauthorized'
 
         '403':
-          description: El usuario no tiene permisos de profesor
+          $ref: '#/components/responses/Forbidden'
 
   /v1/evaluations/{evaluationId}:
     get:
@@ -96,13 +99,13 @@ paths:
                 $ref: '#/components/schemas/EvaluationResponse'
 
         '401':
-          description: Usuario no autenticado
+          $ref: '#/components/responses/Unauthorized'
 
         '403':
-          description: El usuario no tiene permiso para consultar la evaluación
+          $ref: '#/components/responses/Forbidden'
 
         '404':
-          description: Evaluación no encontrada
+          $ref: '#/components/responses/NotFound'
 
   /v1/evaluations/{evaluationId}/submissions:
     post:
@@ -122,6 +125,7 @@ paths:
           schema:
             type: string
             example: eval-001
+        - $ref: '#/components/parameters/IdempotencyKey'
 
       requestBody:
         required: true
@@ -139,16 +143,16 @@ paths:
                 $ref: '#/components/schemas/SubmissionResponse'
 
         '400':
-          description: Respuestas inválidas
+          $ref: '#/components/responses/BadRequest' 
 
         '401':
-          description: Usuario no autenticado
+          $ref: '#/components/responses/Unauthorized'
 
         '403':
-          description: El usuario no tiene permiso para enviar la evaluación
+          $ref: '#/components/responses/Forbidden'
 
         '404':
-          description: Evaluación no encontrada
+          $ref: '#/components/responses/NotFound'
 
   /v1/students/{studentId}/progress:
     get:
@@ -178,13 +182,13 @@ paths:
                 $ref: '#/components/schemas/StudentProgressResponse'
 
         '401':
-          description: Usuario no autenticado
+          $ref: '#/components/responses/Unauthorized'
 
         '403':
-          description: El usuario no tiene permiso para consultar el progreso
+          $ref: '#/components/responses/Forbidden'
 
         '404':
-          description: Estudiante no encontrado
+          $ref: '#/components/responses/NotFound'
 
   /v1/tutor/questions:
     post:
@@ -213,16 +217,16 @@ paths:
                 $ref: '#/components/schemas/TutorQuestionResponse'
 
         '400':
-          description: Pregunta inválida
+          $ref: '#/components/responses/BadRequest'
 
         '401':
-          description: Usuario no autenticado
+          $ref: '#/components/responses/Unauthorized'
 
         '403':
-          description: El usuario no tiene permiso para utilizar el Tutor IA
+          $ref: '#/components/responses/Forbidden'
 
         '503':
-          description: Servicio del Tutor IA temporalmente no disponible
+          $ref: '#/components/responses/ServiceUnavailable'
 
 components:
 
@@ -231,9 +235,54 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+      
   schemas:
 
+    Problem:
+      type: object
+      description: Formato estándar de error basado en RFC 7807.
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI que identifica el tipo de problema.
+          example: https://api.aulaviva.cl/problems/validation-error
+
+        title:
+          type: string
+          description: Resumen breve del problema.
+          example: Datos de entrada inválidos
+
+        status:
+          type: integer
+          description: Código de estado HTTP.
+          example: 400
+
+        detail:
+          type: string
+          description: Explicación específica del problema.
+          example: El campo title es obligatorio.
+
+        instance:
+          type: string
+          format: uri
+          description: URI que identifica la ocurrencia específica del problema.
+          example: https://api.aulaviva.cl/v1/evaluations
+
+          
   
+
+
+
+
+
+
 
     CreateEvaluationRequest:
       type: object
@@ -475,6 +524,59 @@ components:
           type: string
           description: Respuesta generada por el Tutor IA
           example: La fotosíntesis es el proceso mediante el cual...
+
+
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        Clave única utilizada para garantizar la idempotencia de la operación.
+      schema:
+        type: string
+        minLength: 1
+        example: 550e8400-e29b-41d4-a716-446655440000
+          
+  responses:
+
+    BadRequest:
+      description: Datos de entrada inválidos.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    Unauthorized:
+      description: Usuario no autenticado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    Forbidden:
+      description: El usuario no tiene permisos para realizar la operación.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    NotFound:
+      description: Recurso no encontrado.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    ServiceUnavailable:
+      description: Servicio temporalmente no disponible.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+            
 
 webhooks:
 
