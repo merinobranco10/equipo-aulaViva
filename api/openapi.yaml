@@ -1,0 +1,495 @@
+openapi: 3.1.0
+
+info:
+  title: AulaViva API
+  description: |
+    API principal de AulaViva, plataforma SaaS multi-tenant
+    para gestión de evaluaciones, progreso académico y Tutor IA.
+  version: 1.0.0
+  
+  contact:
+      name: Equipo AulaViva
+
+  license:
+     name: Proprietary
+    
+servers:
+  - url: https://api.aulaviva.cl
+    description: Producción
+
+  - url: https://staging-api.aulaviva.cl
+    description: Staging
+
+  - url: https://dev-api.aulaviva.cl
+    description: Desarrollo
+    
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Evaluations
+    description: Gestión de evaluaciones
+  - name: Progress
+    description: Consulta de progreso académico
+  - name: Tutor IA
+    description: Consultas al Tutor IA
+
+paths:
+
+  /v1/evaluations:
+    post:
+      tags:
+        - Evaluations
+      summary: Crear una evaluación
+      description: Permite a un profesor crear una evaluación para un curso.
+      operationId: createEvaluation
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEvaluationRequest'
+
+      responses:
+        '201':
+          description: Evaluación creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationCreatedResponse'
+
+        '400':
+          description: Datos de entrada inválidos
+
+        '401':
+          description: Usuario no autenticado
+
+        '403':
+          description: El usuario no tiene permisos de profesor
+
+  /v1/evaluations/{evaluationId}:
+    get:
+      tags:
+        - Evaluations
+      summary: Consultar una evaluación
+      description: |
+        Permite a un estudiante consultar una evaluación.
+        Las respuestas correctas no son incluidas en la respuesta.
+      operationId: getEvaluation
+
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          description: Identificador de la evaluación
+          schema:
+            type: string
+            example: eval-001
+
+      responses:
+        '200':
+          description: Evaluación encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResponse'
+
+        '401':
+          description: Usuario no autenticado
+
+        '403':
+          description: El usuario no tiene permiso para consultar la evaluación
+
+        '404':
+          description: Evaluación no encontrada
+
+  /v1/evaluations/{evaluationId}/submissions:
+    post:
+      tags:
+        - Evaluations
+      summary: Enviar respuestas de una evaluación
+      description: |
+        Permite a un estudiante enviar sus respuestas para
+        realizar la corrección automática.
+      operationId: submitEvaluation
+
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          description: Identificador de la evaluación
+          schema:
+            type: string
+            example: eval-001
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionRequest'
+
+      responses:
+        '201':
+          description: Evaluación enviada y corregida correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponse'
+
+        '400':
+          description: Respuestas inválidas
+
+        '401':
+          description: Usuario no autenticado
+
+        '403':
+          description: El usuario no tiene permiso para enviar la evaluación
+
+        '404':
+          description: Evaluación no encontrada
+
+  /v1/students/{studentId}/progress:
+    get:
+      tags:
+        - Progress
+      summary: Consultar progreso de un estudiante
+      description: |
+        Permite a un profesor o apoderado consultar
+        el progreso académico de un estudiante.
+      operationId: getStudentProgress
+
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: Identificador del estudiante
+          schema:
+            type: string
+            example: student-123
+
+      responses:
+        '200':
+          description: Progreso académico obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProgressResponse'
+
+        '401':
+          description: Usuario no autenticado
+
+        '403':
+          description: El usuario no tiene permiso para consultar el progreso
+
+        '404':
+          description: Estudiante no encontrado
+
+  /v1/tutor/questions:
+    post:
+      tags:
+        - Tutor IA
+      summary: Realizar una consulta al Tutor IA
+      description: |
+        Permite a un estudiante realizar una consulta académica.
+        El Tutor IA genera una respuesta utilizando información
+        contextual recuperada mediante RAG.
+      operationId: askTutor
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TutorQuestionRequest'
+
+      responses:
+        '200':
+          description: Respuesta generada por el Tutor IA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TutorQuestionResponse'
+
+        '400':
+          description: Pregunta inválida
+
+        '401':
+          description: Usuario no autenticado
+
+        '403':
+          description: El usuario no tiene permiso para utilizar el Tutor IA
+
+        '503':
+          description: Servicio del Tutor IA temporalmente no disponible
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+
+  
+
+    CreateEvaluationRequest:
+      type: object
+      required:
+        - courseId
+        - title
+        - questions
+      properties:
+        courseId:
+          type: string
+          description: Identificador del curso
+          example: course-123
+
+        title:
+          type: string
+          description: Título de la evaluación
+          example: Prueba Unidad 1
+
+        questions:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/QuestionInput'
+
+    QuestionInput:
+      type: object
+      required:
+        - text
+        - options
+        - correctOption
+      properties:
+        text:
+          type: string
+          description: Enunciado de la pregunta
+          example: ¿Cuál es la capital de Chile?
+
+        options:
+          type: array
+          minItems: 2
+          items:
+            type: string
+          example:
+            - Santiago
+            - Valparaíso
+            - Concepción
+
+        correctOption:
+          type: integer
+          minimum: 0
+          description: Índice de la alternativa correcta
+          example: 0
+
+    EvaluationCreatedResponse:
+      type: object
+      required:
+        - id
+        - title
+        - status
+      properties:
+        id:
+          type: string
+          example: eval-001
+
+        title:
+          type: string
+          example: Prueba Unidad 1
+
+        status:
+          type: string
+          enum:
+            - CREATED
+          example: CREATED
+
+    EvaluationCompletedEvent:
+      type: object
+      required:
+        - evaluationId
+        - studentId
+        - grade
+      properties:
+        evaluationId:
+          type: string
+          description: Identificador de la evaluación.
+          example: eval-001
+
+        studentId:
+          type: string
+          description: Identificador del estudiante.
+          example: student-123
+
+        grade:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 7
+          multipleOf: 0.1
+          description: Nota obtenida por el estudiante.
+          example: 5.8
+      
+    EvaluationResponse:
+      type: object
+      required:
+        - id
+        - title
+        - questions
+      properties:
+        id:
+          type: string
+          example: eval-001
+
+        title:
+          type: string
+          example: Prueba Unidad 1
+
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionResponse'
+
+    QuestionResponse:
+      type: object
+      required:
+        - id
+        - text
+        - options
+      properties:
+        id:
+          type: string
+          example: question-1
+
+        text:
+          type: string
+          example: ¿Cuál es la capital de Chile?
+
+        options:
+          type: array
+          items:
+            type: string
+          example:
+            - Santiago
+            - Valparaíso
+            - Concepción
+
+    SubmissionRequest:
+      type: object
+      required:
+        - answers
+      properties:
+        answers:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Answer'
+
+    Answer:
+      type: object
+      required:
+        - questionId
+        - selectedOption
+      properties:
+        questionId:
+          type: string
+          example: question-1
+
+        selectedOption:
+          type: integer
+          minimum: 0
+          example: 0
+
+    SubmissionResponse:
+      type: object
+      description: Resultado de la corrección automática de una evaluación.
+      required:
+        - grade
+        - status
+      properties:
+        grade:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 7
+          multipleOf: 0.1
+          example: 4.2
+
+        status:
+          type: string
+          enum:
+            - COMPLETED
+          example: COMPLETED
+
+    StudentProgressResponse:
+      type: object
+      required:
+        - completedEvaluations
+        - pendingEvaluations
+        - averageGrade
+      properties:
+        completedEvaluations:
+          type: integer
+          minimum: 0
+          example: 8
+
+        pendingEvaluations:
+          type: integer
+          minimum: 0
+          example: 2
+
+        averageGrade:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 7
+          multipleOf: 0.1
+          example: 6.1
+
+    TutorQuestionRequest:
+      type: object
+      required:
+        - courseId
+        - question
+      properties:
+        courseId:
+          type: string
+          description: Curso sobre el cual se realiza la consulta
+          example: course-123
+
+        question:
+          type: string
+          minLength: 1
+          description: Pregunta académica realizada por el estudiante
+          example: ¿Qué es la fotosíntesis?
+
+    TutorQuestionResponse:
+      type: object
+      required:
+        - answer
+      properties:
+        answer:
+          type: string
+          description: Respuesta generada por el Tutor IA
+          example: La fotosíntesis es el proceso mediante el cual...
+
+webhooks:
+
+  evaluationCompleted:
+    post:
+      summary: Notificación de evaluación completada
+      description: |
+        Notifica al consumidor cuando un estudiante
+        completa una evaluación y se obtiene su nota.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationCompletedEvent'
+      responses:
+        '200':
+          description: Evento recibido correctamente
