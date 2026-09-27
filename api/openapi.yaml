@@ -313,6 +313,7 @@ components:
         - text
         - options
         - correctOption
+        - points
       properties:
         text:
           type: string
@@ -334,6 +335,11 @@ components:
           minimum: 0
           description: Índice de la alternativa correcta
           example: 0
+
+        points:
+          type: integer
+          minimum: 1
+          example: 2
 
     EvaluationCreatedResponse:
       type: object
@@ -408,6 +414,7 @@ components:
         - id
         - text
         - options
+        - points
       properties:
         id:
           type: string
@@ -425,6 +432,12 @@ components:
             - Santiago
             - Valparaíso
             - Concepción
+
+        points:
+          type: integer
+          minimum: 1
+          description: Puntaje asignado a la pregunta
+          example: 2
 
     SubmissionRequest:
       type: object
@@ -457,6 +470,8 @@ components:
       description: Resultado de la corrección automática de una evaluación.
       required:
         - grade
+        - score
+        - maxScore
         - status
       properties:
         grade:
@@ -466,6 +481,18 @@ components:
           maximum: 7
           multipleOf: 0.1
           example: 4.2
+
+        score:
+          type: integer
+          minimum: 0
+          description: Puntaje obtenido por el estudiante.
+          example: 12
+
+        maxScore:
+          type: integer
+          minimum: 1
+          description: Puntaje máximo posible de la evaluación.
+          example: 20
 
         status:
           type: string
