@@ -543,14 +543,24 @@ components:
           example: ¿Qué es la fotosíntesis?
 
     TutorQuestionResponse:
-      type: object
-      required:
-        - answer
-      properties:
-        answer:
-          type: string
-          description: Respuesta generada por el Tutor IA
-          example: La fotosíntesis es el proceso mediante el cual...
+        type: object
+        required:
+          - answer
+          - sources
+        properties:
+          answer:
+            type: string
+            description: Respuesta generada por el Tutor IA
+            example: La fotosíntesis es el proceso mediante el cual...
+  
+          sources:
+            type: array
+            description: Fuentes utilizadas por el RAG
+            items:
+              type: string
+            example:
+              - Biología - Unidad 1
+              - Material del curso
 
 
 
