@@ -1,0 +1,44 @@
+{
+  "summary": "Crear evaluación de prueba de unidad",
+  "request": {
+    "method": "POST",
+    "url": "/v1/evaluations",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "Idempotency-Key": "550e8400-e29b-41d4-a716-446655440000",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "courseId": "course-123",
+      "title": "Prueba Unidad 1",
+      "questions": [
+        {
+          "text": "¿Cuál es la capital de Chile?",
+          "options": ["Santiago", "Valparaíso", "Concepción"],
+          "correctOption": 0,
+          "points": 2
+        },
+        {
+          "text": "¿Cuál es el río más largo de Chile?",
+          "options": ["Loa", "Biobío", "Maipo"],
+          "correctOption": 0,
+          "points": 2
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 201,
+    "body": {
+      "id": "eval-001",
+      "title": "Prueba Unidad 1",
+      "status": "CREATED"
+    }
+  },
+  "_openapi_ref": {
+    "operationId": "createEvaluation",
+    "path": "/v1/evaluations",
+    "schema_request": "#/components/schemas/CreateEvaluationRequest",
+    "schema_response": "#/components/schemas/EvaluationCreatedResponse"
+  }
+}
