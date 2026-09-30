@@ -272,7 +272,7 @@ components:
       
   schemas:
 
-        ProblemDetails:
+    ProblemDetails:
       type: object
       description: Formato estándar de error basado en RFC 7807.
       required:
@@ -440,7 +440,7 @@ components:
           maximum: 7
           multipleOf: 0.1
           description: Nota obtenida por el estudiante.
-          example: 5.8
+          example: 5
       
     EvaluationResponse:
       type: object
@@ -577,7 +577,7 @@ components:
           minimum: 1
           maximum: 7
           multipleOf: 0.1
-          example: 6.1
+          example: 6
 
     TutorQuestionRequest:
       type: object
@@ -710,4 +710,5 @@ webhooks:
               $ref: '#/components/schemas/EvaluationCompletedEvent'
       responses:
         '200':
-          description: Evento recibido correctamente
+          description: Evento recibido correctamentes
+
