@@ -1,0 +1,59 @@
+extends: spectral:oas
+
+rules:
+  security-schemes-defined:
+    description: La API debe definir un esquema de seguridad Bearer con JWT.
+    severity: error
+    given: $.components.securitySchemes
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - bearerAuth
+          properties:
+            bearerAuth:
+              type: object
+              required:
+                - type
+                - scheme
+                - bearerFormat
+              properties:
+                type:
+                  const: http
+                scheme:
+                  const: bearer
+                bearerFormat:
+                  const: JWT
+
+  api-security-defined:
+    description: La API debe definir seguridad global mediante bearerAuth.
+    severity: error
+    given: $
+    then:
+      field: security
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          minItems: 1
+          contains:
+            type: object
+            required:
+              - bearerAuth
+            properties:
+              bearerAuth:
+                type: array
+
+  security-scheme-name:
+    description: El esquema de autenticación debe llamarse bearerAuth.
+    severity: error
+    given: $.components.securitySchemes
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - bearerAuth
