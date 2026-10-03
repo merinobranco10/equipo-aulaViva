@@ -1,0 +1,33 @@
+{
+  "summary": "Enviar respuestas de una evaluación",
+  "request": {
+    "method": "POST",
+    "url": "/v1/evaluations/eval-001/submissions",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "Idempotency-Key": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "answers": [
+        { "questionId": "question-1", "selectedOption": 0 },
+        { "questionId": "question-2", "selectedOption": 0 }
+      ]
+    }
+  },
+  "response": {
+    "status": 201,
+    "body": {
+      "grade": 4.2,
+      "score": 12,
+      "maxScore": 20,
+      "status": "COMPLETED"
+    }
+  },
+  "_openapi_ref": {
+    "operationId": "submitEvaluation",
+    "path": "/v1/evaluations/{evaluationId}/submissions",
+    "schema_request": "#/components/schemas/SubmissionRequest",
+    "schema_response": "#/components/schemas/SubmissionResponse"
+  }
+}
