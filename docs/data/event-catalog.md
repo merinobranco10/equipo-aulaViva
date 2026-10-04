@@ -444,7 +444,11 @@ Campos principales:
 
 * `progress_id`
 
-* `progress_percentage`
+* `completedEvaluations`
+  
+* `pendingEvaluations`
+  
+* `averageGrade`
 
 Schema:
 
@@ -461,7 +465,9 @@ Schema:
     "student_id": "student-uuid",
     "course_id": "course-uuid",
     "progress_id": "progress-uuid",
-    "progress_percentage": 75
+    "completedEvaluations": 8,
+    "pendingEvaluations": 2,
+    "averageGrade": 6.1
   }
 }
 
