@@ -48,3 +48,5 @@ Todos los eventos de AulaViva utilizan un envelope común:
   "trace_id": "uuid",
   "data": {}
 }
+
+3. Catálogo de eventos
