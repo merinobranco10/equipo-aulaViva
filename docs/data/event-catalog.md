@@ -315,7 +315,7 @@ Campos principales:
 
 Schema:
 
-```json
+```
 {
   "event_id": "uuid",
   "event_type": "evaluation.submitted",
