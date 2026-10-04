@@ -8,12 +8,13 @@ Los eventos representan hechos que ya ocurrieron dentro del sistema y permiten d
 
 Los Bounded Contexts considerados son:
 
-- Gestión Académica
-- Evaluaciones y Progreso
-- Tutor IA y Contenidos
-- Identidad y Acceso
+* Gestión Académica
 
----
+* Evaluaciones y Progreso
+
+* Tutor IA y Contenidos
+
+* Identidad y Acceso
 
 ## 2. Convenciones generales
 
@@ -25,10 +26,13 @@ Los nombres siguen el formato:
 
 Ejemplos:
 
-- `student.enrolled`
-- `evaluation.submitted`
-- `evaluation.graded`
-- `tutor.question.received`
+* `student.enrolled`
+
+* `evaluation.submitted`
+
+* `evaluation.graded`
+
+* `tutor.question.received`
 
 El nombre representa un hecho que ya ocurrió.
 
@@ -42,20 +46,21 @@ El campo `event_version` permite evolucionar el esquema de un evento sin romper 
 
 Todos los eventos utilizan los siguientes campos:
 
-| Campo | Descripción |
-|---|---|
-| `event_id` | Identificador único del evento |
-| `event_type` | Nombre del evento |
-| `event_version` | Versión del esquema del evento |
-| `occurred_at` | Fecha y hora en que ocurrió el evento |
-| `aggregate_id` | Identificador del agregado relacionado |
-| `tenant_id` | Identificador del tenant |
-| `trace_id` | Identificador utilizado para trazabilidad |
-| `data` | Datos específicos del evento |
+| 
+
+| **Campo** | **Descripción** | 
+| `event_id` | Identificador único del evento | 
+| `event_type` | Nombre del evento | 
+| `event_version` | Versión del esquema del evento | 
+| `occurred_at` | Fecha y hora en que ocurrió el evento | 
+| `aggregate_id` | Identificador del agregado relacionado | 
+| `tenant_id` | Identificador del tenant | 
+| `trace_id` | Identificador utilizado para trazabilidad | 
+| `data` | Datos específicos del evento | 
 
 ### 2.4 Esquema general
 
-```json
+```
 {
   "event_id": "uuid",
   "event_type": "evaluation.submitted",
@@ -66,9 +71,14 @@ Todos los eventos utilizan los siguientes campos:
   "trace_id": "uuid",
   "data": {}
 }
-3. Catálogo de eventos
-3.1 Gestión Académica
-1. student.enrolled
+
+```
+
+## 3. Catálogo de eventos
+
+### 3.1 Gestión Académica
+
+#### 1. `student.enrolled`
 
 Versión: 1.0
 
@@ -78,18 +88,23 @@ Producer: Gestión Académica
 
 Consumers:
 
-Evaluaciones y Progreso
-Tutor IA y Contenidos
+* Evaluaciones y Progreso
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-student_id
-course_id
-enrollment_id
-enrolled_at
+* `student_id`
+
+* `course_id`
+
+* `enrollment_id`
+
+* `enrolled_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "student.enrolled",
@@ -105,7 +120,10 @@ Schema:
     "enrolled_at": "2026-10-04T15:00:00Z"
   }
 }
-2. course.created
+
+```
+
+#### 2. `course.created`
 
 Versión: 1.0
 
@@ -115,17 +133,21 @@ Producer: Gestión Académica
 
 Consumers:
 
-Evaluaciones y Progreso
-Tutor IA y Contenidos
+* Evaluaciones y Progreso
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-course_id
-name
-created_at
+* `course_id`
+
+* `name`
+
+* `created_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "course.created",
@@ -140,7 +162,10 @@ Schema:
     "created_at": "2026-10-04T15:05:00Z"
   }
 }
-3. course.teacher.assigned
+
+```
+
+#### 3. `course.teacher.assigned`
 
 Versión: 1.0
 
@@ -150,16 +175,19 @@ Producer: Gestión Académica
 
 Consumers:
 
-Evaluaciones y Progreso
+* Evaluaciones y Progreso
 
 Campos principales:
 
-course_id
-teacher_id
-assigned_at
+* `course_id`
+
+* `teacher_id`
+
+* `assigned_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "course.teacher.assigned",
@@ -174,8 +202,12 @@ Schema:
     "assigned_at": "2026-10-04T15:10:00Z"
   }
 }
-3.2 Evaluaciones y Progreso
-4. evaluation.created
+
+```
+
+### 3.2 Evaluaciones y Progreso
+
+#### 4. `evaluation.created`
 
 Versión: 1.0
 
@@ -185,17 +217,21 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-Gestión Académica
+* Gestión Académica
 
 Campos principales:
 
-evaluation_id
-course_id
-title
-created_at
+* `evaluation_id`
+
+* `course_id`
+
+* `title`
+
+* `created_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "evaluation.created",
@@ -211,7 +247,10 @@ Schema:
     "created_at": "2026-10-04T15:15:00Z"
   }
 }
-5. evaluation.published
+
+```
+
+#### 5. `evaluation.published`
 
 Versión: 1.0
 
@@ -221,16 +260,19 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-Gestión Académica
+* Gestión Académica
 
 Campos principales:
 
-evaluation_id
-course_id
-published_at
+* `evaluation_id`
+
+* `course_id`
+
+* `published_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "evaluation.published",
@@ -245,7 +287,10 @@ Schema:
     "published_at": "2026-10-04T15:20:00Z"
   }
 }
-6. evaluation.submitted
+
+```
+
+#### 6. `evaluation.submitted`
 
 Versión: 1.0
 
@@ -255,18 +300,23 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-Gestión Académica
-Tutor IA y Contenidos
+* Gestión Académica
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-evaluation_id
-submission_id
-student_id
-submitted_at
+* `evaluation_id`
+
+* `submission_id`
+
+* `student_id`
+
+* `submitted_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "evaluation.submitted",
@@ -282,7 +332,10 @@ Schema:
     "submitted_at": "2026-10-04T15:29:50Z"
   }
 }
-7. evaluation.graded
+
+```
+
+#### 7. `evaluation.graded`
 
 Versión: 1.0
 
@@ -292,19 +345,25 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-Gestión Académica
-Tutor IA y Contenidos
+* Gestión Académica
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-evaluation_id
-submission_id
-student_id
-grade
-graded_at
+* `evaluation_id`
+
+* `submission_id`
+
+* `student_id`
+
+* `grade`
+
+* `graded_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "evaluation.graded",
@@ -321,7 +380,10 @@ Schema:
     "graded_at": "2026-10-04T15:59:50Z"
   }
 }
-8. evaluation.completed
+
+```
+
+#### 8. `evaluation.completed`
 
 Versión: 1.0
 
@@ -331,17 +393,21 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-Gestión Académica
-Tutor IA y Contenidos
+* Gestión Académica
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-evaluation_id
-course_id
-completed_at
+* `evaluation_id`
+
+* `course_id`
+
+* `completed_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "evaluation.completed",
@@ -356,7 +422,10 @@ Schema:
     "completed_at": "2026-10-04T16:00:00Z"
   }
 }
-9. student.progress.updated
+
+```
+
+#### 9. `student.progress.updated`
 
 Versión: 1.0
 
@@ -366,18 +435,23 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-Gestión Académica
-Tutor IA y Contenidos
+* Gestión Académica
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-student_id
-course_id
-progress_id
-progress_percentage
+* `student_id`
+
+* `course_id`
+
+* `progress_id`
+
+* `progress_percentage`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "student.progress.updated",
@@ -393,8 +467,12 @@ Schema:
     "progress_percentage": 75
   }
 }
-3.3 Tutor IA y Contenidos
-10. tutor.question.received
+
+```
+
+### 3.3 Tutor IA y Contenidos
+
+#### 10. `tutor.question.received`
 
 Versión: 1.0
 
@@ -404,18 +482,23 @@ Producer: Tutor IA y Contenidos
 
 Consumers:
 
-Tutor IA y Contenidos
+* Tutor IA y Contenidos
 
 Campos principales:
 
-question_id
-student_id
-course_id
-question
-received_at
+* `question_id`
+
+* `student_id`
+
+* `course_id`
+
+* `question`
+
+* `received_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "tutor.question.received",
@@ -432,7 +515,10 @@ Schema:
     "received_at": "2026-10-04T16:14:50Z"
   }
 }
-11. tutor.response.generated
+
+```
+
+#### 11. `tutor.response.generated`
 
 Versión: 1.0
 
@@ -442,19 +528,25 @@ Producer: Tutor IA y Contenidos
 
 Consumers:
 
-Tutor IA y Contenidos
-Evaluaciones y Progreso
+* Tutor IA y Contenidos
+
+* Evaluaciones y Progreso
 
 Campos principales:
 
-question_id
-response_id
-student_id
-response
-generated_at
+* `question_id`
+
+* `response_id`
+
+* `student_id`
+
+* `response`
+
+* `generated_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "tutor.response.generated",
@@ -471,7 +563,10 @@ Schema:
     "generated_at": "2026-10-04T16:15:50Z"
   }
 }
-12. learning.document.indexed
+
+```
+
+#### 12. `learning.document.indexed`
 
 Versión: 1.0
 
@@ -481,18 +576,23 @@ Producer: Tutor IA y Contenidos
 
 Consumers:
 
-Tutor IA y Contenidos
+* Tutor IA y Contenidos
 
 Campos principales:
 
-document_id
-course_id
-storage_key
-index_id
-indexed_at
+* `document_id`
+
+* `course_id`
+
+* `storage_key`
+
+* `index_id`
+
+* `indexed_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "learning.document.indexed",
@@ -509,8 +609,12 @@ Schema:
     "indexed_at": "2026-10-04T16:19:50Z"
   }
 }
-3.4 Identidad y Acceso
-13. user.role.assigned
+
+```
+
+### 3.4 Identidad y Acceso
+
+#### 13. `user.role.assigned`
 
 Versión: 1.0
 
@@ -520,19 +624,25 @@ Producer: Identidad y Acceso
 
 Consumers:
 
-Gestión Académica
-Evaluaciones y Progreso
-Tutor IA y Contenidos
+* Gestión Académica
+
+* Evaluaciones y Progreso
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-user_id
-role_id
-role
-assigned_at
+* `user_id`
+
+* `role_id`
+
+* `role`
+
+* `assigned_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "user.role.assigned",
@@ -548,7 +658,10 @@ Schema:
     "assigned_at": "2026-10-04T16:24:50Z"
   }
 }
-14. user.access.revoked
+
+```
+
+#### 14. `user.access.revoked`
 
 Versión: 1.0
 
@@ -558,18 +671,23 @@ Producer: Identidad y Acceso
 
 Consumers:
 
-Gestión Académica
-Evaluaciones y Progreso
-Tutor IA y Contenidos
+* Gestión Académica
+
+* Evaluaciones y Progreso
+
+* Tutor IA y Contenidos
 
 Campos principales:
 
-user_id
-reason
-revoked_at
+* `user_id`
+
+* `reason`
+
+* `revoked_at`
 
 Schema:
 
+```
 {
   "event_id": "uuid",
   "event_type": "user.access.revoked",
@@ -584,73 +702,92 @@ Schema:
     "revoked_at": "2026-10-04T16:29:50Z"
   }
 }
-4. Entrega y procesamiento de eventos
+
+```
+
+## 4. Entrega y procesamiento de eventos
 
 Los eventos serán publicados mediante Kafka/MSK utilizando un modelo de entrega at-least-once.
 
 Esto significa que un mismo evento podría ser recibido más de una vez por un consumidor.
 
-Para evitar efectos duplicados, los consumidores deben implementar procesamiento idempotente utilizando el campo event_id.
+Para evitar efectos duplicados, los consumidores deben implementar procesamiento idempotente utilizando el campo `event_id`.
 
 Un consumidor debe:
 
-Recibir el evento.
-Verificar si el event_id ya fue procesado.
-Si ya fue procesado, ignorar el evento.
-Si no fue procesado, ejecutar la operación correspondiente.
-Registrar el event_id como procesado.
+1. Recibir el evento.
+
+2. Verificar si el `event_id` ya fue procesado.
+
+3. Si ya fue procesado, ignorar el evento.
+
+4. Si no fue procesado, ejecutar la operación correspondiente.
+
+5. Registrar el `event_id` como procesado.
 
 Ejemplo conceptual:
 
+```
 Evento publicado
-       |
-       v
-     Kafka
-       |
-       v
-   Consumidor
-       |
-       v
+        |
+        v
+      Kafka
+        |
+        v
+    Consumidor
+        |
+        v
 ¿event_id ya procesado?
-     /       \
-   Sí         No
-   |           |
-Ignorar      Procesar
-               |
-               v
-        Registrar event_id
-5. Trazabilidad
+      /       \
+    Sí         No
+    |           |
+ Ignorar     Procesar
+                |
+                v
+       Registrar event_id
+
+```
+
+## 5. Trazabilidad
 
 Los eventos contienen identificadores que permiten realizar seguimiento de una operación a través de los distintos Bounded Contexts.
 
 Los principales campos de trazabilidad son:
 
-event_id: identifica de forma única el evento.
-trace_id: permite seguir una operación distribuida.
-tenant_id: identifica el tenant al que pertenece la operación.
-aggregate_id: identifica el agregado relacionado.
-occurred_at: indica cuándo ocurrió el evento.
+* `event_id`: identifica de forma única el evento.
+
+* `trace_id`: permite seguir una operación distribuida.
+
+* `tenant_id`: identifica el tenant al que pertenece la operación.
+
+* `aggregate_id`: identifica el agregado relacionado.
+
+* `occurred_at`: indica cuándo ocurrió el evento.
 
 Esto permite relacionar eventos producidos por distintos servicios y facilitar la observabilidad y diagnóstico de errores.
 
-6. Coherencia con los Bounded Contexts
-Bounded Context	Eventos
-Gestión Académica	student.enrolled, course.created, course.teacher.assigned
-Evaluaciones y Progreso	evaluation.created, evaluation.published, evaluation.submitted, evaluation.graded, evaluation.completed, student.progress.updated
-Tutor IA y Contenidos	tutor.question.received, tutor.response.generated, learning.document.indexed
-Identidad y Acceso	user.role.assigned, user.access.revoked
+## 6. Coherencia con los Bounded Contexts
+
+| **Bounded Context** | **Eventos** | 
+| Gestión Académica | `student.enrolled`, `course.created`, `course.teacher.assigned` | 
+| Evaluaciones y Progreso | `evaluation.created`, `evaluation.published`, `evaluation.submitted`, `evaluation.graded`, `evaluation.completed`, `student.progress.updated` | 
+| Tutor IA y Contenidos | `tutor.question.received`, `tutor.response.generated`, `learning.document.indexed` | 
+| Identidad y Acceso | `user.role.assigned`, `user.access.revoked` | 
 
 Los eventos permiten comunicación asíncrona entre contextos sin acoplar directamente sus implementaciones internas.
 
-7. Resumen
+## 7. Resumen
 
 El catálogo contiene 14 eventos de dominio distribuidos entre los Bounded Contexts de AulaViva:
 
-3 eventos de Gestión Académica.
-6 eventos de Evaluaciones y Progreso.
-3 eventos de Tutor IA y Contenidos.
-2 eventos de Identidad y Acceso.
+* 3 eventos de Gestión Académica.
 
-Los eventos siguen el formato de nombres recurso.acción.pasado, cuentan con versión 1.0, productor, consumidores, campos principales y schema JSON.
+* 6 eventos de Evaluaciones y Progreso.
 
-La comunicación se plantea de forma asíncrona mediante Kafka/MSK, utilizando entrega at-least-once, identificadores de trazabilidad e idempotencia basada en event_id.
+* 3 eventos de Tutor IA y Contenidos.
+
+* 2 eventos de Identidad y Acceso.
+
+Los eventos siguen el formato de nombres `recurso.acción.pasado`, cuentan con versión `1.0`, productor, consumidores, campos principales y schema JSON.
+
+La comunicación se plantea de forma asíncrona mediante Kafka/MSK, utilizando entrega at-least-once, identificadores de trazabilidad e idempotencia basada en `event_id`.
