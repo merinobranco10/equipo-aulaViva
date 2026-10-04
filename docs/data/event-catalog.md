@@ -479,7 +479,7 @@ Producer: Tutor IA y Contenidos
 
 Consumers:
 
-* Tutor IA y Contenidos
+Ninguno externo
 
 Campos principales:
 
@@ -524,8 +524,6 @@ Descripción: Se genera cuando el Tutor IA genera una respuesta para una pregunt
 Producer: Tutor IA y Contenidos
 
 Consumers:
-
-* Tutor IA y Contenidos
 
 * Evaluaciones y Progreso
 
@@ -573,7 +571,7 @@ Producer: Tutor IA y Contenidos
 
 Consumers:
 
-* Tutor IA y Contenidos
+Ninguno externo
 
 Campos principales:
 
