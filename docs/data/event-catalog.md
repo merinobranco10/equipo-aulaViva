@@ -46,8 +46,6 @@ El campo `event_version` permite evolucionar el esquema de un evento sin romper 
 
 Todos los eventos utilizan los siguientes campos:
 
-| 
-
 | **Campo** | **Descripción** |
 |---|---|
 | `event_id` | Identificador único del evento |
