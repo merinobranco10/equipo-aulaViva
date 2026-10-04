@@ -1,6 +1,6 @@
 # Catálogo de Eventos de Dominio — AulaViva
 
-### 1. Propósito
+## 1. Propósito
 
 Este documento define el catálogo de eventos de dominio utilizados para la comunicación entre los distintos Bounded Contexts de AulaViva.
 
@@ -123,7 +123,7 @@ Schema:
 
 ```
 
-##### 2. `course.created`
+#### 2. `course.created`
 
 Versión: 1.0
 
