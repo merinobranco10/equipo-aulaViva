@@ -1,0 +1,63 @@
+Table Evaluacion {
+  id varchar [pk]
+  curso_id varchar [not null]
+  titulo varchar [not null]
+  estado varchar [not null]
+  fecha_creacion datetime [not null]
+}
+
+Table Pregunta {
+  id varchar [pk]
+  evaluacion_id varchar [not null]
+  enunciado text [not null]
+  puntos int [not null]
+  orden int [not null]
+  indexes {
+    (evaluacion_id, orden) [unique]
+  }
+}
+
+Table Entrega {
+  id varchar [pk]
+  evaluacion_id varchar [not null]
+  estudiante_id varchar [not null]
+  fecha_entrega datetime
+  estado varchar [not null]
+}
+
+Table Respuesta {
+  id varchar [pk]
+  pregunta_id varchar [not null]
+  entrega_id varchar [not null]
+  alternativa_id varchar [not null]
+  indexes {
+    (entrega_id, pregunta_id) [unique]
+  }
+}
+
+Table Calificacion {
+  id varchar [pk]
+  entrega_id varchar [not null, unique]
+  nota decimal(2,1) [not null]
+  puntaje_obtenido int [not null]
+  puntaje_maximo int [not null]
+}
+
+Table Alternativa {
+  id varchar [pk]
+  pregunta_id varchar [not null]
+  texto text [not null]
+  orden int [not null]
+  es_correcta boolean [not null]
+  indexes {
+    (pregunta_id, orden) [unique]
+  }
+}
+
+Ref: Pregunta.id < Alternativa.pregunta_id
+Ref: Evaluacion.id < Pregunta.evaluacion_id
+Ref: Evaluacion.id < Entrega.evaluacion_id
+Ref: Entrega.id < Respuesta.entrega_id
+Ref: Pregunta.id < Respuesta.pregunta_id
+Ref: Alternativa.id < Respuesta.alternativa_id
+Ref: Entrega.id - Calificacion.entrega_id
