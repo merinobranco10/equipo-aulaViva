@@ -48,15 +48,16 @@ Todos los eventos utilizan los siguientes campos:
 
 | 
 
-| **Campo** | **Descripción** | 
-| `event_id` | Identificador único del evento | 
-| `event_type` | Nombre del evento | 
-| `event_version` | Versión del esquema del evento | 
-| `occurred_at` | Fecha y hora en que ocurrió el evento | 
-| `aggregate_id` | Identificador del agregado relacionado | 
-| `tenant_id` | Identificador del tenant | 
-| `trace_id` | Identificador utilizado para trazabilidad | 
-| `data` | Datos específicos del evento | 
+| **Campo** | **Descripción** |
+|---|---|
+| `event_id` | Identificador único del evento |
+| `event_type` | Nombre del evento |
+| `event_version` | Versión del esquema del evento |
+| `occurred_at` | Fecha y hora en que ocurrió el evento |
+| `aggregate_id` | Identificador del agregado relacionado |
+| `tenant_id` | Identificador del tenant |
+| `trace_id` | Identificador utilizado para trazabilidad |
+| `data` | Datos específicos del evento |
 
 ### 2.4 Esquema general
 
