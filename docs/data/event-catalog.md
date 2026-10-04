@@ -331,7 +331,7 @@ Schema:
     "submitted_at": "2026-10-04T15:29:50Z"
   }
 }
-
+```
 #### 7. `evaluation.graded`
 
 Versión: 1.0
@@ -765,11 +765,12 @@ Esto permite relacionar eventos producidos por distintos servicios y facilitar l
 
 ## 6. Coherencia con los Bounded Contexts
 
-| **Bounded Context** | **Eventos** | 
-| Gestión Académica | `student.enrolled`, `course.created`, `course.teacher.assigned` | 
-| Evaluaciones y Progreso | `evaluation.created`, `evaluation.published`, `evaluation.submitted`, `evaluation.graded`, `evaluation.completed`, `student.progress.updated` | 
-| Tutor IA y Contenidos | `tutor.question.received`, `tutor.response.generated`, `learning.document.indexed` | 
-| Identidad y Acceso | `user.role.assigned`, `user.access.revoked` | 
+| **Bounded Context** | **Eventos** |
+|---|---|
+| Gestión Académica | `student.enrolled`, `course.created`, `course.teacher.assigned` |
+| Evaluaciones y Progreso | `evaluation.created`, `evaluation.published`, `evaluation.submitted`, `evaluation.graded`, `evaluation.completed`, `student.progress.updated` |
+| Tutor IA y Contenidos | `tutor.question.received`, `tutor.response.generated`, `learning.document.indexed` |
+| Identidad y Acceso | `user.role.assigned`, `user.access.revoked` |
 
 Los eventos permiten comunicación asíncrona entre contextos sin acoplar directamente sus implementaciones internas.
 
