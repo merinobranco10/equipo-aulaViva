@@ -315,7 +315,7 @@ Campos principales:
 
 Schema:
 
-```
+```json
 {
   "event_id": "uuid",
   "event_type": "evaluation.submitted",
@@ -331,8 +331,6 @@ Schema:
     "submitted_at": "2026-10-04T15:29:50Z"
   }
 }
-
-```
 
 #### 7. `evaluation.graded`
 
