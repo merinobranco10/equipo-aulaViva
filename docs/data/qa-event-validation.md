@@ -99,7 +99,7 @@ El broker Kafka/MSK utiliza **at-least-once delivery**, lo que significa que un 
 
 ### 7.3 Retención
 
-Se definió una ventana de **7 días** para la retención de los `event_id` procesados. Este período cubre el máximo esperado de reintentos del broker.
+Para el MVP se establece una retención inicial de **7 días** para los `event_id` procesados, con el objetivo de detectar y evitar el procesamiento de eventos duplicados.
 
 ## 8. Orden de eventos
 
