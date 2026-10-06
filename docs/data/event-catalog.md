@@ -36,6 +36,21 @@ Ejemplos:
 
 El nombre representa un hecho que ya ocurrió.
 
+Cuando el evento involucra un sub-recurso dentro de un contexto, se permite un cuarto segmento:
+
+`recurso.subrecurso.acción.pasado`
+
+Ejemplos aceptados en este catálogo:
+- `course.teacher.assigned`
+- `student.progress.updated`
+- `tutor.question.received`
+- `tutor.response.generated`
+- `learning.document.indexed`
+- `user.role.assigned`
+- `user.access.revoked`
+
+Esto mantiene la semántica del formato `recurso.acción.pasado` cuando el recurso tiene sub-recursos naturales.
+
 ### 2.2 Versionado
 
 Todos los eventos actualmente definidos utilizan la versión `1.0`.
@@ -56,6 +71,13 @@ Todos los eventos utilizan los siguientes campos:
 | `tenant_id` | Identificador del tenant |
 | `trace_id` | Identificador utilizado para trazabilidad |
 | `data` | Datos específicos del evento |
+
+**Diferencia entre `occurred_at` y los campos `*_at` dentro de `data`:**
+
+- `occurred_at` es la marca de tiempo del sistema cuando el evento fue emitido al broker.
+- Los campos como `enrolled_at`, `created_at` o `submitted_at` corresponden a la marca de tiempo del hecho de negocio (cuando el usuario realizó la acción).
+
+En la mayoría de los casos coinciden, pero pueden diferir levemente por latencia de procesamiento. Se mantienen ambos para preservar la semántica del hecho de negocio y permitir auditorías precisas.
 
 ### 2.4 Esquema general
 
@@ -748,6 +770,36 @@ Evento publicado
        Registrar event_id
 
 ```
+
+### 4.1 Idempotencia del productor
+
+El productor debe:
+
+1. Generar el `event_id` una sola vez.
+2. Reutilizar el mismo `event_id` si necesita reintentar la publicación.
+3. Publicar el evento con la misma `occurred_at` en reintentos.
+
+Esto permite que el consumidor detecte duplicados incluso si el evento se publica varias veces por errores de red.
+
+### 4.2 Retención de `event_id` procesados
+
+Cada consumidor debe mantener un registro de los `event_id` ya procesados durante al menos **7 días**, usando una tabla de deduplicación o un almacén clave-valor (por ejemplo, Redis). La ventana de 7 días cubre el período máximo esperado de reintentos del broker.
+
+Cuando un consumidor detecta un `event_id` ya procesado:
+- Descarta el evento sin ejecutar la operación de negocio.
+- Registra el evento en el log de observabilidad con la marca `duplicate_ignored`.
+
+### 4.3 Orden de eventos
+
+Kafka garantiza el orden dentro de una partición. Para preservar el orden de eventos por agregado, se utilizará `aggregate_id` como **clave de partición**. De este modo, todos los eventos de un mismo agregado se procesan en orden secuencial.
+
+### 4.4 Eventos sin consumidores externos
+
+Los eventos `tutor.question.received` y `learning.document.indexed` no tienen consumidores externos en esta versión del catálogo. Se mantienen porque:
+
+- Se utilizan para auditoría y observabilidad del contexto Tutor IA.
+- Alimentan proyecciones internas del mismo contexto (por ejemplo, dashboard de uso del Tutor).
+- Sientan las bases para consumidores futuros (analítica de aprendizaje, métricas de uso).
 
 ## 5. Trazabilidad
 
