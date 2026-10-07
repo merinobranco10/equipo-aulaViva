@@ -109,9 +109,8 @@ Producer: Gestión Académica
 
 Consumers:
 
-* Evaluaciones y Progreso
-
-* Tutor IA y Contenidos
+* Evaluaciones y Progreso — habilita al estudiante para participar en las evaluaciones asociadas al curso.
+* Tutor IA y Contenidos — habilita el contexto académico del estudiante para consultas relacionadas con el curso.
 
 Campos principales:
 
@@ -154,9 +153,8 @@ Producer: Gestión Académica
 
 Consumers:
 
-* Evaluaciones y Progreso
-
-* Tutor IA y Contenidos
+* Evaluaciones y Progreso — reconoce el curso como referencia válida para asociar evaluaciones.
+* Tutor IA y Contenidos — reconoce el curso como ámbito para asociar contenidos y contexto utilizado por el Tutor IA.
 
 Campos principales:
 
@@ -196,7 +194,7 @@ Producer: Gestión Académica
 
 Consumers:
 
-* Evaluaciones y Progreso
+* Evaluaciones y Progreso — actualiza la referencia del docente responsable del curso para las operaciones relacionadas con evaluaciones.
 
 Campos principales:
 
@@ -238,7 +236,7 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-* Gestión Académica
+* Ninguno externo
 
 Campos principales:
 
@@ -281,7 +279,7 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-* Gestión Académica
+* Ninguno externo
 
 Campos principales:
 
@@ -321,9 +319,7 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-* Gestión Académica
-
-* Tutor IA y Contenidos
+* Ninguno externo
 
 Campos principales:
 
@@ -364,9 +360,7 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-* Gestión Académica
-
-* Tutor IA y Contenidos
+* Tutor IA y Contenidos — actualiza el contexto académico disponible para personalizar la asistencia del Tutor IA según los resultados del estudiante.
 
 Campos principales:
 
@@ -412,9 +406,7 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-* Gestión Académica
-
-* Tutor IA y Contenidos
+* Ninguno externo
 
 Campos principales:
 
@@ -454,9 +446,8 @@ Producer: Evaluaciones y Progreso
 
 Consumers:
 
-* Gestión Académica
-
-* Tutor IA y Contenidos
+* Gestión Académica — actualiza la información resumida de progreso utilizada para el seguimiento académico del estudiante dentro del curso.
+* Tutor IA y Contenidos — actualiza el contexto académico utilizado para adaptar la asistencia del Tutor IA al progreso del estudiante.
 
 Campos principales:
 
@@ -553,7 +544,7 @@ Producer: Tutor IA y Contenidos
 
 Consumers:
 
-* Evaluaciones y Progreso
+* Ninguno externo
 
 Campos principales:
 
@@ -647,11 +638,9 @@ Producer: Identidad y Acceso
 
 Consumers:
 
-* Gestión Académica
-
-* Evaluaciones y Progreso
-
-* Tutor IA y Contenidos
+* Gestión Académica — actualiza la información necesaria para aplicar permisos sobre cursos y relaciones académicas.
+* Evaluaciones y Progreso — actualiza la información necesaria para autorizar operaciones sobre evaluaciones y resultados.
+* Tutor IA y Contenidos — actualiza la información necesaria para autorizar el acceso al Tutor IA y a contenidos académicos.
 
 Campos principales:
 
@@ -694,11 +683,9 @@ Producer: Identidad y Acceso
 
 Consumers:
 
-* Gestión Académica
-
-* Evaluaciones y Progreso
-
-* Tutor IA y Contenidos
+* Gestión Académica — invalida el acceso del usuario a operaciones de gestión académica.
+* Evaluaciones y Progreso — impide que el usuario continúe realizando operaciones sobre evaluaciones y resultados.
+* Tutor IA y Contenidos — impide el acceso del usuario al Tutor IA y a contenidos protegidos.
 
 Campos principales:
 
@@ -783,7 +770,9 @@ Esto permite que el consumidor detecte duplicados incluso si el evento se public
 
 ### 4.2 Retención de `event_id` procesados
 
-Cada consumidor debe mantener un registro de los `event_id` ya procesados durante al menos **7 días**, usando una tabla de deduplicación o un almacén clave-valor (por ejemplo, Redis). La ventana de 7 días cubre el período máximo esperado de reintentos del broker.
+Cada consumidor debe mantener un registro de los `event_id` ya procesados para permitir la detección de eventos duplicados.
+
+Para el MVP se establece una ventana inicial de retención de **7 días** para los `event_id` procesados, utilizando una tabla de deduplicación o un almacén clave-valor. Este período podrá ajustarse posteriormente según las necesidades operacionales y la configuración de reintentos del sistema.
 
 Cuando un consumidor detecta un `event_id` ya procesado:
 - Descarta el evento sin ejecutar la operación de negocio.
@@ -795,11 +784,21 @@ Kafka garantiza el orden dentro de una partición. Para preservar el orden de ev
 
 ### 4.4 Eventos sin consumidores externos
 
-Los eventos `tutor.question.received` y `learning.document.indexed` no tienen consumidores externos en esta versión del catálogo. Se mantienen porque:
+Algunos eventos del catálogo no poseen consumidores externos en la versión actual de la arquitectura.
 
-- Se utilizan para auditoría y observabilidad del contexto Tutor IA.
-- Alimentan proyecciones internas del mismo contexto (por ejemplo, dashboard de uso del Tutor).
-- Sientan las bases para consumidores futuros (analítica de aprendizaje, métricas de uso).
+Esto ocurre cuando el evento representa un hecho relevante para auditoría, observabilidad o evolución futura, pero ningún otro Bounded Context necesita ejecutar actualmente una acción como consecuencia directa del evento.
+
+Los eventos sin consumidores externos son:
+
+- `evaluation.created`
+- `evaluation.published`
+- `evaluation.submitted`
+- `evaluation.completed`
+- `tutor.question.received`
+- `tutor.response.generated`
+- `learning.document.indexed`
+
+Estos eventos pueden utilizarse para auditoría, observabilidad, métricas o futuros consumidores sin introducir dependencias innecesarias entre los Bounded Contexts.
 
 ## 5. Trazabilidad
 
