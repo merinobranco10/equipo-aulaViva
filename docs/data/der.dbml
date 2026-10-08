@@ -1,63 +1,66 @@
-Table Evaluacion {
+Table evaluations {
   id varchar [pk]
-  curso_id varchar [not null]
-  titulo varchar [not null]
-  estado varchar [not null]
-  fecha_creacion datetime [not null]
+  course_id varchar [not null]
+  title varchar [not null]
+  status varchar [not null]
+  created_at datetime [not null]
 }
 
-Table Pregunta {
+Table questions {
   id varchar [pk]
-  evaluacion_id varchar [not null]
-  enunciado text [not null]
-  puntos int [not null]
-  orden int [not null]
+  evaluation_id varchar [not null]
+  text text [not null]
+  points int [not null]
+  position int [not null]
+
   indexes {
-    (evaluacion_id, orden) [unique]
+    (evaluation_id, position) [unique]
   }
 }
 
-Table Entrega {
+Table submissions {
   id varchar [pk]
-  evaluacion_id varchar [not null]
-  estudiante_id varchar [not null]
-  fecha_entrega datetime
-  estado varchar [not null]
+  evaluation_id varchar [not null]
+  student_id varchar [not null]
+  submitted_at datetime
+  status varchar [not null]
 }
 
-Table Respuesta {
+Table answers {
   id varchar [pk]
-  pregunta_id varchar [not null]
-  entrega_id varchar [not null]
-  alternativa_id varchar [not null]
+  question_id varchar [not null]
+  submission_id varchar [not null]
+  option_id varchar [not null]
+
   indexes {
-    (entrega_id, pregunta_id) [unique]
+    (submission_id, question_id) [unique]
   }
 }
 
-Table Calificacion {
+Table grades {
   id varchar [pk]
-  entrega_id varchar [not null, unique]
-  nota decimal(2,1) [not null]
-  puntaje_obtenido int [not null]
-  puntaje_maximo int [not null]
+  submission_id varchar [not null, unique]
+  grade decimal(2,1) [not null]
+  score_obtained int [not null]
+  max_score int [not null]
 }
 
-Table Alternativa {
+Table options {
   id varchar [pk]
-  pregunta_id varchar [not null]
-  texto text [not null]
-  orden int [not null]
-  es_correcta boolean [not null]
+  question_id varchar [not null]
+  text text [not null]
+  position int [not null]
+  is_correct boolean [not null]
+
   indexes {
-    (pregunta_id, orden) [unique]
+    (question_id, position) [unique]
   }
 }
 
-Ref: Pregunta.id < Alternativa.pregunta_id
-Ref: Evaluacion.id < Pregunta.evaluacion_id
-Ref: Evaluacion.id < Entrega.evaluacion_id
-Ref: Entrega.id < Respuesta.entrega_id
-Ref: Pregunta.id < Respuesta.pregunta_id
-Ref: Alternativa.id < Respuesta.alternativa_id
-Ref: Entrega.id - Calificacion.entrega_id
+Ref: questions.id < options.question_id
+Ref: evaluations.id < questions.evaluation_id
+Ref: evaluations.id < submissions.evaluation_id
+Ref: submissions.id < answers.submission_id
+Ref: questions.id < answers.question_id
+Ref: options.id < answers.option_id
+Ref: submissions.id - grades.submission_id
