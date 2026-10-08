@@ -1,0 +1,66 @@
+Table evaluations {
+  id varchar [pk]
+  course_id varchar [not null]
+  title varchar [not null]
+  status varchar [not null]
+  created_at datetime [not null]
+}
+
+Table questions {
+  id varchar [pk]
+  evaluation_id varchar [not null]
+  text text [not null]
+  points int [not null]
+  position int [not null]
+
+  indexes {
+    (evaluation_id, position) [unique]
+  }
+}
+
+Table submissions {
+  id varchar [pk]
+  evaluation_id varchar [not null]
+  student_id varchar [not null]
+  submitted_at datetime
+  status varchar [not null]
+}
+
+Table answers {
+  id varchar [pk]
+  question_id varchar [not null]
+  submission_id varchar [not null]
+  option_id varchar [not null]
+
+  indexes {
+    (submission_id, question_id) [unique]
+  }
+}
+
+Table grades {
+  id varchar [pk]
+  submission_id varchar [not null, unique]
+  grade decimal(2,1) [not null]
+  score_obtained int [not null]
+  max_score int [not null]
+}
+
+Table options {
+  id varchar [pk]
+  question_id varchar [not null]
+  text text [not null]
+  position int [not null]
+  is_correct boolean [not null]
+
+  indexes {
+    (question_id, position) [unique]
+  }
+}
+
+Ref: questions.id < options.question_id
+Ref: evaluations.id < questions.evaluation_id
+Ref: evaluations.id < submissions.evaluation_id
+Ref: submissions.id < answers.submission_id
+Ref: questions.id < answers.question_id
+Ref: options.id < answers.option_id
+Ref: submissions.id - grades.submission_id
