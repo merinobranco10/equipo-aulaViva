@@ -6,7 +6,6 @@ namespace: equipo-aulaviva
 resources:
   - namespace.yaml
   - configmap.yaml
-  - secret.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
