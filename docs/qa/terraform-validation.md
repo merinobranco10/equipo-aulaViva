@@ -11,17 +11,19 @@ Revisar la configuración de Terraform para AulaViva con el fin de verificar
 coherencia con los manifiestos de Kubernetes, proteger archivos sensibles
 y dejar constancia de la revisión QA.
 
-## 2. Resultado de la revisión
+## 2. Resultado de la validación
 
-| Criterio | Resultado |
+La validación se ejecutó automáticamente mediante **GitHub Actions**,
+en el workflow `terraform-validate.yml`, al hacer push del cambio
+de namespace en la rama `desarrollo`.
+
+| Comando | Resultado |
 |---|---|
-| Provider de Kubernetes declarado | ✅ `hashicorp/kubernetes ~> 2.38` |
-| Versión mínima de Terraform | ✅ `>= 1.10.0` |
-| Backend remoto S3 con locking | ✅ `use_lockfile = true`, `encrypt = true` |
-| Namespace alineado con manifiestos k8s | ✅ Corregido a `equipo-aulaviva` |
-| Placeholder de Secret (sin credenciales reales) | ✅ |
-| Archivos de estado excluidos de Git | ✅ `.gitignore` creado |
+| `terraform fmt -check` | ✅ Sin cambios de formato pendientes |
+| `terraform init -backend=false` | ✅ Providers inicializados |
+| `terraform validate` | ✅ Success! The configuration is valid. |
 
+**Evidencia:** `docs/qa/evidence/terraform-validate-output.png`
 ## 3. Hallazgo y corrección
 
 **Hallazgo:** el namespace por defecto en `terraform/main.tf` era `aulaviva`,
