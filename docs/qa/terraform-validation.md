@@ -3,24 +3,63 @@
 **Responsable:** Alexander Ruiz-Tagle — QA Lead
 **Fecha:** 13 de octubre de 2026
 **Sesión:** S07
+**Alcance:** `terraform/main.tf`, `terraform/backend.tf`
 
 ## 1. Objetivo
-Validar que la configuración de Terraform para AulaViva es correcta y coherente con los manifiestos de Kubernetes.
 
-## 2. Resultado de la validación
-| Comando | Resultado |
+Revisar la configuración de Terraform para AulaViva con el fin de verificar
+coherencia con los manifiestos de Kubernetes, proteger archivos sensibles
+y dejar constancia de la revisión QA.
+
+## 2. Resultado de la revisión
+
+| Criterio | Resultado |
 |---|---|
-| `terraform init -backend=false` | ✅ Providers inicializados |
-| `terraform validate` | ✅ Configuración válida |
-
-Evidencia: ![Terraform Validate](evidence/terraform-validate-output.png)
+| Provider de Kubernetes declarado | ✅ `hashicorp/kubernetes ~> 2.38` |
+| Versión mínima de Terraform | ✅ `>= 1.10.0` |
+| Backend remoto S3 con locking | ✅ `use_lockfile = true`, `encrypt = true` |
+| Namespace alineado con manifiestos k8s | ✅ Corregido a `equipo-aulaviva` |
+| Placeholder de Secret (sin credenciales reales) | ✅ |
+| Archivos de estado excluidos de Git | ✅ `.gitignore` creado |
 
 ## 3. Hallazgo y corrección
-**Hallazgo:** el namespace en `terraform/main.tf` era `aulaviva`, pero los manifiestos de Kubernetes esperan `equipo-aulaviva`.
-**Corrección:** se alineó el default del namespace a `equipo-aulaviva`.
 
-## 4. Pendientes
+**Hallazgo:** el namespace por defecto en `terraform/main.tf` era `aulaviva`,
+pero los manifiestos de Kubernetes (`k8s/namespace.yaml` y `k8s/kustomization.yaml`)
+esperan el namespace `equipo-aulaviva`.
+
+**Riesgo detectado:** si ambos se aplicaran sin corrección, el Deployment de
+Kubernetes no encontraría el namespace esperado y el despliegue fallaría.
+
+**Corrección aplicada:** se actualizó el default de la variable `namespace`
+en `terraform/main.tf` a `equipo-aulaviva`, quedando alineado con los manifiestos
+de Kubernetes.
+
+**Evidencia:** captura del archivo `main.tf` corregido en
+`docs/qa/evidence/terraform-main-tf.png`.
+
+## 4. Archivos de protección creados
+
+Se creó `.gitignore` en la raíz del repositorio con reglas para excluir:
+
+- Archivos de estado de Terraform (`*.tfstate`, `*.tfstate.*`)
+- Directorio `.terraform/`
+- Variables con posibles valores sensibles (`*.tfvars`)
+- Archivos `.env` y secretos
+- `kubeconfig`
+
+## 5. Consideraciones de seguridad
+
+- No se almacenan credenciales reales en el repositorio.
+- El `Secret` incluido es un placeholder sin datos reales.
+- El backend remoto requiere un bucket S3 existente con cifrado habilitado.
+- El estado de Terraform queda excluido del control de versiones.
+
+## 6. Pendientes
+
+- Ejecutar `terraform init -backend=false` y `terraform validate` en un
+  entorno con Terraform instalado, para obtener la evidencia de la validación
+  sintáctica. Se coordinará con el área de DevSecOps en la próxima sesión.
 - Provisionar el bucket S3 real para el backend remoto.
-- Ejecutar `terraform plan` y `apply` en el entorno real.
 
 **Validado por:** Alexander Ruiz-Tagle — QA Lead
