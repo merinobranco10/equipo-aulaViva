@@ -23,7 +23,7 @@ variable "kubeconfig_path" {
 variable "namespace" {
   description = "Namespace de Kubernetes para AulaViva"
   type        = string
-  default     = "aulaviva"
+  default     = "equipo-aulaviva"
 }
 
 resource "kubernetes_namespace_v1" "aulaviva" {
