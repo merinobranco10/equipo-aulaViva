@@ -1,0 +1,48 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+
+# Secretos
+.env
+.env.*
+!.env.example
+secrets.yaml
+*.secret.yaml
+
+# Backend (Java)
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store
+
+# Logs
+*.log
+logs/
