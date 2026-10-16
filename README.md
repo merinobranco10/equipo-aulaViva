@@ -53,14 +53,23 @@ Servicio principal: `backend/` (Spring Boot 3.5, Java 21).
 
 ### Estado del despliegue
 
-![kubectl get all](qa/evidence/kubectl-get-all.png)
+![kubectl get all](docs/qa/evidence/kubectl-get-all.png)
 
 ### Prueba del HPA
 
 Carga sintética con pods busybox que consultan `/actuator/health` en bucle. El HPA escala de 2 a 5 réplicas cuando la CPU supera el 60% y vuelve a 2 al detener la carga.
 
-![HPA escalando](qa/evidence/hpa-scale-up.png)
-![HPA bajando](qa/evidence/hpa-scale-down.png)
+**1. Escalado: la CPU supera el 60% y el HPA sube las réplicas**
+
+![HPA escalando](docs/qa/evidence/hpa-scale-up.png)
+
+**2. Pods y consumo con las réplicas escaladas**
+
+![Pods escalados](docs/qa/evidence/kubectl-get-pods-scaled.png)
+
+**3. Reducción: al detener la carga vuelve a 2 réplicas**
+
+![HPA bajando](docs/qa/evidence/hpa-scale-down.png)
 
 ## Estado del proyecto
 
