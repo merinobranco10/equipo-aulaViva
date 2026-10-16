@@ -1,6 +1,6 @@
 # ADR-0005 — Plataforma Kubernetes e Infraestructura como Código
 
-**Estado:** Propuesto  
+**Estado:** Aceptado  
 **Fecha:** 15-10-2026
 
 ## Contexto
@@ -36,21 +36,19 @@ Se utilizará Kustomize para organizar y aplicar los manifiestos de Kubernetes d
 
 Se elige porque permite agrupar recursos, reutilizar configuraciones y mantener los despliegues versionados en el repositorio sin duplicar innecesariamente los archivos YAML.
 
-Los manifiestos contemplarán, según las necesidades de cada entorno, recursos como Deployments, Services, ConfigMaps, Secrets, Ingress y HorizontalPodAutoscalers.
+Los manifiestos contemplarán, según las necesidades de cada entorno, recursos como Deployments, Services, ConfigMaps, Ingress y HorizontalPodAutoscalers. El namespace y el secret placeholder los gestiona Terraform.
 
 La configuración se mantendrá separada del código de la aplicación. Las credenciales reales no se incorporarán al repositorio y deberán gestionarse mediante mecanismos de secretos adecuados al entorno.
 
 ### 3. Infraestructura como Código
 
-Se utilizará Terraform para gestionar recursos de infraestructura cuya creación y ciclo de vida se hayan asignado explícitamente a Terraform. Inicialmente, se contempla su uso para recursos de Kubernetes como el namespace de AulaViva.
+Se utilizará Terraform para gestionar recursos de infraestructura cuya creación y ciclo de vida se hayan asignado explícitamente a Terraform. Actualmente gestiona el namespace `equipo-aulaviva` y un secret placeholder (`aulaviva-app-secrets`), que por ese motivo no forman parte de los manifiestos de Kustomize. Terraform se aplica antes que `kubectl apply -k`.
 
 Se elige porque permite declarar infraestructura mediante código, revisar los cambios con plan antes de aplicarlos y mantener un estado que facilita el seguimiento de los recursos administrados.
 
 Antes de incorporar nuevos recursos al estado de Terraform, se verificará si ya existen y si están siendo gestionados por otros mecanismos. Se evitará que Terraform y los manifiestos aplicados directamente mediante Kustomize administren simultáneamente el mismo recurso.
 
-El estado de Terraform se mantendrá fuera del control de versiones. Para un entorno cloud, se evaluará el uso de un backend remoto con almacenamiento protegido y mecanismos de bloqueo compatibles con la versión utilizada de Terraform.
-
-El backend remoto de Terraform se configurará cuando se disponga de un bucket S3 y de los permisos necesarios para acceder a él. Hasta entonces, se utilizará el backend local para las pruebas de desarrollo.
+El estado de Terraform se mantendrá fuera del control de versiones y se almacenará en un **backend remoto de tipo `kubernetes`**, es decir, en un Secret del propio clúster (namespace `default`), con bloqueo mediante Lease. Se elige porque el equipo no dispone de una cuenta cloud ni de un bucket S3, y funciona con cualquier clúster local sin credenciales adicionales. Su limitación es que el estado se pierde si el clúster se elimina, lo que es aceptable en un laboratorio pero no en producción. Para un entorno cloud, se evaluará migrar a un backend con almacenamiento protegido y bloqueo (por ejemplo, S3 con `use_lockfile`) mediante `terraform init -migrate-state`.
 
 ### 4. Despliegue y validación
 
@@ -82,6 +80,7 @@ La configuración de producción deberá incorporar controles adicionales de acc
 - Kind no reproduce todas las características operativas de un clúster de producción.
 - El equipo deberá mantener y validar los manifiestos y módulos de infraestructura.
 - Terraform requiere gestionar cuidadosamente el estado y evitar conflictos con recursos creados por otros mecanismos.
+- El estado de Terraform reside en el mismo clúster que gestiona, por lo que se pierde si el clúster se elimina.
 - La gestión de secretos, el escalado y la observabilidad requieren configuración adicional; no quedan resueltos únicamente por adoptar Kubernetes.
 - La operación de Kubernetes en producción implica costes y responsabilidades de seguridad, actualización y monitorización.
 
@@ -99,9 +98,9 @@ La configuración de producción deberá incorporar controles adicionales de acc
 
 **Ventajas:** permite ejecutar Kubernetes localmente y dispone de herramientas para desarrollo y pruebas.
 
-**Desventajas:** utiliza un flujo de trabajo diferente al clúster local basado en Kind y no aporta una ventaja suficiente para justificar mantener dos entornos locales equivalentes.
+**Desventajas:** suele requerir una máquina virtual o un driver adicional, con mayor consumo de recursos y arranque más lento, y no aporta una ventaja suficiente para justificar mantener dos entornos locales equivalentes.
 
-**Motivo de descarte:** se mantiene Kind como opción local para evitar duplicar herramientas y procedimientos.
+**Motivo de descarte:** Kind solo requiere Docker, que el equipo ya utiliza para construir la imagen, por lo que se mantiene como opción local para evitar duplicar herramientas y procedimientos.
 
 ### Gestionar todos los recursos únicamente con manifiestos de Kubernetes
 
@@ -113,6 +112,6 @@ La configuración de producción deberá incorporar controles adicionales de acc
 
 ## Estado y revisión futura
 
-Esta decisión define la estrategia inicial de desarrollo y gestión declarativa de infraestructura; no implica que la plataforma de producción, el backend remoto de Terraform o la integración con un gestor externo de secretos ya estén implementados.
+Esta decisión define la estrategia inicial de desarrollo y gestión declarativa de infraestructura; no implica que la plataforma de producción, un backend remoto externo para Terraform (como S3) o la integración con un gestor externo de secretos ya estén implementados.
 
 La decisión se revisará cuando se seleccione la plataforma cloud de producción, se definan los requisitos de disponibilidad y operación, o se identifiquen necesidades que justifiquen cambiar la distribución de Kubernetes o el alcance de Terraform.
