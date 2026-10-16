@@ -18,25 +18,19 @@ El MVP de AulaViva contempla:
 
 ## Equipo
 
-| Integrantes | Rol |
-* | Branco Merino | PO |
-* | Matías Díaz | Tech Lead |
-* | Valentina León | DevSecOps |
-* | Gerardo González | AI/Data |
-* | Alexander Ruiz-Tagle | QA |
+| Integrante | Rol |
+|---|---|
+| Branco Merino | PO |
+| Matías Díaz | Tech Lead |
+| Valentina León | DevSecOps |
+| Gerardo González | AI/Data |
+| Alexander Ruiz-Tagle | QA |
 
 ## Organización del proyecto
 
-El trabajo del equipo se gestionará mediante GitHub Issues y un tablero Kanban.
+El trabajo del equipo se gestiona mediante GitHub Issues y un tablero Kanban.
 
-Las columnas del tablero son:
-
-- Backlog
-- To Do
-- In Progress
-- Review
-- Blocked
-- Done
+Las columnas del tablero son: Backlog, To Do, In Progress, Review, Blocked y Done.
 
 ## Documentación
 
@@ -45,10 +39,29 @@ Las columnas del tablero son:
 
 ## Comunicación
 
-El canal principal de comunicación del equipo será Discord.
+El canal principal de comunicación del equipo es Discord.
 
-Las decisiones importantes del proyecto serán documentadas en GitHub mediante Issues, Pull Requests o documentos dentro del repositorio.
+Las decisiones importantes del proyecto se documentan en GitHub mediante Issues, Pull Requests o documentos dentro del repositorio.
+
+## Despliegue en Kubernetes (mini-lab S07)
+
+Servicio principal: `backend/` (Spring Boot 3.5, Java 21).
+
+- **Imagen:** Dockerfile multi-stage (Maven + Temurin 21 para compilar, `distroless/java21-debian12:nonroot` como imagen final), publicada en GHCR y referenciada por digest en `k8s/deployment.yaml`.
+- **Manifiestos:** `k8s/` (Deployment, Service, Ingress, ConfigMap y HPA), aplicados con `kubectl apply -k k8s/`.
+- **Infraestructura como código:** `terraform/` crea el namespace `equipo-aulaviva` y un secret placeholder. El provider está en `version.tf` y el backend remoto en `backend.tf`.
+
+### Estado del despliegue
+
+![kubectl get all](qa/evidence/kubectl-get-all.png)
+
+### Prueba del HPA
+
+Carga sintética con pods busybox que consultan `/actuator/health` en bucle. El HPA escala de 2 a 5 réplicas cuando la CPU supera el 60% y vuelve a 2 al detener la carga.
+
+![HPA escalando](qa/evidence/hpa-scale-up.png)
+![HPA bajando](qa/evidence/hpa-scale-down.png)
 
 ## Estado del proyecto
 
-Actualmente el proyecto se encuentra en la etapa inicial de planificación y organización del equipo.
+Backend base, imagen en GHCR, manifiestos de Kubernetes y Terraform implementados. Próximos pasos: funcionalidades del MVP.
