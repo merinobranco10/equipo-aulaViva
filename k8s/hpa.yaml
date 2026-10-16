@@ -16,10 +16,6 @@ spec:
         target:
           type: Utilization
           averageUtilization: 60
-    - type: Pods
-      pods:
-        metric:
-          name: http_request_duration_p95_seconds
-        target:
-          type: AverageValue
-          averageValue: "500m"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
