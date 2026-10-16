@@ -3,7 +3,6 @@ kind: Deployment
 metadata:
   name: aulaviva-backend
 spec:
-  replicas: 2
   selector:
     matchLabels:
       app: aulaviva-backend
