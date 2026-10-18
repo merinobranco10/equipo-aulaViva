@@ -1,0 +1,35 @@
+name: Terraform Validate
+
+on:
+  push:
+    branches:
+      - desarrollo
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-validate.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Formato (fmt -check)
+        working-directory: terraform
+        run: terraform fmt -check
+
+      - name: Inicializar Terraform (sin backend)
+        working-directory: terraform
+        run: terraform init -backend=false
+
+      - name: Validar configuración
+        working-directory: terraform
+        run: terraform validate

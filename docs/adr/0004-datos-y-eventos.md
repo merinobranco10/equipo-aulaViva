@@ -1,6 +1,6 @@
 # ADR 0004 — Persistencia y mensajería
 
-**Estado:** Pendiente  
+**Estado:** Aprobado  
 **Fecha:** 06-10-2026
 
 ## Contexto
