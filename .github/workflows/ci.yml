@@ -1,7 +1,12 @@
-
 name: AulaViva - CI Quality Gates
 
 on:
+  push:
+    branches:
+      - "desarrollo"
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches:
       - desarrollo
@@ -15,7 +20,7 @@ permissions:
 
 jobs:
   quality:
-    name: Quality - Java and Maven
+    name: Quality - Java, Maven and SAST
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +35,17 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
 
-      - name: Compilar y verificar backend
+      - name: Compilar, probar y verificar cobertura
         working-directory: backend
         run: mvn -B verify
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar Semgrep
+        run: python -m pip install semgrep
+
+      - name: Ejecutar analisis SAST
+        run: semgrep scan --config p/java --error backend/
