@@ -1,33 +1,43 @@
+
 name: AulaViva - CI Quality Gates
 
 on:
   push:
     branches:
-      - "desarrollo"
+      - desarrollo
     paths:
       - "backend/**"
       - ".github/workflows/ci.yml"
+
   pull_request:
     branches:
       - desarrollo
     paths:
       - "backend/**"
       - ".github/workflows/ci.yml"
+
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/equipo-aulaviva-backend
+
 jobs:
   quality:
-    name: Quality - Java, Maven and SAST
+    name: Quality - Lint, Tests, Coverage and SAST
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
-      - name: Descargar codigo del repositorio
+      - name: Descargar codigo
         uses: actions/checkout@v4
 
-      - name: Configurar Java 21
+      - name: Configurar Java 21 y cache Maven
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -35,7 +45,7 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
 
-      - name: Compilar, probar y verificar cobertura
+      - name: Lint, pruebas y cobertura minima del 70 por ciento
         working-directory: backend
         run: mvn -B verify
 
@@ -47,5 +57,138 @@ jobs:
       - name: Instalar Semgrep
         run: python -m pip install semgrep
 
-      - name: Ejecutar analisis SAST
+      - name: Analisis SAST
         run: semgrep scan --config p/java --error backend/
+
+  build-and-push:
+    name: Build and Push - GHCR
+    runs-on: ubuntu-latest
+    needs: quality
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar sesion en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generar etiquetas de imagen
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=desarrollo
+            type=sha,format=short,prefix=sha-
+
+      - name: Construir y publicar imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  promote:
+    name: Promote - GitOps Pull Request
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Validar configuracion GitOps
+        env:
+          GITOPS_REPOSITORY: ${{ vars.GITOPS_REPOSITORY }}
+          GITOPS_KUSTOMIZE_PATH: ${{ vars.GITOPS_KUSTOMIZE_PATH }}
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: |
+          test -n "$GITOPS_REPOSITORY" || {
+            echo "::error::Falta configurar la variable GITOPS_REPOSITORY"
+            exit 1
+          }
+          test -n "$GITOPS_KUSTOMIZE_PATH" || {
+            echo "::error::Falta configurar la variable GITOPS_KUSTOMIZE_PATH"
+            exit 1
+          }
+          test -n "$GITOPS_TOKEN" || {
+            echo "::error::Falta configurar el secreto GITOPS_TOKEN"
+            exit 1
+          }
+
+      - name: Configurar Python para herramientas auxiliares
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Preparar herramientas GitOps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git
+
+      - name: Descargar repositorio GitOps
+        env:
+          GITOPS_REPOSITORY: ${{ vars.GITOPS_REPOSITORY }}
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: |
+          git clone \
+            "https://x-access-token:${GITOPS_TOKEN}@github.com/${GITOPS_REPOSITORY}.git" \
+            "$RUNNER_TEMP/gitops"
+
+      - name: Configurar Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Actualizar imagen en GitOps
+        working-directory: ${{ runner.temp }}/gitops
+        env:
+          GITOPS_KUSTOMIZE_PATH: ${{ vars.GITOPS_KUSTOMIZE_PATH }}
+          IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          test -f "$GITOPS_KUSTOMIZE_PATH/kustomization.yaml" || {
+            echo "::error::No existe kustomization.yaml en la ruta configurada"
+            exit 1
+          }
+
+          kustomize edit set image "${IMAGE_NAME}=${IMAGE_NAME}:${IMAGE_TAG}" \
+            --load-restrictor LoadRestrictionsNone \
+            --reorder legacy \
+            --kustomization "$GITOPS_KUSTOMIZE_PATH/kustomization.yaml"
+
+      - name: Crear Pull Request de promocion
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITOPS_TOKEN }}
+          path: ${{ runner.temp }}/gitops
+          commit-message: "chore(gitops): promover AulaViva ${{ github.sha }}"
+          branch: "automation/promote-aulaviva-${{ github.run_id }}"
+          delete-branch: true
+          title: "chore(gitops): promover imagen de AulaViva"
+          body: |
+            PR generado automaticamente por el pipeline de AulaViva.
+
+            - Commit de origen: ${{ github.sha }}
+            - Imagen: ghcr.io/${{ github.repository_owner }}/equipo-aulaviva-backend:sha-${{ github.sha }}
+            - Los gates de calidad finalizaron correctamente.
+          base: main
+          add-paths: ${{ vars.GITOPS_KUSTOMIZE_PATH }}/kustomization.yaml
