@@ -52,3 +52,33 @@ jobs:
 
       - name: Ejecutar analisis SAST
         run: semgrep scan --config p/java --error backend/
+
+  build:
+    name: Build - Docker image validation
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen Docker
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+
+  promote:
+    name: Promote - Pending GitOps repository
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Informar que la promocion esta pendiente
+        run: |
+          echo "Quality y build finalizaron correctamente."
+          echo "La promocion real queda pendiente de crear y configurar el repositorio GitOps."
