@@ -135,6 +135,7 @@ jobs:
           echo "Commit: ${COMMIT_SHA}" >> "$GITHUB_STEP_SUMMARY"
 
   
+  
   promote:
     name: Promote - GitOps
     runs-on: ubuntu-latest
@@ -145,7 +146,7 @@ jobs:
       - name: Descargar repositorio GitOps
         uses: actions/checkout@v4
         with:
-          repository: matiasdiaz434/equipo-aulaViva-gitops
+          repository: merinobranco10/equipo-aulaviva-gitops
           ref: main
           token: ${{ secrets.GITOPS_TOKEN }}
           path: gitops
@@ -165,22 +166,36 @@ jobs:
           if not path.is_file():
               raise SystemExit(f"No existe el manifiesto: {path}")
 
+          digest = os.environ.get("DIGEST", "")
+          if not digest.startswith("sha256:"):
+              raise SystemExit("El digest de la imagen no es válido.")
+
           content = path.read_text()
-          pattern = r"(?m)^(\s*image:\s*).+$"
+          pattern = r"(?m)^([ \t]*image:[ \t]*).+$"
+          matches = re.findall(pattern, content)
 
-          if len(re.findall(pattern, content)) != 1:
-              raise SystemExit("Se esperaba exactamente una linea image:. No se modifico el manifiesto.")
+          if len(matches) != 1:
+              raise SystemExit(
+                  "Se esperaba exactamente una línea image:. "
+                  "No se modificó el manifiesto."
+              )
 
-          image = f"{os.environ['IMAGE']}@{os.environ['DIGEST']}"
-          updated = re.sub(pattern, lambda match: match.group(1) + image, content)
+          image = f"{os.environ['IMAGE']}@{digest}"
+          updated = re.sub(
+              pattern,
+              lambda match: match.group(1) + image,
+              content
+          )
 
-          if updated != content:
+          if updated == content:
+              print("El manifiesto ya utiliza esta imagen; no hay cambios.")
+          else:
               path.write_text(updated)
+              print(f"Imagen propuesta: {image}")
 
-          print(f"Imagen propuesta: {image}")
           PY
 
-      - name: Crear Pull Request de promocion
+      - name: Crear Pull Request de promoción
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITOPS_TOKEN }}
@@ -191,7 +206,7 @@ jobs:
           commit-message: "chore: promote AulaViva backend ${{ github.sha }}"
           title: "Promote AulaViva backend ${{ github.sha }}"
           body: |
-            ## Promocion de imagen AulaViva
+            ## Promoción de imagen AulaViva
 
             - Commit del backend: `${{ github.sha }}`
             - Etiqueta: `ghcr.io/${{ github.repository_owner }}/equipo-aulaviva-backend:sha-${{ github.sha }}`
@@ -199,4 +214,3 @@ jobs:
 
             El manifiesto propone la imagen mediante su digest inmutable.
             Revisar y aprobar antes de integrar en main.
-
