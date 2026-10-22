@@ -162,7 +162,7 @@ jobs:
           import re
           from pathlib import Path
 
-          path = Path("gitops/apps/aulaviva-backend/deployment.yaml")
+          path = Path("gitops/apps/aulaviva-backend/base/deployment.yaml")
 
           if not path.is_file():
               raise SystemExit(f"No existe el manifiesto: {path}")
@@ -203,7 +203,7 @@ jobs:
           path: gitops
           base: main
           branch: promotion/aulaviva-${{ github.sha }}
-          add-paths: apps/aulaviva-backend/deployment.yaml
+          add-paths: apps/aulaviva-backend/base/deployment.yaml
           commit-message: "chore: promote AulaViva backend ${{ github.sha }}"
           title: "Promote AulaViva backend ${{ github.sha }}"
           body: |
