@@ -42,4 +42,11 @@ class AulaVivaApplicationTests {
                 .andExpect(jsonPath("$.service").value("aulaviva-backend"))
                 .andExpect(jsonPath("$.status").value("ok"));
     }
+
+    @Test
+    void applicationClassCanBeInstantiated() {
+        AulaVivaApplication application = new AulaVivaApplication();
+
+        org.junit.jupiter.api.Assertions.assertNotNull(application);
+    }
 }
