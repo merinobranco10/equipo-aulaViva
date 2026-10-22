@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -15,24 +16,29 @@
     <groupId>cl.aulaviva</groupId>
     <artifactId>aulaviva-backend</artifactId>
     <version>0.1.0</version>
+    <name>aulaviva-backend</name>
+    <description>Backend de la plataforma AulaViva</description>
 
     <properties>
         <java.version>21</java.version>
         <jacoco.version>0.8.13</jacoco.version>
-        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+        <checkstyle.version>3.6.0</checkstyle.version>
     </properties>
 
     <dependencies>
+        <!-- API REST -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Monitoreo y estado del servicio -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Pruebas automatizadas -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -44,20 +50,17 @@
         <finalName>app</finalName>
 
         <plugins>
+            <!-- Compilación y empaquetado Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
+            <!-- Validación de estilo Java -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${maven-checkstyle-plugin.version}</version>
-                <configuration>
-                    <configLocation>google_checks.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                </configuration>
+                <version>${checkstyle.version}</version>
                 <executions>
                     <execution>
                         <id>validate-code-style</id>
@@ -65,14 +68,22 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
+                        <configuration>
+                            <configLocation>google_checks.xml</configLocation>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
 
+            <!-- Medición y validación de cobertura -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -87,6 +98,11 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>cl/aulaviva/AulaVivaApplication.class</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
 
                     <execution>
@@ -96,6 +112,9 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
+                            <excludes>
+                                <exclude>cl/aulaviva/AulaVivaApplication.class</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
@@ -114,4 +133,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
