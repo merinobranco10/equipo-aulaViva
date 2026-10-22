@@ -1,4 +1,3 @@
-
 name: AulaViva - CI Quality Gates
 
 on:
@@ -27,7 +26,7 @@ env:
 
 jobs:
   quality:
-    name: Quality - Maven and SAST
+    name: Quality - Maven and Coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -46,6 +45,23 @@ jobs:
         working-directory: backend
         run: mvn -B verify
 
+      - name: Publicar reporte JaCoCo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: backend/target/site/jacoco/
+          if-no-files-found: warn
+          retention-days: 14
+
+  sast:
+    name: SAST - Semgrep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
@@ -60,7 +76,7 @@ jobs:
   build:
     name: Build - Docker validation
     runs-on: ubuntu-latest
-    needs: quality
+    needs: [quality, sast]
 
     steps:
       - name: Descargar codigo
@@ -79,10 +95,7 @@ jobs:
   build-and-push:
     name: Publish - GHCR
     runs-on: ubuntu-latest
-    needs: [quality, build]
-
-    # Publicar solo tras un push a desarrollo.
-    # En Pull Requests solo se ejecutan los controles y la validacion.
+    needs: [quality, sast, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
 
     permissions:
@@ -142,6 +155,5 @@ jobs:
     steps:
       - name: Verificar publicacion
         run: |
-          echo "La imagen se publico despues de superar los quality gates."
+          echo "La imagen se publico despues de superar los controles de calidad."
           echo "Pendiente: configurar el repositorio GitOps y crear el PR."
-
