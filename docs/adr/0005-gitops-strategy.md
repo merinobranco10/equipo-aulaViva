@@ -1,4 +1,4 @@
-# ADR 0006: Estrategia GitOps y herramienta de despliegue
+# ADR 0005: Estrategia GitOps y herramienta de despliegue
 
 - **Estado:** Aceptada
 - **Fecha:** 22-10-2026
