@@ -1,4 +1,4 @@
-# ADR-0005 — Plataforma Kubernetes e Infraestructura como Código
+# ADR-0004 — Plataforma Kubernetes e Infraestructura como Código
 
 **Estado:** Aceptado  
 **Fecha:** 15-10-2026
