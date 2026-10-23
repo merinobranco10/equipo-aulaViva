@@ -108,9 +108,9 @@ La estrategia de despliegue se complementará con comprobaciones de salud de los
 
 Desde el área de QA se revisó esta estrategia para asegurar que el proceso sea auditable y seguro:
 
-- **Trazabilidad y auditoría:** El uso de Pull Requests en el repositorio GitOps garantiza que cada cambio en producción quede registrado con un autor, una fecha y una justificación.
-- **Quality Gates:** Se validó que GitHub Actions bloquee la promoción de imágenes si las pruebas unitarias, la cobertura (mínimo 70%) o el análisis estático de seguridad (SAST) fallan.
-- **Verificación de protección:** Se confirmó que la rama `main` y `desarrollo` del repositorio de código fuente están protegidas, exigiendo Pull Requests y la aprobación de los checks de CI para poder fusionar cambios.
-- **Rollback:** La estrategia de usar digests inmutables (SHA-256) y mantener el historial en Git permite revertir un despliegue fallido simplemente revirtiendo un commit en el repositorio GitOps, sin necesidad de reconstruir la imagen.
+- **Trazabilidad y auditoría:** El uso de Pull Requests en el repositorio GitOps garantiza que cada cambio quede registrado.
+- **Quality Gates:** Se validó que GitHub Actions bloquee la promoción si las pruebas, la cobertura o el SAST fallan.
+- **Protección de ramas:** Durante la validación empírica se detectó que las ramas `main` y `desarrollo` no cuentan con reglas estrictas de protección (permiten commits directos). Se recomienda a la administración habilitar esta configuración en GitHub para bloquear el bypass del pipeline.
+- **Rollback:** El uso de digests inmutables (SHA-256) permite revertir un despliegue fallido simplemente revirtiendo un commit en Git.
 
 **Responsable:** Alexander Ruiz-Tagle — QA Lead.
