@@ -1,0 +1,59 @@
+rules:
+
+  # Regla 1: CORS permite cualquier origen
+
+  - id: aulaviva.spring-cors-wildcard
+    languages:
+      - java
+
+    severity: ERROR
+
+    message: >
+      Configuracion CORS permisiva: se permite cualquier origen.
+      Restringe los origenes a dominios autorizados.
+
+    metadata:
+      category: security
+      technology:
+        - java
+        - spring-boot
+      cwe:
+        - CWE-942
+      owasp:
+        - A05:2021 Security Misconfiguration
+      confidence: HIGH
+
+    pattern-regex: '@CrossOrigin\s*\([^)]*origins\s*=\s*"\*"'
+
+    paths:
+      include:
+        - "**/*.java"
+
+
+  # Regla 2: Uso de algoritmos criptograficos debiles
+
+  - id: aulaviva.java-weak-message-digest
+    languages:
+      - java
+
+    severity: ERROR
+
+    message: >
+      Se detecto el uso de MD5 o SHA-1 mediante MessageDigest.
+      Utiliza algoritmos criptograficos modernos segun el caso de uso.
+
+    metadata:
+      category: security
+      technology:
+        - java
+      cwe:
+        - CWE-328
+      owasp:
+        - A02:2021 Cryptographic Failures
+      confidence: HIGH
+
+    pattern-regex: 'MessageDigest\s*\.\s*getInstance\s*\(\s*"(?:MD5|SHA-1)"\s*\)'
+
+    paths:
+      include:
+        - "**/*.java"
