@@ -20,7 +20,7 @@ rules:
       cwe:
         - CWE-942
       owasp:
-        - A05:2021 Security Misconfiguration
+        - "A05:2021 Security Misconfiguration"
       confidence: HIGH
 
     pattern-regex: '@CrossOrigin\s*\([^)]*origins\s*=\s*"\*"'
@@ -49,7 +49,7 @@ rules:
       cwe:
         - CWE-328
       owasp:
-        - A02:2021 Cryptographic Failures
+        - "A02:2021 Cryptographic Failures"
       confidence: HIGH
 
     pattern-regex: 'MessageDigest\s*\.\s*getInstance\s*\(\s*"(?:MD5|SHA-1)"\s*\)'
