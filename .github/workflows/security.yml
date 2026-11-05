@@ -86,7 +86,7 @@ jobs:
           exit-code: "1"
           format: table
 
-    secrets:
+  secrets:
     name: Secrets - Deteccion de secretos
     runs-on: ubuntu-latest
 
@@ -116,14 +116,3 @@ jobs:
             --redact \
             --verbose \
             --exit-code=2
-
-    steps:
-      - name: Descargar historial Git
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Detectar secretos con Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
