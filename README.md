@@ -136,4 +136,56 @@ Se obtiene un inventario de componentes de software en formato CycloneDX JSON, q
 
 ## Estado del proyecto
 
+## Detección de secretos con Gitleaks
+
+### Objetivo
+
+Incorporar un mecanismo automatizado para detectar secretos expuestos en el repositorio AulaViva, incluyendo posibles API Keys, tokens y credenciales, tanto en los archivos actuales como en el historial de Git.
+
+### Implementación
+
+Se integró **Gitleaks** mediante la acción `gitleaks/gitleaks-action@v2` en el workflow `AulaViva - Security Analysis`, ubicado en `.github/workflows/security.yml`.
+
+La configuración incluye:
+
+- Creación de un job independiente denominado `secrets`.
+- Uso de `actions/checkout@v4` con `fetch-depth: 0` para obtener el historial completo.
+- Ejecución automática de Gitleaks en GitHub Actions.
+- Escaneo adicional del historial Git mediante Docker y Gitleaks v8.24.3.
+- Uso de `--redact` para evitar mostrar valores sensibles durante el análisis.
+- Configuración de códigos de salida bloqueantes para detener el pipeline cuando se detectan secretos.
+- Generación y publicación del reporte SARIF como artefacto de GitHub Actions.
+
+### Gestión de hallazgos
+
+Durante el análisis inicial se identificaron dos coincidencias de la regla `generic-api-key` en archivos de ejemplos de API:
+
+- `api/examples/tutor-question-error.json`
+- `api/examples/submit-evaluation.json`
+
+Se incorporaron sus fingerprints específicos al archivo `.gitleaksignore` para excluir esas coincidencias del análisis. Su origen como datos ficticios no ha sido verificado independientemente.
+
+### Validación
+
+En la ejecución de GitHub Actions se verificó:
+
+- Escaneo de 219 commits del historial Git.
+- Análisis aproximado de 506 KB.
+- Resultado final: `no leaks found`.
+- Generación del artefacto `gitleaks-results.sarif.zip`.
+- Ejecución exitosa del job de detección de secretos.
+
+### Evidencias
+
+Los resultados pueden consultarse en:
+
+1. Repositorio de AulaViva → pestaña **Actions**.
+2. Workflow **AulaViva - Security Analysis**.
+3. Job **Secrets - Deteccion de secretos**.
+4. Artefactos de la ejecución → `gitleaks-results.sarif.zip`.
+
+### Resultado esperado
+
+Disponer de un control automatizado para identificar posibles secretos expuestos en el código y su historial, evitando que nuevos hallazgos pasen inadvertidos mediante un gate bloqueante en el pipeline de seguridad.
+
 El proyecto cuenta con un backend contenerizado, despliegue en Kubernetes, escalado automático y gestión GitOps mediante Kustomize y Argo CD. Las evidencias documentan las validaciones realizadas en S07 y S08.
