@@ -4,19 +4,11 @@ on:
   push:
     branches:
       - desarrollo
-    paths:
-      - "backend/**"
-      - ".semgrep/**"
-      - ".github/workflows/security.yml"
 
   pull_request:
     branches:
       - main
       - desarrollo
-    paths:
-      - "backend/**"
-      - ".semgrep/**"
-      - ".github/workflows/security.yml"
 
   workflow_dispatch:
 
