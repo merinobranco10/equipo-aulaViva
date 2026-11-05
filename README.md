@@ -157,6 +157,13 @@ La configuración incluye:
 - Generación y publicación del reporte SARIF como artefacto de GitHub Actions.
 
 ### Gestión de hallazgos
+### Clasificación final de los hallazgos
+
+Los dos hallazgos detectados en los archivos de ejemplos de API fueron revisados y confirmados por el Tech Lead como valores ficticios utilizados para pruebas.
+
+Por lo tanto, se clasificaron como falsos positivos y se mantuvieron sus fingerprints específicos en `.gitleaksignore`.
+
+No fue necesaria la rotación de credenciales, ya que se confirmó que los valores no corresponden a credenciales reales.
 
 Durante el análisis inicial se identificaron dos coincidencias de la regla `generic-api-key` en archivos de ejemplos de API:
 
