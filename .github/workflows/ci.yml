@@ -49,6 +49,13 @@ jobs:
         continue-on-error: true
         working-directory: backend
         run: mvn -B verify
+      - name: Generar SBOM CycloneDX
+        if: steps.maven.outcome == 'success'
+        working-directory: backend
+        run: |
+          mvn -B org.cyclonedx:cyclonedx-maven-plugin:2.9.3:makeBom \
+            -DoutputFormat=json \
+            -DoutputName=sbom
 
       - name: Validar SBOM CycloneDX
         id: sbom-validation
