@@ -94,6 +94,45 @@ Durante S08 se incorporó la validación automatizada del backend y la gestión 
 
 ![Pipeline de CI](docs/qa/evidence/s08/04-ci-all-jobs-success-gitops.png)
 
+## Generación y publicación del SBOM (CycloneDX)
+
+### Objetivo
+Generar un inventario de los componentes y dependencias del backend de AulaViva mediante CycloneDX, permitiendo identificar las bibliotecas utilizadas y facilitar el análisis de seguridad de la aplicación.
+
+### Implementación
+Se incorporó el plugin **CycloneDX Maven Plugin** en el archivo `backend/pom.xml`, configurado para generar un archivo en formato JSON.
+
+El SBOM se genera durante la ejecución del pipeline de integración continua de GitHub Actions, dentro del workflow **AulaViva - CI Quality Gates**.
+
+**Configuración utilizada:**
+- Herramienta: CycloneDX Maven Plugin.
+- Versión: 2.9.3.
+- Formato de salida: JSON.
+- Nombre del archivo: `sbom.json`.
+- Ubicación de generación: `backend/target/sbom.json`.
+- Dependencias de prueba excluidas del inventario.
+
+### Validación
+Se incorporó una etapa de validación en GitHub Actions para comprobar que el archivo SBOM exista y que su estructura corresponda al formato CycloneDX.
+
+Además, se revisó el contenido del archivo para verificar que incluya las dependencias directas y transitivas del backend.
+
+### Publicación del artefacto
+El archivo generado se publica automáticamente como artefacto de GitHub Actions mediante la acción `actions/upload-artifact@v4`.
+
+**Nombre del artefacto:** `aulaviva-sbom`.
+
+### Procedimiento para descargar el SBOM
+1. Ingresar al repositorio de AulaViva en GitHub.
+2. Acceder a la pestaña **Actions**.
+3. Seleccionar una ejecución exitosa del workflow **AulaViva - CI Quality Gates**.
+4. Ubicar la sección **Artifacts** al final de la ejecución.
+5. Descargar el artefacto `aulaviva-sbom`.
+6. Descomprimir el archivo y abrir `sbom.json`.
+
+### Resultado esperado
+Se obtiene un inventario de componentes de software en formato CycloneDX JSON, que permite mantener trazabilidad sobre las dependencias utilizadas por el backend y sirve como insumo para futuras revisiones de seguridad y análisis de vulnerabilidades.
+
 
 ## Estado del proyecto
 
