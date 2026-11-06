@@ -196,3 +196,157 @@ Los resultados pueden consultarse en:
 Disponer de un control automatizado para identificar posibles secretos expuestos en el código y su historial, evitando que nuevos hallazgos pasen inadvertidos mediante un gate bloqueante en el pipeline de seguridad.
 
 El proyecto cuenta con un backend contenerizado, despliegue en Kubernetes, escalado automático y gestión GitOps mediante Kustomize y Argo CD. Las evidencias documentan las validaciones realizadas en S07 y S08.
+
+## Re-triage de hallazgos y gestión de excepciones (VEX)
+
+### Objetivo
+
+Establecer un procedimiento para revisar, clasificar y gestionar los hallazgos de seguridad detectados durante los análisis automatizados de AulaViva.
+
+El procedimiento permite determinar si una vulnerabilidad afecta realmente al proyecto, definir las acciones correctivas y documentar excepciones justificadas mediante Vulnerability Exploitability eXchange (VEX).
+
+### Herramientas involucradas
+
+Los hallazgos pueden provenir de los siguientes controles:
+
+| Herramienta | Tipo de análisis | Hallazgos que puede detectar |
+|---|---|---|
+| Semgrep | SAST | Problemas de seguridad en el código fuente Java. |
+| Trivy | SCA | Vulnerabilidades conocidas en dependencias del proyecto. |
+| Gitleaks | Detección de secretos | Posibles credenciales, tokens y claves expuestas. |
+| CycloneDX | SBOM | Inventario de componentes y dependencias para facilitar su identificación y análisis. |
+
+### Procedimiento de re-triage
+
+Cuando una herramienta detecte un hallazgo, el equipo deberá realizar los siguientes pasos:
+
+**1. Identificar el hallazgo**
+
+Registrar la información disponible:
+
+- Herramienta que detectó el problema.
+- Identificador del hallazgo o CVE, cuando corresponda.
+- Componente, dependencia o archivo afectado.
+- Versión del componente.
+- Severidad asignada.
+- Fecha de detección.
+- Workflow y ejecución donde se identificó.
+
+**2. Analizar la aplicabilidad**
+
+Revisar si el hallazgo afecta realmente a AulaViva.
+
+Para ello se debe:
+
+- Comprobar si el componente afectado está presente en el SBOM.
+- Verificar la versión de la dependencia.
+- Determinar si el componente vulnerable se utiliza en el contexto afectado.
+- Revisar las condiciones necesarias para explotar la vulnerabilidad.
+- Evaluar el impacto potencial sobre la confidencialidad, integridad y disponibilidad del sistema.
+
+En el caso de hallazgos SAST, se debe revisar el código involucrado para determinar si existe realmente una condición vulnerable.
+
+En el caso de Gitleaks, se debe comprobar si el valor detectado corresponde a una credencial real o a un dato de ejemplo. Si existe la posibilidad de que sea una credencial real, se debe investigar y evaluar su revocación o rotación.
+
+**3. Clasificar el hallazgo**
+
+Después de la revisión, se debe asignar una clasificación:
+
+| Clasificación | Descripción | Acción |
+|---|---|---|
+| Vulnerabilidad confirmada | El componente o código está afectado. | Corregir o implementar una mitigación. |
+| Falso positivo | La herramienta identificó un problema que no corresponde a una vulnerabilidad real. | Documentar la justificación y evidencia. |
+| No afectado | El producto no está afectado por la vulnerabilidad identificada. | Documentar la justificación mediante VEX cuando corresponda. |
+| En investigación | No existe información suficiente para determinar su aplicabilidad. | Continuar el análisis y asignar un responsable. |
+
+**4. Definir la acción correctiva**
+
+Según el resultado del análisis, se deberá tomar una de las siguientes decisiones:
+
+- **Corregir:** actualizar la dependencia, modificar el código o eliminar la condición vulnerable.
+- **Mitigar:** implementar controles que reduzcan el riesgo mientras se prepara una solución definitiva.
+- **Investigar:** recopilar información adicional antes de tomar una decisión.
+- **Solicitar una excepción:** cuando exista una justificación técnica para aceptar temporalmente el riesgo o determinar que el producto no está afectado.
+
+**5. Registrar el resultado**
+
+Cada hallazgo revisado debe quedar documentado con:
+
+- Identificador del hallazgo.
+- Herramienta de origen.
+- Componente y versión afectados, cuando corresponda.
+- Clasificación final.
+- Justificación técnica.
+- Evidencia de la revisión.
+- Acción definida.
+- Responsable.
+- Fecha de revisión.
+- Fecha de próxima revisión, si corresponde.
+
+Los resultados deben quedar asociados a un GitHub Issue o Pull Request para mantener la trazabilidad.
+
+### Gestión de excepciones mediante VEX
+
+VEX (Vulnerability Exploitability eXchange) permite comunicar si un producto está afectado por una vulnerabilidad conocida y cuál es su situación respecto de ella.
+
+Cuando se determine que una vulnerabilidad no afecta a AulaViva o se requiera documentar formalmente su estado, se podrá registrar mediante un documento VEX asociado al SBOM CycloneDX correspondiente.
+
+Se consideran los siguientes estados:
+
+| Estado VEX | Significado |
+|---|---|
+| `not_affected` | El producto no está afectado por la vulnerabilidad. |
+| `affected` | El producto está afectado por la vulnerabilidad. |
+| `fixed` | La vulnerabilidad fue corregida en el producto. |
+| `under_investigation` | La aplicabilidad de la vulnerabilidad todavía está siendo investigada. |
+
+**Requisitos para solicitar una excepción**
+
+La solicitud deberá incluir:
+
+1. Identificador de la vulnerabilidad (CVE, cuando corresponda).
+2. Componente y versión afectados.
+3. Herramienta que detectó el hallazgo.
+4. Estado VEX propuesto.
+5. Justificación técnica de la solicitud.
+6. Evidencia que respalde la clasificación.
+7. Riesgo residual y posibles mitigaciones.
+8. Responsable de la solicitud.
+9. Fecha de aprobación y próxima fecha de revisión.
+
+**Flujo de aprobación**
+
+1. El integrante que detecta o analiza el hallazgo documenta la solicitud.
+2. El responsable técnico revisa la justificación y las evidencias.
+3. El Tech Lead evalúa el riesgo residual y aprueba o rechaza la excepción.
+4. La decisión se registra en GitHub mediante un Issue o Pull Request.
+5. Si la excepción es temporal, debe establecerse una fecha de revisión.
+6. Cuando se corrija la vulnerabilidad, se actualiza el registro y su estado correspondiente.
+
+Una excepción no elimina una vulnerabilidad confirmada ni debe utilizarse para ocultar hallazgos. Su objetivo es documentar una decisión técnica justificada y mantener la trazabilidad del riesgo aceptado.
+
+### Relación entre SBOM y VEX
+
+El SBOM generado mediante CycloneDX en el workflow `AulaViva - CI Quality Gates` proporciona el inventario de componentes y dependencias del backend.
+
+Este inventario sirve como referencia para identificar los componentes relacionados con un hallazgo y documentar su aplicabilidad mediante VEX.
+
+El SBOM y el documento VEX cumplen funciones diferentes:
+
+- **SBOM:** identifica los componentes y dependencias que forman parte del software.
+- **VEX:** comunica si una vulnerabilidad conocida afecta al producto y cuál es su estado.
+
+Ambos documentos pueden mantenerse relacionados mediante la identificación del producto, sus componentes y la versión analizada.
+
+### Revisión y actualización de excepciones
+
+Las excepciones aprobadas deben revisarse cuando ocurra alguna de las siguientes situaciones:
+
+- Se actualice la versión del componente afectado.
+- Cambien las condiciones de explotación de la vulnerabilidad.
+- Se incorporen nuevos controles de seguridad.
+- Se publique información que modifique la evaluación inicial.
+- Se alcance la fecha de revisión establecida.
+
+Si la justificación deja de ser válida, el hallazgo deberá volver a evaluarse y se deberán definir las acciones correctivas correspondientes.
+
