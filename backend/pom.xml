@@ -131,30 +131,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- Generación de Software Bill of Materials -->
-            <plugin>
-                <groupId>org.cyclonedx</groupId>
-                <artifactId>cyclonedx-maven-plugin</artifactId>
-                <version>2.9.3</version>
-
-                <configuration>
-                    <outputFormat>json</outputFormat>
-                    <outputName>sbom</outputName>
-                    <outputDirectory>${project.build.directory}</outputDirectory>
-                    <includeTestScope>false</includeTestScope>
-                </configuration>
-
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>makeBom</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
 
