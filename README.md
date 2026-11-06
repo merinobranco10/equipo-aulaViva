@@ -216,6 +216,52 @@ Los hallazgos pueden provenir de los siguientes controles:
 | Gitleaks | Detección de secretos | Posibles credenciales, tokens y claves expuestas. |
 | CycloneDX | SBOM | Inventario de componentes y dependencias para facilitar su identificación y análisis. |
 
+### 2. Priorización de hallazgos
+
+Los hallazgos identificados por las herramientas se priorizan considerando su severidad, explotabilidad, exposición e impacto potencial sobre AulaViva.
+
+#### Criterios de evaluación
+
+| Criterio | Descripción |
+|---|---|
+| Severidad | Clasificación asignada por la herramienta (CRITICAL, HIGH, MEDIUM o LOW). Cuando esté disponible, también se considera la puntuación CVSS. |
+| Explotabilidad | Existencia de exploits conocidos, facilidad de explotación y condiciones necesarias para aprovechar la vulnerabilidad. |
+| Exposición | Accesibilidad del componente vulnerable desde Internet, usuarios autenticados u otros servicios internos. |
+| Impacto | Posibles consecuencias sobre la confidencialidad, integridad y disponibilidad de la plataforma. |
+
+#### Niveles de prioridad
+
+| Prioridad | Condiciones orientativas | Acción requerida |
+|---|---|---|
+| P0 – Crítica | Vulnerabilidad CRITICAL con explotación conocida, exposición directa o consecuencias potencialmente graves. | Evaluación y mitigación inmediata. |
+| P1 – Alta | Vulnerabilidad HIGH con exploit conocido, componente expuesto o impacto significativo. | Planificar y ejecutar una corrección prioritaria. |
+| P2 – Media | Vulnerabilidad MEDIUM o HIGH con explotabilidad y exposición limitadas. | Registrar y programar su corrección. |
+| P3 – Baja | Vulnerabilidad LOW, sin evidencia de explotación y con impacto limitado. | Resolver durante el mantenimiento periódico. |
+
+Esta clasificación corresponde a una política interna del equipo y no reemplaza las puntuaciones CVSS ni la evaluación técnica de cada vulnerabilidad. Los hallazgos CRITICAL siempre requieren revisión prioritaria, aunque no se conozca un exploit público.
+
+#### Aplicación en AulaViva
+
+Se dará especial atención a los hallazgos que puedan comprometer:
+
+- El aislamiento de datos entre colegios (multi-tenancy).
+- Los datos personales y académicos de estudiantes menores de edad.
+- Los mecanismos de autenticación y autorización (Keycloak y RBAC).
+- El acceso a documentos y datos utilizados por el Tutor IA.
+- La disponibilidad de la plataforma y los costos asociados al consumo de servicios LLM.
+
+Los siguientes tiempos son objetivos internos propuestos para evaluar y gestionar los hallazgos:
+
+| Prioridad | Tiempo objetivo de evaluación |
+|---|---|
+| P0 – Crítica | Inmediato. |
+| P1 – Alta | Dentro de 24 horas. |
+| P2 – Media | Dentro de 7 días. |
+| P3 – Baja | Durante el siguiente ciclo de mantenimiento. |
+
+Estos plazos corresponden a objetivos de gestión y no garantizan que la corrección completa se realice dentro del mismo período.
+
+
 ### Procedimiento de re-triage
 
 Cuando una herramienta detecte un hallazgo, el equipo deberá realizar los siguientes pasos:
@@ -224,29 +270,33 @@ Cuando una herramienta detecte un hallazgo, el equipo deberá realizar los sigui
 
 Registrar la información disponible:
 
-- Herramienta que detectó el problema.
-- Identificador del hallazgo o CVE, cuando corresponda.
-- Componente, dependencia o archivo afectado.
-- Versión del componente.
-- Severidad asignada.
-- Fecha de detección.
-- Workflow y ejecución donde se identificó.
+| Campo | Descripción |
+|---|---|
+| Herramienta de origen | Herramienta que detectó el problema (Semgrep, Trivy o Gitleaks). |
+| Identificador del hallazgo | Identificador de la alerta o CVE, cuando corresponda. |
+| Componente afectado | Componente, dependencia o archivo involucrado. |
+| Versión | Versión del componente afectado, cuando corresponda. |
+| Severidad | Severidad asignada por la herramienta (CRITICAL, HIGH, MEDIUM o LOW). |
+| Fecha de detección | Fecha en que se identificó el hallazgo. |
+| Workflow y ejecución | Nombre del workflow y enlace o identificador de la ejecución de GitHub Actions. |
 
-**2. Analizar la aplicabilidad**
+**2. Analizar el hallazgo**
 
-Revisar si el hallazgo afecta realmente a AulaViva.
+Revisar la información técnica para determinar si el problema representa un riesgo real para AulaViva.
 
-Para ello se debe:
+Se deberán considerar los siguientes aspectos:
 
-- Comprobar si el componente afectado está presente en el SBOM.
-- Verificar la versión de la dependencia.
-- Determinar si el componente vulnerable se utiliza en el contexto afectado.
-- Revisar las condiciones necesarias para explotar la vulnerabilidad.
-- Evaluar el impacto potencial sobre la confidencialidad, integridad y disponibilidad del sistema.
+- Si el componente o código afectado está presente y se utiliza en la aplicación.
 
-En el caso de hallazgos SAST, se debe revisar el código involucrado para determinar si existe realmente una condición vulnerable.
+- Si la versión utilizada está afectada por la vulnerabilidad.
 
-En el caso de Gitleaks, se debe comprobar si el valor detectado corresponde a una credencial real o a un dato de ejemplo. Si existe la posibilidad de que sea una credencial real, se debe investigar y evaluar su revocación o rotación.
+- Si existen exploits conocidos o evidencia de explotación activa.
+
+- Si se cumplen las condiciones necesarias para explotar el problema.
+
+- Si el componente está expuesto a usuarios externos o servicios internos.
+
+- Qué impacto podría tener sobre la confidencialidad, integridad y disponibilidad de AulaViva.
 
 **3. Clasificar el hallazgo**
 
@@ -258,6 +308,10 @@ Después de la revisión, se debe asignar una clasificación:
 | Falso positivo | La herramienta identificó un problema que no corresponde a una vulnerabilidad real. | Documentar la justificación y evidencia. |
 | No afectado | El producto no está afectado por la vulnerabilidad identificada. | Documentar la justificación mediante VEX cuando corresponda. |
 | En investigación | No existe información suficiente para determinar su aplicabilidad. | Continuar el análisis y asignar un responsable. |
+
+Una vez clasificado, se deberá asignar una prioridad P0, P1, P2 o P3 considerando la severidad, explotabilidad, exposición e impacto definidos en la sección de priorización de hallazgos.
+
+La prioridad asignada determinará el tiempo objetivo de evaluación y seguimiento.
 
 **4. Definir la acción correctiva**
 
@@ -272,18 +326,37 @@ Según el resultado del análisis, se deberá tomar una de las siguientes decisi
 
 Cada hallazgo revisado debe quedar documentado con:
 
-- Identificador del hallazgo.
-- Herramienta de origen.
-- Componente y versión afectados, cuando corresponda.
-- Clasificación final.
-- Justificación técnica.
-- Evidencia de la revisión.
-- Acción definida.
-- Responsable.
-- Fecha de revisión.
-- Fecha de próxima revisión, si corresponde.
+| Campo | Descripción |
+|---|---|
+| Identificador del hallazgo | Identificador de la alerta o CVE, cuando corresponda. |
+| Herramienta de origen | Herramienta que detectó el problema. |
+| Componente y versión | Componente, dependencia o archivo afectado y su versión, cuando corresponda. |
+| Clasificación final | Vulnerabilidad confirmada, falso positivo, no afectado o en investigación. |
+| Prioridad asignada | Prioridad P0, P1, P2 o P3. |
+| Justificación técnica | Motivo de la clasificación y prioridad asignadas. |
+| Evidencia de la revisión | Resultados del análisis, referencias, pruebas o documentación que respalda la decisión. |
+| Acción definida | Corregir, mitigar, investigar, solicitar una excepción o documentar como no afectado. |
+| Responsable | Integrante encargado del seguimiento y resolución. |
+| Fecha de detección y revisión | Fechas en que se detectó y reevaluó el hallazgo. |
+| Fecha de próxima revisión | Fecha programada para una nueva evaluación, si corresponde. |
 
 Los resultados deben quedar asociados a un GitHub Issue o Pull Request para mantener la trazabilidad.
+
+**6. Verificar la corrección y cerrar el hallazgo**
+
+Cuando se implemente una corrección o mitigación, el equipo deberá:
+
+- Verificar que la modificación resuelva el problema identificado.
+
+- Volver a ejecutar la herramienta de análisis correspondiente.
+
+- Comprobar que el hallazgo ya no se detecte o que la mitigación esté correctamente aplicada.
+
+- Actualizar el estado del hallazgo y registrar la evidencia de resolución.
+
+- Cerrar el GitHub Issue o actualizar el Pull Request correspondiente.
+
+Si el problema continúa presente, el hallazgo deberá permanecer abierto y continuar su seguimiento hasta su resolución.
 
 ### Gestión de excepciones mediante VEX
 
@@ -304,25 +377,32 @@ Se consideran los siguientes estados:
 
 La solicitud deberá incluir:
 
-1. Identificador de la vulnerabilidad (CVE, cuando corresponda).
-2. Componente y versión afectados.
-3. Herramienta que detectó el hallazgo.
-4. Estado VEX propuesto.
-5. Justificación técnica de la solicitud.
-6. Evidencia que respalde la clasificación.
-7. Riesgo residual y posibles mitigaciones.
-8. Responsable de la solicitud.
-9. Fecha de aprobación y próxima fecha de revisión.
+| Campo | Descripción |
+|---|---|
+| Identificador | Identificador del hallazgo o CVE, cuando corresponda. |
+| Herramienta | Semgrep, Trivy o Gitleaks. |
+| Componente afectado | Dependencia, archivo o servicio involucrado. |
+| Severidad | Severidad original informada por la herramienta. |
+| Prioridad | P0, P1, P2 o P3 asignada durante el análisis. |
+| Justificación | Motivo por el cual se solicita la excepción. |
+| Evidencia | Resultados del análisis, versiones, configuración y condiciones de uso. |
+| Riesgo residual | Riesgo que permanece y sus posibles consecuencias. |
+| Mitigaciones | Medidas aplicadas para reducir el riesgo, si corresponde. |
+| Responsable | Integrante que solicita y mantiene el seguimiento. |
+| Aprobación | Responsable técnico que revisa y aprueba o rechaza la solicitud. |
+| Fecha de revisión | Fecha en que debe reevaluarse la decisión. |
 
 **Flujo de aprobación**
 
-1. El integrante que detecta o analiza el hallazgo documenta la solicitud.
-2. El responsable técnico revisa la justificación y las evidencias.
-3. El Tech Lead evalúa el riesgo residual y aprueba o rechaza la excepción.
-4. La decisión se registra en GitHub mediante un Issue o Pull Request.
-5. Si la excepción es temporal, debe establecerse una fecha de revisión.
-6. Cuando se corrija la vulnerabilidad, se actualiza el registro y su estado correspondiente.
+1. Un integrante del equipo registra el hallazgo y su análisis.
+2. Se documentan la prioridad, justificación y evidencia.
+3. El responsable técnico revisa la solicitud y las mitigaciones propuestas.
+4. El Tech Lead aprueba o rechaza la excepción.
+5. La decisión queda registrada mediante una incidencia o Pull Request en GitHub.
+6. Se establece una fecha de revisión para comprobar si la excepción sigue siendo válida.
+7. Si el problema se corrige, se actualiza el registro y se cierra el seguimiento.
 
+Una excepción no elimina la vulnerabilidad ni el riesgo asociado. Tampoco reemplaza la corrección cuando esta sea necesaria. Las credenciales o secretos potencialmente expuestos deben evaluarse para su revocación o rotación, aunque exista una solicitud de excepción.
 Una excepción no elimina una vulnerabilidad confirmada ni debe utilizarse para ocultar hallazgos. Su objetivo es documentar una decisión técnica justificada y mantener la trazabilidad del riesgo aceptado.
 
 ### Relación entre SBOM y VEX
