@@ -4,19 +4,11 @@ on:
   push:
     branches:
       - desarrollo
-    paths:
-      - "backend/**"
-      - ".semgrep/**"
-      - ".github/workflows/security.yml"
 
   pull_request:
     branches:
       - main
       - desarrollo
-    paths:
-      - "backend/**"
-      - ".semgrep/**"
-      - ".github/workflows/security.yml"
 
   workflow_dispatch:
 
@@ -25,6 +17,11 @@ permissions:
 
 jobs:
 
+  # ---------------------------------------------------------------------------
+  # SAST - Semgrep (p/java + p/owasp-top-ten + reglas propias en .semgrep/)
+  # Gate bloqueante: cualquier hallazgo (--error) o fallo de la herramienta
+  # hace fallar el job.
+  # ---------------------------------------------------------------------------
   sast:
     name: SAST - Semgrep (Java / OWASP Top 10)
     runs-on: ubuntu-latest
@@ -32,6 +29,8 @@ jobs:
     steps:
       - name: Descargar codigo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -50,7 +49,7 @@ jobs:
           semgrep scan \
             --config p/java \
             --config p/owasp-top-ten \
-            --config .semgrep/java-security.yml \
+            --config .semgrep/ \
             --include "*.java" \
             --metrics=off \
             --error \
@@ -71,11 +70,17 @@ jobs:
         if: steps.semgrep.outcome == 'failure'
         run: |
           echo "El analisis SAST encontro hallazgos bloqueantes o fallo."
-          echo "Revisa los resultados de Semgrep."
+          echo "Revisa los resultados de Semgrep (artefacto semgrep-sast-results)."
           exit 1
 
+  # ---------------------------------------------------------------------------
+  # SCA - Trivy (filesystem) + SBOM CycloneDX
+  # Gate bloqueante en HIGH/CRITICAL con parche disponible (ignore-unfixed).
+  # El SBOM se genera y se publica SIEMPRE (aunque Trivy falle), para poder
+  # consultar el inventario ante un CVE.
+  # ---------------------------------------------------------------------------
   sca:
-    name: SCA - Analisis de dependencias
+    name: SCA - Analisis de dependencias y SBOM
     runs-on: ubuntu-latest
 
     steps:
@@ -83,6 +88,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Analizar dependencias con Trivy
+        id: trivy
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: fs
@@ -94,6 +101,58 @@ jobs:
           exit-code: "1"
           format: table
 
+      - name: Configurar Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Generar SBOM CycloneDX
+        working-directory: backend
+        run: |
+          mvn -B -ntp org.cyclonedx:cyclonedx-maven-plugin:2.9.3:makeBom \
+            -DoutputFormat=json \
+            -DoutputName=sbom
+
+      - name: Validar SBOM CycloneDX
+        id: sbom-validation
+        run: |
+          if [ ! -f backend/target/sbom.json ]; then
+            echo "ERROR: No se encontro backend/target/sbom.json"
+            exit 1
+          fi
+
+          jq -e '
+            .bomFormat == "CycloneDX" and
+            .specVersion != null and
+            (.components | type == "array") and
+            (.components | length > 0)
+          ' backend/target/sbom.json
+
+          echo "SBOM CycloneDX valido."
+          echo "Componentes: $(jq '.components | length' backend/target/sbom.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar SBOM como artefacto
+        if: always() && steps.sbom-validation.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: aulaviva-sbom
+          path: backend/target/sbom.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Aplicar gate bloqueante SCA
+        if: always() && steps.trivy.outcome == 'failure'
+        run: |
+          echo "Trivy encontro vulnerabilidades HIGH/CRITICAL con parche disponible."
+          echo "Corrige la dependencia o documenta una excepcion VEX (ver README)."
+          exit 1
+
+  # ---------------------------------------------------------------------------
+  # Secrets - gitleaks con historial completo (fetch-depth: 0)
+  # ---------------------------------------------------------------------------
   secrets:
     name: Secrets - Deteccion de secretos
     runs-on: ubuntu-latest
@@ -112,3 +171,15 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Escanear historial Git completo
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/path" \
+            ghcr.io/gitleaks/gitleaks:v8.24.3 \
+            detect \
+            --source=/path \
+            --log-opts="--all" \
+            --redact \
+            --verbose \
+            --exit-code=2
