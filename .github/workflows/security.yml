@@ -27,13 +27,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-           - name: Descargar codigo
+      - name: Descargar codigo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          - name: Mostrar dependencias Maven
-        working-directory: backend
-        run: mvn -B dependency:tree
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -109,6 +106,10 @@ jobs:
           java-version: "21"
           cache: maven
           cache-dependency-path: backend/pom.xml
+
+      - name: Mostrar dependencias Maven
+        working-directory: backend
+        run: mvn -B -ntp dependency:tree
 
       - name: Generar SBOM CycloneDX
         working-directory: backend
