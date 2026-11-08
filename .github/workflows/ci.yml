@@ -45,7 +45,6 @@ jobs:
 
       - name: Ejecutar pruebas y verificaciones Maven
         id: maven
-        continue-on-error: true
         working-directory: backend
         run: mvn -B verify
 
