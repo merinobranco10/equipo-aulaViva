@@ -1,3 +1,4 @@
+
 name: AulaViva - Security Analysis
 
 on:
@@ -18,9 +19,8 @@ permissions:
 jobs:
 
   # ---------------------------------------------------------------------------
-  # SAST - Semgrep (p/java + p/owasp-top-ten + reglas propias en .semgrep/)
-  # Gate bloqueante: cualquier hallazgo (--error) o fallo de la herramienta
-  # hace fallar el job.
+  # SAST - Semgrep (Java / OWASP Top 10)
+  # Gate bloqueante ante hallazgos o fallos del analisis.
   # ---------------------------------------------------------------------------
   sast:
     name: SAST - Semgrep (Java / OWASP Top 10)
@@ -70,14 +70,12 @@ jobs:
         if: steps.semgrep.outcome == 'failure'
         run: |
           echo "El analisis SAST encontro hallazgos bloqueantes o fallo."
-          echo "Revisa los resultados de Semgrep (artefacto semgrep-sast-results)."
+          echo "Revisa los resultados de Semgrep."
           exit 1
 
   # ---------------------------------------------------------------------------
   # SCA - Trivy (filesystem) + SBOM CycloneDX
-  # Gate bloqueante en HIGH/CRITICAL con parche disponible (ignore-unfixed).
-  # El SBOM se genera y se publica SIEMPRE (aunque Trivy falle), para poder
-  # consultar el inventario ante un CVE.
+  # Gate bloqueante en HIGH/CRITICAL con parche disponible.
   # ---------------------------------------------------------------------------
   sca:
     name: SCA - Analisis de dependencias y SBOM
@@ -147,11 +145,11 @@ jobs:
         if: always() && steps.trivy.outcome == 'failure'
         run: |
           echo "Trivy encontro vulnerabilidades HIGH/CRITICAL con parche disponible."
-          echo "Corrige la dependencia o documenta una excepcion VEX (ver README)."
+          echo "Corrige la dependencia o documenta una excepcion VEX."
           exit 1
 
   # ---------------------------------------------------------------------------
-  # Secrets - gitleaks con historial completo (fetch-depth: 0)
+  # Secrets - Gitleaks con historial completo
   # ---------------------------------------------------------------------------
   secrets:
     name: Secrets - Deteccion de secretos
@@ -184,7 +182,7 @@ jobs:
             --verbose \
             --exit-code=2
 
-              # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
   # IaC Scan - Checkov (Terraform)
   # Gate bloqueante: cualquier hallazgo provoca el fallo del job.
   # ---------------------------------------------------------------------------
@@ -205,26 +203,7 @@ jobs:
           soft_fail: false
           quiet: true
 
-            # ---------------------------------------------------------------------------
-  # IaC Scan - Checkov (Terraform)
-  # Gate bloqueante: los hallazgos hacen fallar el job.
   # ---------------------------------------------------------------------------
-  iac-scan:
-    name: IaC Scan - Checkov
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Descargar codigo
-        uses: actions/checkout@v4
-
-      - name: Analizar infraestructura con Checkov
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: terraform/
-          framework: terraform
-          soft_fail: false
-
-            # ---------------------------------------------------------------------------
   # Container Scan - Trivy
   # Construye la imagen y analiza vulnerabilidades HIGH/CRITICAL.
   # Gate bloqueante: exit-code 1 ante hallazgos.
