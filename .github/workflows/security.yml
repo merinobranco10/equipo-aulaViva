@@ -204,3 +204,58 @@ jobs:
           framework: terraform
           soft_fail: false
           quiet: true
+
+            # ---------------------------------------------------------------------------
+  # IaC Scan - Checkov (Terraform)
+  # Gate bloqueante: los hallazgos hacen fallar el job.
+  # ---------------------------------------------------------------------------
+  iac-scan:
+    name: IaC Scan - Checkov
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Analizar infraestructura con Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/
+          framework: terraform
+          soft_fail: false
+
+            # ---------------------------------------------------------------------------
+  # Container Scan - Trivy
+  # Construye la imagen y analiza vulnerabilidades HIGH/CRITICAL.
+  # Gate bloqueante: exit-code 1 ante hallazgos.
+  # ---------------------------------------------------------------------------
+  container-scan:
+    name: Container Scan - Trivy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen para analisis
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          load: true
+          tags: aulaviva-backend:scan
+
+      - name: Analizar imagen con Trivy
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: image
+          image-ref: aulaviva-backend:scan
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
