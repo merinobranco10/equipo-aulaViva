@@ -183,3 +183,24 @@ jobs:
             --redact \
             --verbose \
             --exit-code=2
+
+              # ---------------------------------------------------------------------------
+  # IaC Scan - Checkov (Terraform)
+  # Gate bloqueante: cualquier hallazgo provoca el fallo del job.
+  # ---------------------------------------------------------------------------
+  iac-scan:
+    name: IaC Scan - Checkov (Terraform)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Analizar infraestructura con Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/
+          framework: terraform
+          soft_fail: false
+          quiet: true
