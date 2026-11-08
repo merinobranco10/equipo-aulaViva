@@ -14,7 +14,7 @@ WORKDIR /app
 
 COPY --from=build /app/target/app.jar /app/app.jar
 
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=7 5"
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
 
 EXPOSE 8080
 
