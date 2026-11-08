@@ -1,4 +1,4 @@
-
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -6,10 +6,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Spring Boot 4 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.14</version>
+        <version>4.0.9</version>
         <relativePath/>
     </parent>
 
@@ -19,23 +20,18 @@
     <name>aulaviva-backend</name>
     <description>Backend de la plataforma AulaViva</description>
 
-   <properties>
-    <java.version>21</java.version>
-    <jacoco.version>0.8.13</jacoco.version>
-    <checkstyle.version>3.6.0</checkstyle.version>
-
-    <!-- Actualizaciones de seguridad -->
-    <jackson-bom.version>2.21.7</jackson-bom.version>
-    <micrometer.version>1.15.12</micrometer.version>
-    <tomcat.version>10.1.59</tomcat.version>
-    <spring-framework.version>6.2.19</spring-framework.version>
-</properties>
+    <properties>
+        <java.version>21</java.version>
+        <jacoco.version>0.8.13</jacoco.version>
+        <checkstyle.version>3.6.0</checkstyle.version>
+    </properties>
 
     <dependencies>
-        <!-- API REST -->
+
+        <!-- API REST con Spring MVC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
         <!-- Monitoreo y estado del servicio -->
@@ -47,15 +43,17 @@
         <!-- Pruebas automatizadas -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-test-classic</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
         <finalName>app</finalName>
 
         <plugins>
+
             <!-- Compilación y empaquetado Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -91,6 +89,7 @@
                 <version>${jacoco.version}</version>
 
                 <executions>
+
                     <execution>
                         <id>prepare-agent</id>
                         <goals>
@@ -135,9 +134,12 @@
                             </rules>
                         </configuration>
                     </execution>
+
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 
 </project>
+```
