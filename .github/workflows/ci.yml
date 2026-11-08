@@ -77,6 +77,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Descargar codigo
@@ -107,8 +109,16 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
+          provenance: mode=max,version=v0.2
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Generar provenance firmada por GitHub
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
 
       - name: Registrar referencia y digest
         env:
@@ -122,13 +132,93 @@ jobs:
           echo "Referencia inmutable: ${IMAGE}@${IMAGE_DIGEST}" >> "$GITHUB_STEP_SUMMARY"
           echo "Commit: ${COMMIT_SHA}" >> "$GITHUB_STEP_SUMMARY"
 
-  
+  sign-and-attest:
+    name: Sign and Attest - Cosign
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: read
+
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/equipo-aulaviva-backend
+      DIGEST: ${{ needs.build-and-push.outputs.digest }}
+      OIDC_ISSUER: https://token.actions.githubusercontent.com
+      IDENTITY: https://github.com/${{ github.repository }}/.github/workflows/ci.yml@refs/heads/desarrollo
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Cosign
+        uses: sigstore/cosign-installer@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar sesion en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verificar provenance SLSA de GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify \
+            "oci://${IMAGE}@${DIGEST}" \
+            --repo merinobranco10/equipo-aulaViva \
+            --signer-workflow merinobranco10/equipo-aulaViva/.github/workflows/ci.yml \
+            --source-ref refs/heads/desarrollo
+
+      - name: Extraer provenance de la imagen
+        run: |
+          set -euo pipefail
+
+          docker buildx imagetools inspect \
+            "${IMAGE}@${DIGEST}" \
+            --format '{{json .Provenance.SLSA}}' \
+            > provenance.json
+
+          test -s provenance.json
+          jq -e '.builder.id and .buildType and (.materials | type == "array")' provenance.json
+
+      - name: Firmar imagen con Cosign
+        run: |
+          cosign sign --yes "${IMAGE}@${DIGEST}"
+
+      - name: Adjuntar attestation SLSA
+        run: |
+          cosign attest --yes \
+            --type slsaprovenance \
+            --predicate provenance.json \
+            "${IMAGE}@${DIGEST}"
+
+      - name: Verificar firma Cosign
+        run: |
+          cosign verify \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer "${OIDC_ISSUER}" \
+            "${IMAGE}@${DIGEST}"
+
+      - name: Verificar attestation SLSA
+        run: |
+          cosign verify-attestation \
+            --type slsaprovenance \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer "${OIDC_ISSUER}" \
+            "${IMAGE}@${DIGEST}"
   
   promote:
     name: Promote - GitOps
     runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo' && needs.build-and-push.result == 'success'
+    needs: [build-and-push, sign-and-attest]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo' && needs.build-and-push.result == 'success' && needs.sign-and-attest.result == 'success'
 
     steps:
       - name: Descargar repositorio GitOps
