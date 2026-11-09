@@ -82,12 +82,18 @@ jobs:
           cat alertas-falco.txt >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-      # Si falta alguna alerta, el robot falla y nos avisa
       - name: Verificar que saltaron las 3 reglas
         run: |
-          grep -q "Shell abierta en contenedor" alertas-falco.txt
-          grep -q "Escritura en /etc" alertas-falco.txt
-          grep -q "Tutor IA con conexion saliente" alertas-falco.txt
+          echo "Verificando alerta de shell..."
+          grep -q "Shell en contenedor AulaViva" alertas-falco.txt
+
+          echo "Verificando alerta de escritura en /etc..."
+          grep -q "Escritura en /etc de AulaViva" alertas-falco.txt
+
+          echo "Verificando alerta de conexion saliente..."
+          grep -q "Conexion saliente inesperada de AulaViva" alertas-falco.txt
+
+          echo "Las tres reglas de Falco fueron detectadas correctamente."
 
       - name: Subir las alertas como archivo
         if: always()
