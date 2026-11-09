@@ -1,87 +1,39 @@
-# ============================================================
-# Reglas propias de Falco para AulaViva (S10)
-# Falco es como una "camara de seguridad": mira lo que pasa
-# dentro de los contenedores y avisa si ve algo raro.
-# ============================================================
+- macro: aulaviva_workload
+  condition: (k8s.ns.name = "equipo-aulaviva" and k8s.pod.name startswith "aulaviva-")
 
-# ---------- Piezas reutilizables (se usan dentro de las reglas) ----------
-
-# Solo nos importa lo que pasa dentro del namespace de AulaViva
-- macro: av_namespace
-  condition: k8s.ns.name = "equipo-aulaviva"
-
-# Solo nos importa lo que pasa dentro de contenedores (no en el computador host)
-- macro: av_en_contenedor
-  condition: container.id != host
-
-# Un programa nuevo que se empieza a ejecutar
-- macro: av_programa_nuevo
-  condition: evt.type in (execve, execveat) and evt.dir = <
-
-# Un archivo que se abre para ESCRIBIR
-- macro: av_escritura_archivo
-  condition: evt.type in (open, openat, openat2) and evt.is_open_write = true and fd.typechar = 'f' and fd.num >= 0
-
-# Una conexion hacia afuera (a otra maquina o servicio)
-- macro: av_conexion_saliente
+# Regla 1 - Shell en contenedor (severidad media)
+- rule: AulaViva - Shell en contenedor
+  desc: Se abrió una shell dentro de un contenedor de AulaViva (tutor IA/RAG, datos de estudiantes).
   condition: >
-    evt.type = connect and evt.dir = <
-    and (fd.typechar = 4 or fd.typechar = 6)
-    and fd.ip != "0.0.0.0"
-    and fd.net != "127.0.0.0/8"
-
-# Los pods del tutor IA / RAG
-# (hoy vive dentro del backend, mas adelante tendra su propio nombre)
-- macro: av_pod_tutor_ia
-  condition: (k8s.pod.name startswith "aulaviva-tutor" or k8s.pod.name startswith "aulaviva-backend")
-
-# Puertos que el tutor SI puede usar:
-# 53 = DNS, 443 = HTTPS hacia el proveedor de IA, 5432 = PostgreSQL/pgvector
-- list: av_puertos_permitidos_tutor
-  items: [53, 443, 5432]
-
-# ---------- REGLA 1: shell dentro de un contenedor ----------
-- rule: AulaViva - Shell abierta dentro de un contenedor
-  desc: >
-    Alguien abrio una terminal (sh, bash...) dentro de un contenedor de AulaViva.
-    Los contenedores de produccion no deberian necesitar una terminal.
-  condition: >
-    av_programa_nuevo and av_en_contenedor and av_namespace
-    and proc.name in (sh, bash, ash, dash, zsh)
+    spawned_process and container and aulaviva_workload
+    and proc.name in (bash, sh, ash, dash, zsh)
   output: >
-    Shell abierta en contenedor de AulaViva
-    (usuario=%user.name pod=%k8s.pod.name namespace=%k8s.ns.name contenedor=%container.name
-    imagen=%container.image.repository comando=%proc.cmdline padre=%proc.pname)
+    Shell en contenedor AulaViva (user=%user.name pod=%k8s.pod.name ns=%k8s.ns.name
+    image=%container.image.repository cmd=%proc.cmdline)
   priority: WARNING
-  tags: [aulaviva, shell, contenedor, T13]
+  tags: [aulaviva, shell]
 
-# ---------- REGLA 2: escritura en /etc ----------
-- rule: AulaViva - Escritura en /etc dentro de un contenedor
-  desc: >
-    Alguien intento modificar un archivo dentro de /etc (configuracion del sistema,
-    usuarios, contrasenas). Un contenedor sano nunca hace esto mientras funciona.
+# Regla 2 - Escritura en /etc (High)
+- rule: AulaViva - Escritura en /etc de contenedor
+  desc: Un proceso escribió en /etc dentro de un contenedor de AulaViva.
   condition: >
-    av_escritura_archivo and av_en_contenedor and av_namespace
+    open_write and container and aulaviva_workload
     and fd.name startswith /etc/
   output: >
-    Escritura en /etc de un contenedor de AulaViva
-    (archivo=%fd.name usuario=%user.name programa=%proc.name pod=%k8s.pod.name
-    namespace=%k8s.ns.name contenedor=%container.name imagen=%container.image.repository
-    comando=%proc.cmdline)
+    Escritura en /etc de AulaViva (file=%fd.name user=%user.name pod=%k8s.pod.name
+    ns=%k8s.ns.name cmd=%proc.cmdline)
   priority: CRITICAL
-  tags: [aulaviva, escritura, etc, integridad, T3]
+  tags: [aulaviva, filesystem]
 
-# ---------- REGLA 3 (la del tutor IA): conexion saliente inesperada ----------
-- rule: AulaViva - Tutor IA con conexion saliente inesperada
-  desc: >
-    El tutor IA / RAG se conecto a un puerto que no es DNS, HTTPS ni PostgreSQL.
-    Puede significar que alguien esta sacando datos de estudiantes hacia afuera.
+# Regla 3 - Conexión saliente inesperada (High)
+- rule: AulaViva - Conexion saliente inesperada
+  desc: Un contenedor de AulaViva se conectó a una IP pública en un puerto distinto de 443 (posible fuga de datos de estudiantes).
   condition: >
-    av_conexion_saliente and av_en_contenedor and av_namespace and av_pod_tutor_ia
-    and not fd.sport in (av_puertos_permitidos_tutor)
+    outbound and container and aulaviva_workload
+    and not fd.snet in (rfc_1918_addresses)
+    and not fd.sport = 443
   output: >
-    Tutor IA con conexion saliente inesperada
-    (destino=%fd.sip:%fd.sport programa=%proc.name pod=%k8s.pod.name namespace=%k8s.ns.name
-    contenedor=%container.name imagen=%container.image.repository comando=%proc.cmdline)
-  priority: CRITICAL
-  tags: [aulaviva, tutor-ia, red, exfiltracion, T8]
+    Conexion saliente inesperada de AulaViva (dest=%fd.sip:%fd.sport pod=%k8s.pod.name
+    ns=%k8s.ns.name cmd=%proc.cmdline)
+  priority: ERROR
+  tags: [aulaviva, network]
