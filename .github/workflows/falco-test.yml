@@ -1,0 +1,105 @@
+# ============================================================
+# Prueba de las reglas de Falco (S10)
+# Este robot hace por nosotros lo que haria una persona:
+#   1. crea un cluster de prueba
+#   2. instala Falco con nuestras reglas
+#   3. hace cosas "raras" a proposito
+#   4. guarda las alertas que Falco mando
+# ============================================================
+name: Falco - Prueba de reglas (S10)
+
+# Se ejecuta cuando abres un pull request que toca Falco,
+# o cuando lo ejecutas a mano desde la pestana Actions
+on:
+  pull_request:
+    paths:
+      - "falco/**"
+      - ".github/workflows/falco-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probar-falco:
+    name: Instalar Falco y probar las 3 reglas
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      # Crea un cluster de Kubernetes chiquito, solo para esta prueba
+      - name: Crear cluster de prueba (kind)
+        uses: helm/kind-action@v1
+
+      - name: Crear el namespace de AulaViva
+        run: kubectl create namespace equipo-aulaviva
+
+      # Instala Falco y le entrega nuestro archivo de reglas
+      - name: Instalar Falco con nuestras reglas
+        run: |
+          helm repo add falcosecurity https://falcosecurity.github.io/charts
+          helm repo update
+          helm install falco falcosecurity/falco \
+            --namespace falco --create-namespace \
+            --set driver.kind=modern_ebpf \
+            --set tty=true \
+            --set falcoctl.artifact.install.enabled=false \
+            --set falcoctl.artifact.follow.enabled=false \
+            --set-file "customRules.rules-custom\.yaml=falco/rules-custom.yaml" \
+            --wait --timeout 5m
+
+      - name: Ver que Falco cargo las reglas
+        run: |
+          sleep 10
+          kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --tail=-1 | grep -i "rules" || true
+
+      # Pod de prueba: hace de "tutor IA". El nombre empieza con aulaviva-tutor
+      - name: Crear el pod de prueba
+        run: |
+          kubectl run aulaviva-tutor-test -n equipo-aulaviva --image=busybox:1.36 --restart=Never -- sleep 3600
+          kubectl wait -n equipo-aulaviva --for=condition=Ready pod/aulaviva-tutor-test --timeout=120s
+          sleep 5
+
+      - name: Disparar regla 1 - abrir una shell
+        run: kubectl exec -n equipo-aulaviva aulaviva-tutor-test -- sh -c "ls"
+
+      - name: Disparar regla 2 - escribir en /etc
+        run: kubectl exec -n equipo-aulaviva aulaviva-tutor-test -- touch /etc/prueba-falco
+
+      # Puerto 8080 no esta permitido para el tutor, asi que debe saltar la alarma.
+      # El "|| true" es porque la conexion no llega a ningun lado y eso no es un error nuestro
+      - name: Disparar regla 3 - conexion saliente rara
+        run: kubectl exec -n equipo-aulaviva aulaviva-tutor-test -- nc -w 2 1.1.1.1 8080 || true
+
+      - name: Guardar las alertas
+        run: |
+          sleep 10
+          kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --tail=-1 | grep -i aulaviva | tee alertas-falco.txt
+          echo "## Alertas de Falco" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat alertas-falco.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # Si falta alguna alerta, el robot falla y nos avisa
+      - name: Verificar que saltaron las 3 reglas
+        run: |
+          grep -q "Shell abierta en contenedor" alertas-falco.txt
+          grep -q "Escritura en /etc" alertas-falco.txt
+          grep -q "Tutor IA con conexion saliente" alertas-falco.txt
+
+      - name: Subir las alertas como archivo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alertas-falco
+          path: alertas-falco.txt
+          if-no-files-found: ignore
+
+      # Si algo fallo, muestra informacion para saber por que
+      - name: Mostrar registro de Falco si fallo
+        if: failure()
+        run: |
+          kubectl get pods -A
+          kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --tail=100 || true
