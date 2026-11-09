@@ -46,20 +46,20 @@ Se crea un Issue en GitHub con la etiqueta `incident`:
 
 ## 5. Evidencias de las pruebas
 
-Las reglas se probaron a mano en el clúster, con un pod auxiliar
-`aulaviva-falco-test` (alpine) en el namespace `equipo-aulaviva`:
+Las reglas se probaron mediante el workflow automatizado `Falco - Prueba de reglas (S10)`, utilizando un clúster temporal de Kubernetes creado con Kind.
 
-- `sh -c "echo hola"` → regla 1 (Shell en contenedor)
-- `sh -c "echo x >> /etc/prueba-falco"` → regla 2 (Escritura en /etc)
-- `wget -T 5 -q -O /dev/null http://1.1.1.1` → regla 3 (Conexión saliente inesperada)
+Se utilizó un pod auxiliar `aulaviva-tutor-test` (BusyBox) en el namespace `equipo-aulaviva`.
 
-Capturas en `docs/qa/evidence/s10/`:
+Las pruebas realizadas fueron:
 
-- `01-falco-instalado.png`: Falco en `Running`.
-- `02-alerta-shell.png`: alerta Warning de la regla 1.
-- `03-alerta-escritura-etc.png`: alerta Critical de la regla 2.
-- `04-alerta-conexion-saliente.png`: alerta Error de la regla 3.
-- `05-issue-incidente.png`: Issue de incidente abierto a partir de la alerta Critical.
+- `sh -c "ls"` → regla 1: Shell en contenedor.
+- `touch /etc/prueba-falco` → regla 2: Escritura en `/etc`.
+- `nc -w 2 1.1.1.1 8080` → regla 3: Conexión saliente inesperada.
 
+Las tres reglas generaron alertas correctamente en la ejecución #10 de GitHub Actions.
+
+El workflow guardó las alertas en el resumen de ejecución y generó el artefacto `alertas-falco`.
+
+El backend real no se utilizó para las pruebas porque su imagen distroless no incluye una shell. Por eso se utilizó un pod auxiliar para simular el comportamiento del tutor IA/RAG.
 El backend real no se usó para las pruebas porque su imagen no tiene shell
 (distroless), por eso se probó con un pod auxiliar.
