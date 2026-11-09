@@ -3,18 +3,20 @@
 ## 1. Qué hace Falco aquí
 
 Falco vigila los contenedores del namespace `equipo-aulaviva` y avisa cuando
-pasa algo raro. Las reglas están en `falco/rules-custom.yaml`.
+pasa algo raro. Las reglas están en `falco/rules-custom.yaml` y aplican a los
+pods `aulaviva-*`, que incluyen al tutor IA / RAG.
 
 ## 2. Las 3 reglas
 
 | Regla | Qué detecta | Nivel | Amenaza relacionada |
 |---|---|---|---|
-| Shell abierta dentro de un contenedor | Alguien abre una terminal dentro de un contenedor | Medio (WARNING) | T13 |
-| Escritura en /etc dentro de un contenedor | Alguien intenta cambiar archivos del sistema | Alto (CRITICAL) | T3 |
-| Tutor IA con conexión saliente inesperada | El tutor se conecta a un puerto que no usa (solo usa DNS, HTTPS y PostgreSQL) | Alto (CRITICAL) | T8 |
+| Shell en contenedor | Alguien abre una terminal (`sh`, `bash`) dentro de un contenedor | Medio (WARNING) | T13 |
+| Escritura en /etc | Un proceso intenta cambiar archivos del sistema en `/etc/` | Alto (CRITICAL) | T3 |
+| Conexión saliente inesperada | Un pod de AulaViva se conecta a una IP pública en un puerto distinto de 443 | Alto (ERROR) | T8 |
 
-La regla 3 está pensada para el tutor IA / RAG porque maneja datos de
-estudiantes, y una conexión rara podría ser una fuga de información.
+La regla 3 cubre también al tutor IA / RAG, porque maneja datos de estudiantes
+y una conexión rara podría ser una fuga de información. Se permite el puerto
+443 porque el tutor debe llamar al proveedor del modelo.
 
 ## 3. Ruta de las alertas
 
@@ -25,13 +27,15 @@ estudiantes, y una conexión rara podría ser una fuga de información.
 | Nivel | A quién llega | Qué se hace |
 |---|---|---|
 | Medio (WARNING) | Valentina León (DevSecOps) | Revisar el mismo día. Si fue una prueba o un error, se anota y no se abre incidente |
-| Alto (CRITICAL) | Valentina León (DevSecOps) y Matías Díaz (Tech Lead). Se avisa a Gerardo González (AI/Data) si es del tutor IA, y a Branco Merino (PO) para que esté informado | Se abre un incidente (ver sección 4) |
+| Alto (ERROR o CRITICAL) | Valentina León (DevSecOps) y Matías Díaz (Tech Lead). Se avisa a Gerardo González (AI/Data) si es del tutor IA, y a Branco Merino (PO) para que esté informado | Se abre un incidente (ver sección 4) |
 
-3. El aviso al equipo se hace por Discord, el canal principal del equipo.
+3. Por ahora las alertas se revisan en los logs de Falco.
+
+Mejora futura: enviar las alertas a Discord con Falcosidekick.
 
 ## 4. Qué incidente se abre con una alerta Alta
 
-Se crea un Issue en GitHub con la etiqueta `incidente`:
+Se crea un Issue en GitHub con la etiqueta `incident`:
 
 - Título: `[INCIDENTE] <nombre de la regla> - <fecha>`
 - Contenido: qué regla saltó, pod y contenedor afectados, hora, y la línea
@@ -42,16 +46,20 @@ Se crea un Issue en GitHub con la etiqueta `incidente`:
 
 ## 5. Evidencias de las pruebas
 
-Las pruebas se hacen automáticamente con GitHub Actions
-(`.github/workflows/falco-test.yml`). El robot crea un cluster de prueba,
-instala Falco con nuestras reglas y dispara las 3 alertas.
+Las reglas se probaron a mano en el clúster, con un pod auxiliar
+`aulaviva-falco-test` (alpine) en el namespace `equipo-aulaviva`:
 
-- Corrida del workflow: (pega aquí el link de la corrida)
-- Regla 1 (shell): (captura)
-- Regla 2 (escritura en /etc): (captura)
-- Regla 3 (conexión saliente del tutor IA): (captura)
+- `sh -c "echo hola"` → regla 1 (Shell en contenedor)
+- `sh -c "echo x >> /etc/prueba-falco"` → regla 2 (Escritura en /etc)
+- `wget -T 5 -q -O /dev/null http://1.1.1.1` → regla 3 (Conexión saliente inesperada)
 
-El backend real no se usó para las pruebas porque no tiene shell y su sistema
-de archivos es de solo lectura, así que esos ataques ya se bloquean por
-diseño. Se usó un pod de prueba `aulaviva-tutor-test` dentro del cluster
-temporal, que desaparece al terminar la corrida.
+Capturas en `docs/qa/evidence/s10/`:
+
+- `01-falco-instalado.png`: Falco en `Running`.
+- `02-alerta-shell.png`: alerta Warning de la regla 1.
+- `03-alerta-escritura-etc.png`: alerta Critical de la regla 2.
+- `04-alerta-conexion-saliente.png`: alerta Error de la regla 3.
+- `05-issue-incidente.png`: Issue de incidente abierto a partir de la alerta Critical.
+
+El backend real no se usó para las pruebas porque su imagen no tiene shell
+(distroless), por eso se probó con un pod auxiliar.
