@@ -15,7 +15,7 @@ La S10 extiende el workflow de seguridad existente con controles de cadena de su
 
 Se agrega el job `sign-and-attest` a `.github/workflows/security.yml`, es decir, **en el workflow de seguridad y no en `ci.yml`**. `ci.yml` conserva su responsabilidad (calidad, build, publicación y promoción); `security.yml` concentra todos los controles de seguridad.
 
-El job corre en **todos los disparadores de `security.yml`** (push a `desarrollo` y Pull Request hacia `main` o `desarrollo`), junto con `sast`, `sca` y `secrets`, y solo si estos pasaron (`needs`). En todos los casos termina con `cosign verify` y `cosign verify-attestation`: si la imagen no está firmada y con attestation SLSA válida, el check falla.
+El job corre en **todos los disparadores de `security.yml`** (push a `desarrollo` y Pull Request hacia `main` o `desarrollo`), junto con `sast`, `sca` y `secrets`, y solo si estos y los controles `iac-scan` y `container-scan` pasaron (`needs`). En todos los casos termina con `cosign verify` y `cosign verify-attestation`: si la imagen no está firmada y con attestation SLSA válida, el check falla.
 
 | Evento | Qué hace |
 |---|---|
@@ -60,7 +60,38 @@ Si BuildKit emitiera provenance SLSA v1, el job usa el tipo `slsaprovenance1` en
 
 **Límite reconocido:** la provenance la genera BuildKit en el job de build y la firma el job `sign-and-attest`, ambos dentro del mismo repositorio. Es suficiente para L2 (procedencia firmada y verificable), pero no ofrece la garantía de L3 (builder aislado y provenance no falsificable por el propio workflow de build).
 
-## 5. Consecuencias
+## 5. Escaneos bloqueantes, excepciones y admisión en el clúster
+
+### 5.1. Escaneos bloqueantes
+
+Antes de firmar, `security.yml` ejecuta dos controles bloqueantes que `sign-and-attest` exige como requisito (`needs`):
+
+| Job | Herramienta | Qué revisa | Cuándo bloquea |
+|---|---|---|---|
+| `iac-scan` | Checkov | Código Terraform de `terraform/` | Cualquier check fallido (`soft_fail: false`) |
+| `container-scan` | Trivy | Imagen construida del backend (OS y librerías) | Vulnerabilidades HIGH/CRITICAL con parche disponible (`exit-code: 1`, `ignore-unfixed`) |
+
+### 5.2. Política de excepciones (`skip_check`)
+
+1. **Ningún `skip_check` sin registro en este ADR.** Cada check omitido (parámetro `skip_check` de la acción o comentario `#checkov:skip=` en el `.tf`) se agrega en un Pull Request que incluya su fila en el registro de abajo.
+2. **Alcance mínimo.** Se omite el check específico (por ejemplo `CKV_K8S_35`), nunca una familia ni el job completo, y si es posible solo para el recurso afectado.
+3. **Contenido obligatorio:** ID del check, recurso afectado, justificación técnica, riesgo residual, responsable, fecha y fecha de revisión.
+4. **Revisión.** Se reevalúan en cada release mayor; una excepción vencida sin renovar se elimina.
+5. **Aprobación.** El PR lo revisa el Tech Lead o DevSecOps. Está prohibido usar `soft_fail: true` como atajo.
+
+**Estado actual:** el análisis de `terraform/` con Checkov 3.4.3 arrojó 1 check aprobado, 0 fallidos y 0 omitidos, por lo que no hay ningún `skip_check` vigente.
+
+| ID | Check | Recurso | Justificación | Riesgo residual | Responsable | Fecha | Revisión |
+|---|---|---|---|---|---|---|---|
+| — | — | — | Sin excepciones vigentes | — | — | — | — |
+
+Checkov solo analiza Terraform: los manifiestos de `k8s/` y el repositorio GitOps no están cubiertos por este job.
+
+### 5.3. Admisión en el clúster (Kyverno)
+
+La política `require-image-signature` (`k8s/policies/require-signature.yaml`) es una `ClusterPolicy` en modo `Enforce` que rechaza los Pods del backend (`ghcr.io/merinobranco10/equipo-aulaviva-backend*`) cuya imagen no tenga una firma Cosign keyless válida de `security.yml` en la rama `desarrollo`, con emisor `https://token.actions.githubusercontent.com`. Aplica en los namespaces `equipo-aulaviva`, `equipo-aulaviva-dev` y `equipo-aulaviva-prod`. Es el punto de control final: aunque se cree el PR de promoción GitOps, una imagen sin firma no llega a ejecutarse.
+
+## 6. Consecuencias
 
 **Positivas**
 
@@ -75,7 +106,7 @@ Si BuildKit emitiera provenance SLSA v1, el job usa el tipo `slsaprovenance1` en
 - La identidad esperada está acoplada al nombre del workflow y a la rama; renombrarlos exige actualizar esta política y la política de admisión.
 - Un commit que no toca `backend/**` no genera imagen nueva; el job firma o verifica la última imagen publicada en `desarrollo`.
 
-## 6. Verificación manual
+## 7. Verificación manual
 
 ```bash
 cosign verify \
@@ -89,7 +120,7 @@ cosign verify-attestation --type slsaprovenance \
   ghcr.io/merinobranco10/equipo-aulaviva-backend@sha256:<digest>
 ```
 
-## 7. Referencias
+## 8. Referencias
 
 - Workflow: `.github/workflows/security.yml`, job `sign-and-attest`.
 - ADR 0005: estrategia GitOps (promoción por digest).
