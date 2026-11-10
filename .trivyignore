@@ -7,11 +7,3 @@
 # AulaViva no usa XsltView ni Server-Sent Events.
 CVE-2026-47884 exp:2026-12-10
 CVE-2026-47890 exp:2026-12-10
-
-# tomcat-embed-core 10.1.x: corregido en 10.1.58, que aun no esta publicado en
-# Maven Central (el build falla al pedirlo). AulaViva no usa autenticacion de
-# Tomcat (DIGEST/FORM) ni security-constraints: es una API REST sin seguridad
-# de contenedor. Retirar al publicarse 10.1.58 (o la version que gestione Spring Boot).
-CVE-2026-65182 exp:2026-11-17
-CVE-2026-65905 exp:2026-11-17
-CVE-2026-68525 exp:2026-11-17
