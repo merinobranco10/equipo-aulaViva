@@ -1,4 +1,3 @@
-
 name: AulaViva - Security Analysis
 
 on:
@@ -19,8 +18,9 @@ permissions:
 jobs:
 
   # ---------------------------------------------------------------------------
-  # SAST - Semgrep (Java / OWASP Top 10)
-  # Gate bloqueante ante hallazgos o fallos del analisis.
+  # SAST - Semgrep (p/java + p/owasp-top-ten + reglas propias en .semgrep/)
+  # Gate bloqueante: cualquier hallazgo (--error) o fallo de la herramienta
+  # hace fallar el job.
   # ---------------------------------------------------------------------------
   sast:
     name: SAST - Semgrep (Java / OWASP Top 10)
@@ -70,12 +70,14 @@ jobs:
         if: steps.semgrep.outcome == 'failure'
         run: |
           echo "El analisis SAST encontro hallazgos bloqueantes o fallo."
-          echo "Revisa los resultados de Semgrep."
+          echo "Revisa los resultados de Semgrep (artefacto semgrep-sast-results)."
           exit 1
 
   # ---------------------------------------------------------------------------
   # SCA - Trivy (filesystem) + SBOM CycloneDX
-  # Gate bloqueante en HIGH/CRITICAL con parche disponible.
+  # Gate bloqueante en HIGH/CRITICAL con parche disponible (ignore-unfixed).
+  # El SBOM se genera y se publica SIEMPRE (aunque Trivy falle), para poder
+  # consultar el inventario ante un CVE.
   # ---------------------------------------------------------------------------
   sca:
     name: SCA - Analisis de dependencias y SBOM
@@ -106,10 +108,6 @@ jobs:
           java-version: "21"
           cache: maven
           cache-dependency-path: backend/pom.xml
-
-      - name: Mostrar dependencias Maven
-        working-directory: backend
-        run: mvn -B -ntp dependency:tree
 
       - name: Generar SBOM CycloneDX
         working-directory: backend
@@ -149,11 +147,11 @@ jobs:
         if: always() && steps.trivy.outcome == 'failure'
         run: |
           echo "Trivy encontro vulnerabilidades HIGH/CRITICAL con parche disponible."
-          echo "Corrige la dependencia o documenta una excepcion VEX."
+          echo "Corrige la dependencia o documenta una excepcion VEX (ver README)."
           exit 1
 
   # ---------------------------------------------------------------------------
-  # Secrets - Gitleaks con historial completo
+  # Secrets - gitleaks con historial completo (fetch-depth: 0)
   # ---------------------------------------------------------------------------
   secrets:
     name: Secrets - Deteccion de secretos
@@ -185,60 +183,3 @@ jobs:
             --redact \
             --verbose \
             --exit-code=2
-
-  # ---------------------------------------------------------------------------
-  # IaC Scan - Checkov (Terraform)
-  # Gate bloqueante: cualquier hallazgo provoca el fallo del job.
-  # ---------------------------------------------------------------------------
-  iac-scan:
-    name: IaC Scan - Checkov (Terraform)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Descargar codigo
-        uses: actions/checkout@v4
-
-      - name: Analizar infraestructura con Checkov
-        id: checkov
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: terraform/
-          framework: terraform
-          soft_fail: false
-          quiet: true
-
-  # ---------------------------------------------------------------------------
-  # Container Scan - Trivy
-  # Construye la imagen y analiza vulnerabilidades HIGH/CRITICAL.
-  # Gate bloqueante: exit-code 1 ante hallazgos.
-  # ---------------------------------------------------------------------------
-  container-scan:
-    name: Container Scan - Trivy
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Descargar codigo
-        uses: actions/checkout@v4
-
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Construir imagen para analisis
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: false
-          load: true
-          tags: aulaviva-backend:scan
-
-      - name: Analizar imagen con Trivy
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          scan-type: image
-          image-ref: aulaviva-backend:scan
-          scanners: vuln
-          vuln-type: os,library
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          format: table

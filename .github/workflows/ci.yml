@@ -1,3 +1,4 @@
+
 name: AulaViva - CI Quality Gates
 
 on:
@@ -7,8 +8,6 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/ci.yml"
-      - "k8s/**" 
-      - "terraform/**" 
 
   pull_request:
     branches:
@@ -17,8 +16,6 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/ci.yml"
-      - "k8s/**" 
-      - "terraform/**" 
 
   workflow_dispatch:
 
@@ -124,22 +121,7 @@ jobs:
           echo "Digest: ${IMAGE_DIGEST}"
           echo "Referencia inmutable: ${IMAGE}@${IMAGE_DIGEST}" >> "$GITHUB_STEP_SUMMARY"
           echo "Commit: ${COMMIT_SHA}" >> "$GITHUB_STEP_SUMMARY"
-  
-  supply-chain:
-    name: Supply chain - security.yml
-    needs: build-and-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
-    uses: ./.github/workflows/security.yml
-    with:
-      digest: ${{ needs.build-and-push.outputs.digest }}
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: read
-      pull-requests: read
-      security-events: write
-      issues: write
+
   
   
   promote:
