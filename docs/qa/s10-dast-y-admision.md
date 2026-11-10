@@ -32,11 +32,24 @@ Staging es la imagen del backend **firmada y verificada** por el job `sign-and-a
 
 ## 4. Hallazgos y falsos positivos
 
-Completar tras la primera ejecución del job `dast`:
+Resultado de la primera ejecución del job `dast` (ZAP baseline sobre `http://localhost:8080`, 2 endpoints):
+
+| Riesgo | Alertas |
+|---|---|
+| High | 0 |
+| Medium | 0 |
+| Low | 2 |
+| Informational | 1 |
+
+El gate (Medium o superior) **pasa**: no hay hallazgos que bloqueen.
 
 | Regla ZAP | Hallazgo | Riesgo | Clasificación | Acción |
 |---|---|---|---|---|
-| _pendiente_ | | | | |
+| 90004 | Cross-Origin-Resource-Policy Header Missing or Invalid | Low | Hallazgo real, bajo el umbral | Se acepta; no bloquea |
+| 10021 | X-Content-Type-Options Header Missing | Low | Hallazgo real, bajo el umbral | Se acepta; no bloquea |
+| 10049 | Storable and Cacheable Content | Informational | Informativo | Se acepta; no bloquea |
+
+**Falsos positivos:** ninguno. No se agregó ninguna regla `IGNORE` a `.zap/rules.tsv`.
 
 Un falso positivo solo se agrega a `.zap/rules.tsv` (`<id>  IGNORE  <motivo>`) después de registrarlo en esta tabla.
 
@@ -70,4 +83,5 @@ Evidencia: `docs/qa/evidence/s10/04-signed-image-test.png`
 - `docs/qa/evidence/s10/02-kubectl-cluster-policy.png`
 - `docs/qa/evidence/s10/03-unsigned-image-test.png`
 - `docs/qa/evidence/s10/04-signed-image-test.png`
-- Pendiente tras ejecutar el pipeline: captura del job `dast` y del reporte ZAP, en la misma carpeta.
+- `docs/qa/evidence/s10/05-pipeline-extend.png`
+- `docs/qa/evidence/s10/06-zap-report.png`
