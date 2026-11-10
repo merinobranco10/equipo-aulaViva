@@ -1,19 +1,50 @@
 name: AulaViva - Security Analysis
 
+# Solo corre cuando cambia algo que afecta a la seguridad del software entregado
+# (codigo, dependencias, Terraform, manifiestos k8s, politicas y configuracion de
+# los propios escaneos). NO corre por cambios en documentacion (*.md, ADR, docs/),
+# imagenes/evidencias (png, jpg...) ni otros archivos sin efecto en la imagen.
+# Para forzar una ejecucion manual: workflow_dispatch.
 on:
   push:
     branches:
       - desarrollo
+    paths:
+      - "backend/**"
+      - "terraform/**"
+      - "k8s/**"
+      - ".semgrep/**"
+      - ".zap/**"
+      - ".trivyignore"
+      - ".gitleaksignore"
+      - ".github/workflows/security.yml"
+      - ".github/workflows/ci.yml"   # ci.yml publica la imagen que se firma y escanea aqui
 
   pull_request:
     branches:
       - main
       - desarrollo
+    paths:
+      - "backend/**"
+      - "terraform/**"
+      - "k8s/**"
+      - ".semgrep/**"
+      - ".zap/**"
+      - ".trivyignore"
+      - ".gitleaksignore"
+      - ".github/workflows/security.yml"
+      - ".github/workflows/ci.yml"
 
   workflow_dispatch:
 
 permissions:
   contents: read
+
+# Un push nuevo a un PR cancela la ejecucion anterior de ese PR. En push a
+# `desarrollo` NUNCA se cancela: podria cortar una firma o attestation a medias.
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
 
@@ -271,6 +302,10 @@ jobs:
       github.event_name == 'pull_request'
     timeout-minutes: 30
 
+    # El job dast escanea exactamente la imagen que este job firmo/verifico.
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+
     permissions:
       contents: read
       packages: write   # adjuntar firma y attestation al registro OCI (GHCR)
@@ -460,3 +495,147 @@ jobs:
             echo "- Attestation \`${VERIFIED}\`: OK"
             echo "- Identidad: \`${IDENTITY}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # DAST (S10) - OWASP ZAP baseline contra staging
+  #
+  # Staging = ambiente efimero dentro del runner: la MISMA imagen que acaba de
+  # firmar/verificar sign-and-attest (por digest), con la configuracion de
+  # k8s/configmap.yaml y las restricciones de k8s/deployment.yaml (no root,
+  # filesystem de solo lectura, sin capabilities). No hay base de datos ni datos
+  # de estudiantes: solo datos sinteticos (docs/qa/dast/synthetic-data.json).
+  # Para apuntar a un staging propio (URL o port-forward publicado) definir la
+  # variable de repositorio STAGING_URL; sin ella se usa el staging efimero.
+  #
+  # Gate: falla si queda algun hallazgo de riesgo Medium o superior que no este
+  # registrado como falso positivo (IGNORE) en .zap/rules.tsv.
+  # Timeout total del job: 9 min (< 10 min exigidos).
+  # ---------------------------------------------------------------------------
+  dast:
+    name: DAST - ZAP Baseline (staging)
+    runs-on: ubuntu-latest
+    needs: sign-and-attest
+    timeout-minutes: 9
+
+    permissions:
+      contents: read
+      packages: read    # descargar la imagen desde GHCR (solo verifica; no firma)
+
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/equipo-aulaviva-backend
+      DIGEST: ${{ needs.sign-and-attest.outputs.digest }}
+      OIDC_ISSUER: https://token.actions.githubusercontent.com
+      IDENTITY: https://github.com/${{ github.repository }}/.github/workflows/security.yml@refs/heads/desarrollo
+      STAGING_URL: ${{ vars.STAGING_URL }}
+      EPHEMERAL_URL: http://localhost:8080
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Iniciar sesion en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Igual que la politica de admision del cluster: no se ejecuta una imagen
+      # cuya firma no verifique.
+      - name: Verificar firma antes de levantar staging
+        run: |
+          case "$DIGEST" in sha256:*) ;; *) echo "::error::sign-and-attest no entrego un digest."; exit 1 ;; esac
+          cosign verify \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer "${OIDC_ISSUER}" \
+            "${IMAGE}@${DIGEST}" > /dev/null
+
+      - name: Levantar staging efimero
+        if: env.STAGING_URL == ''
+        run: |
+          docker run -d --name aulaviva-staging \
+            --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges \
+            --memory 512m --cpus 1 \
+            -p 127.0.0.1:8080:8080 \
+            -e SERVER_PORT=8080 \
+            -e MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true \
+            "${IMAGE}@${DIGEST}"
+
+          for _ in $(seq 1 45); do
+            if curl -fsS http://localhost:8080/actuator/health/readiness > /dev/null 2>&1; then
+              echo "Staging listo."; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::El staging no quedo listo en 90 s."
+          docker logs aulaviva-staging || true
+          exit 1
+
+      - name: Definir URL objetivo
+        id: target
+        run: |
+          URL="${STAGING_URL:-$EPHEMERAL_URL}"
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+          echo "DAST contra: ${URL} (imagen ${IMAGE}@${DIGEST})" >> "$GITHUB_STEP_SUMMARY"
+
+      # El baseline es pasivo (spider + reglas pasivas). Los reportes quedan en el
+      # workspace (report_json.json / report_md.md / report_html.html) y se
+      # publican como artefacto zap-baseline-report. El gate lo aplica el paso
+      # siguiente, porque el baseline solo distingue WARN/FAIL por regla, no por riesgo.
+      - name: ZAP baseline scan
+        id: zap
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ steps.target.outputs.url }}
+          rules_file_name: .zap/rules.tsv
+          cmd_options: "-m 3 -T 5"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-baseline-report
+
+      - name: Gate DAST - fallar en riesgo Medium o superior
+        if: always() && steps.zap.outcome != 'skipped'
+        run: |
+          set -euo pipefail
+          if [ ! -f report_json.json ]; then
+            echo "::error::ZAP no genero report_json.json (el escaneo no se completo)."
+            exit 1
+          fi
+
+          # Falsos positivos registrados: lineas "<id>\tIGNORE\t..." de .zap/rules.tsv
+          IGNORED="$(grep -v '^[[:space:]]*#' .zap/rules.tsv | awk -F'\t' '$2=="IGNORE"{print $1}' | jq -R . | jq -s .)"
+
+          jq -r --argjson ignored "$IGNORED" '
+            [ .site[].alerts[]
+              | select((.riskcode | tonumber) >= 2)
+              | select(((.pluginid // .alertRef) | tostring) as $id | ($ignored | index($id)) | not) ]
+            | .[] | "- [\(.riskdesc)] \(.name // .alert) (regla \(.pluginid // .alertRef), \(.count // "?") instancias)"
+          ' report_json.json > blocking.txt
+
+          {
+            echo "### DAST - ZAP baseline"
+            if [ -s blocking.txt ]; then
+              echo "Hallazgos Medium+ sin justificar (bloquean):"
+              cat blocking.txt
+            else
+              echo "Sin hallazgos Medium+ pendientes."
+            fi
+            echo "Falsos positivos registrados (IGNORE): $(jq 'length' <<< "$IGNORED")"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -s blocking.txt ]; then
+            echo "::error::ZAP encontro hallazgos de riesgo Medium o superior:"
+            cat blocking.txt
+            echo "Corrigelos o registra el falso positivo en .zap/rules.tsv y en docs/qa/s10-supply-chain-validation.md."
+            exit 1
+          fi
+
+      - name: Logs y limpieza del staging
+        if: always() && env.STAGING_URL == ''
+        run: |
+          docker logs aulaviva-staging 2>&1 | tail -n 50 || true
+          docker rm -f aulaviva-staging || true
