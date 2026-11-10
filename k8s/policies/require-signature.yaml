@@ -1,0 +1,52 @@
+# Politica de admision (Kyverno): el cluster rechaza Pods cuya imagen del backend
+# no este firmada por el workflow de seguridad de AulaViva.
+#
+# Aplicar (una vez instalado Kyverno):
+#   kubectl apply -f k8s/policies/require-signature.yaml
+#
+# Esta carpeta NO forma parte de k8s/kustomization.yaml: la politica es un
+# recurso de cluster (ClusterPolicy) y se aplica por separado.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-image-signature
+  annotations:
+    policies.kyverno.io/title: Requerir firma de imagen
+    policies.kyverno.io/category: Software Supply Chain Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Rechaza Pods del backend de AulaViva cuya imagen no tenga una firma Cosign
+      keyless valida emitida por .github/workflows/security.yml del repositorio
+      en la rama desarrollo (job sign-and-attest, ver ADR 0006).
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-cosign-keyless-signature
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - equipo-aulaviva        # namespace actual (Terraform / k8s)
+                - equipo-aulaviva-dev    # overlays GitOps (ADR 0005)
+                - equipo-aulaviva-prod
+      verifyImages:
+        - imageReferences:
+            - "ghcr.io/merinobranco10/equipo-aulaviva-backend*"
+          mutateDigest: true
+          verifyDigest: true
+          required: true
+          attestors:
+            - count: 1
+              entries:
+                - keyless:
+                    # Debe coincidir con la identidad con la que firma sign-and-attest.
+                    # (?i): GitHub no distingue mayusculas en el nombre del repositorio.
+                    subjectRegExp: '(?i)^https://github\.com/merinobranco10/equipo-aulaviva/\.github/workflows/security\.yml@refs/heads/desarrollo$'
+                    issuer: https://token.actions.githubusercontent.com
+                    rekor:
+                      url: https://rekor.sigstore.dev
