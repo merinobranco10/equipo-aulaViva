@@ -1,0 +1,23 @@
+# Valores de Helm para Falco + Falcosidekick (S10).
+# Las credenciales (Slack, PagerDuty) NO van aqui: viven en el Secret
+# "falcosidekick-secrets" (ver docs/qa/s10-falco-alertas.md).
+#
+# Las reglas se pasan con --set-file customRules.rules-custom\.yaml=falco/rules-custom.yaml
+
+driver:
+  kind: modern_ebpf
+
+tty: true
+
+falco:
+  json_output: true
+
+falcosidekick:
+  enabled: true
+  config:
+    existingSecret: falcosidekick-secrets
+    customfields: "proyecto:aulaviva"
+    slack:
+      minimumpriority: warning     # Warning o superior -> canal de seguridad
+    pagerduty:
+      minimumpriority: error       # Error, Critical, Alert, Emergency = High -> incidente
