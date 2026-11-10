@@ -71,35 +71,17 @@ Antes de firmar, `security.yml` ejecuta dos controles bloqueantes que `sign-and-
 | `iac-scan` | Checkov | Código Terraform de `terraform/` | Cualquier check fallido (`soft_fail: false`) |
 | `container-scan` | Trivy | Imagen construida del backend (OS y librerías) | Vulnerabilidades HIGH/CRITICAL con parche disponible (`exit-code: 1`, `ignore-unfixed`) |
 
-### 5.2. Política de excepciones
+### 5.2. Excepciones de los escaneos
 
-Aplica a los dos escaneos: `skip_check` de Checkov (IaC) y `.trivyignore` de Trivy (contenedor).
+- **IaC (Checkov):** sin excepciones. Todo `skip_check` requiere agregar su justificación en este ADR.
+- **Contenedor (Trivy):** tras el primer análisis se corrigió la imagen base (Debian 13) y se actualizaron Spring Boot (3.5.14), Jackson, Micrometer y Spring Framework en `backend/pom.xml`. Los CVE sin corrección disponible se listan en `.trivyignore`, con fecha de vencimiento (`exp:`). Vencida la fecha, Trivy vuelve a bloquear.
 
-1. **Ninguna excepción sin registro en este ADR.** Cada check omitido (`skip_check` o comentario `#checkov:skip=` en el `.tf`) y cada CVE listado en `.trivyignore` se agrega en un Pull Request que incluya su fila en el registro de abajo.
-2. **Alcance mínimo.** Se omite el check o CVE específico, nunca una familia ni el job completo; los checks, si es posible, solo para el recurso afectado.
-3. **Contenido obligatorio:** ID, componente o recurso afectado, justificación técnica, riesgo residual, responsable, fecha y fecha de vencimiento.
-4. **Vencimiento.** Cada CVE de `.trivyignore` lleva `exp:AAAA-MM-DD`; vencida la fecha, Trivy vuelve a bloquear. Las demás excepciones se reevalúan en cada release mayor.
-5. **Aprobación.** El PR lo revisa el Tech Lead o DevSecOps. Está prohibido usar `soft_fail: true` o quitar `exit-code` como atajo.
-6. **Solo con justificación técnica verificable**, por ejemplo que el código vulnerable no se usa. Si existe una versión corregida compatible, se actualiza en lugar de excepcionar.
+| CVE | Componente | Por qué no se corrige | Estado |
+|---|---|---|---|
+| CVE-2026-47884, CVE-2026-47890 | `spring-webmvc` 6.2.x | La corrección existe solo en Spring Framework 7 (requiere migrar a Spring Boot 4). | En análisis. Vence 10-12-2026. |
+| CVE-2026-65182, CVE-2026-65905, CVE-2026-68525 | `tomcat-embed-core` 10.1.x | La corrección (10.1.58) aún no está publicada en Maven Central. | En análisis. Vence 17-11-2026. |
 
-Se usa `.trivyignore` y no un documento VEX porque la imagen del escaneo se construye localmente en el job y no tiene digest de registro al cual asociar la declaración VEX.
-
-**Remediación aplicada tras el primer `container-scan` (10-11-2026).** El primer análisis encontró 40 hallazgos HIGH/CRITICAL con parche disponible: 10 en la imagen base (`libexpat1`, `libbrotli1`, `liblcms2-2` de Debian 12) y 30 en librerías del `app.jar` (Tomcat, Jackson, Micrometer, Spring Boot y Spring Framework). Se corrigieron así:
-
-- Imagen base actualizada a `gcr.io/distroless/java21-debian13:nonroot`.
-- Spring Boot 3.5.12 → 3.5.14 y versiones mínimas fijadas en `backend/pom.xml`: Tomcat 10.1.58, Jackson 2.21.7, Micrometer 1.15.12 y Spring Framework 6.2.19.
-- Quedan dos excepciones, registradas abajo, porque no existe corrección en la línea 6.2 de Spring Framework.
-
-**Registro de excepciones**
-
-| ID | Componente | Justificación | Riesgo residual | Responsable | Fecha | Vence |
-|---|---|---|---|---|---|---|
-| CVE-2026-47884 (CRITICAL) | `spring-webmvc` 6.2.x, RCE por `XsltView` | La corrección existe solo en Spring Framework 7.0.9 (requiere Spring Boot 4). El backend es una API REST sin vistas ni plantillas XSLT: no usa `XsltView` ni resolutores de vistas. | Bajo mientras no se agreguen vistas XSLT. | Tech Lead | 10-11-2026 | 10-12-2026 |
-| CVE-2026-47890 (CRITICAL) | `spring-webmvc` 6.2.x, corrupción de stream en Server-Sent Events con vistas | Misma situación: corrección solo en Spring Framework 7.0.9. El backend no usa `SseEmitter` ni SSE. | Bajo mientras no se implemente streaming SSE. | Tech Lead | 10-11-2026 | 10-12-2026 |
-
-Antes del vencimiento debe migrarse a Spring Boot 4 (Spring Framework 7) o renovarse la justificación. Si el Tutor IA implementa streaming con SSE, la excepción deja de aplicar y la migración pasa a ser obligatoria.
-
-**IaC (Checkov):** el análisis de `terraform/` con Checkov 3.4.3 arrojó 1 check aprobado, 0 fallidos y 0 omitidos; no hay ningún `skip_check` vigente. Checkov solo analiza Terraform: los manifiestos de `k8s/` y el repositorio GitOps no están cubiertos por este job.
+La aplicación no usa las funciones afectadas (vistas XSLT, SSE, autenticación DIGEST/FORM de Tomcat), pero la decisión final sobre estas excepciones queda sujeta a análisis del equipo antes de su vencimiento.
 
 ### 5.3. Admisión en el clúster (Kyverno)
 
