@@ -185,30 +185,46 @@ jobs:
             --exit-code=2
 
   # ---------------------------------------------------------------------------
-  # Supply chain - Firma Cosign keyless + attestation SLSA nivel 2
-  # Solo corre en push a `desarrollo`, cuando sast / sca / secrets ya pasaron.
-  # La imagen la construye y publica ci.yml; este job NO la reconstruye: espera
-  # la imagen del mismo commit (tag sha-<commit>), la resuelve a su digest
-  # inmutable y trabaja siempre sobre `imagen@sha256:...`.
-  # La identidad OIDC con la que se firma es la de ESTE workflow (security.yml).
+  # Supply chain (S10) - Firma Cosign keyless + attestation SLSA nivel 2
+  #
+  # Corre en TODOS los disparadores de este workflow (push a desarrollo y PR
+  # hacia main/desarrollo) y siempre termina verificando con `cosign verify`:
+  # si la imagen no esta firmada y con attestation, el check falla.
+  #
+  #  - push a `desarrollo` -> firma + attestation (si aun no existen) y verifica.
+  #  - pull_request        -> solo verifica. Nunca firma: desde un PR la
+  #                           identidad OIDC seria refs/pull/N/merge y no la
+  #                           autorizada (refs/heads/desarrollo).
+  #
+  # Imagen objetivo: la que ci.yml publico para el commit (tag sha-<commit>).
+  # Si ese commit no toco backend/** y CI no corrio, se usa la ultima imagen
+  # publicada con exito en `desarrollo`. Este job NO reconstruye la imagen y
+  # trabaja siempre sobre `imagen@sha256:...`.
   # ---------------------------------------------------------------------------
   sign-and-attest:
     name: Supply chain - Firma Cosign y attestation SLSA
     runs-on: ubuntu-latest
     needs: [sast, sca, secrets]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
-    timeout-minutes: 20
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/desarrollo') ||
+      github.event_name == 'pull_request'
+    timeout-minutes: 30
 
     permissions:
       contents: read
       packages: write   # adjuntar firma y attestation al registro OCI (GHCR)
       id-token: write   # token OIDC para la firma keyless (Sigstore)
-      actions: read     # localizar el run de ci.yml del mismo commit
+      actions: read     # consultar los runs de ci.yml y security.yml
 
     env:
       IMAGE: ghcr.io/${{ github.repository_owner }}/equipo-aulaviva-backend
       OIDC_ISSUER: https://token.actions.githubusercontent.com
+      # Identidad autorizada: la de ESTE workflow ejecutado en `desarrollo`.
       IDENTITY: https://github.com/${{ github.repository }}/.github/workflows/security.yml@refs/heads/desarrollo
+      # En un PR, github.sha es el commit de merge; el codigo es el head del PR.
+      COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      SIGN: ${{ github.event_name == 'push' }}
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Instalar Cosign
@@ -223,60 +239,80 @@ jobs:
 
       - name: Resolver digest de la imagen construida por CI
         id: image
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+
+          resolve_digest() {
+            docker buildx imagetools inspect "${IMAGE}:sha-$1" \
+              --format '{{.Manifest.Digest}}' 2>/dev/null
+          }
 
           # 1) Run de ci.yml para este commit (puede tardar unos segundos en aparecer).
           RUN_ID=""
           for _ in $(seq 1 12); do
             RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
-              --commit "$GITHUB_SHA" --event push --limit 1 \
+              --commit "$COMMIT_SHA" --event push --limit 1 \
               --json databaseId --jq '.[0].databaseId // empty')"
             [ -n "$RUN_ID" ] && break
             sleep 10
           done
 
-          if [ -z "$RUN_ID" ]; then
-            echo "::notice::ci.yml no se ejecuto para ${GITHUB_SHA} (sin cambios en backend/**): no hay imagen nueva que firmar."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # 2) Esperar a que CI publique la imagen y resolver su digest.
           DIGEST=""
-          for _ in $(seq 1 45); do
-            if DIGEST="$(docker buildx imagetools inspect "${IMAGE}:sha-${GITHUB_SHA}" \
-                 --format '{{.Manifest.Digest}}' 2>/dev/null)" && [ -n "$DIGEST" ]; then
-              break
-            fi
-            DIGEST=""
-            STATUS="$(gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json status --jq '.status')"
-            if [ "$STATUS" = "completed" ]; then
-              echo "::error::ci.yml termino sin publicar ${IMAGE}:sha-${GITHUB_SHA}. No se firma nada."
-              exit 1
-            fi
-            sleep 20
-          done
+          IMG_SHA="$COMMIT_SHA"
+          if [ -n "$RUN_ID" ]; then
+            # 2) Esperar a que CI publique la imagen de este commit.
+            for _ in $(seq 1 45); do
+              if DIGEST="$(resolve_digest "$COMMIT_SHA")" && [ -n "$DIGEST" ]; then break; fi
+              DIGEST=""
+              STATUS="$(gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json status --jq '.status')"
+              if [ "$STATUS" = "completed" ]; then
+                echo "::error::ci.yml termino sin publicar ${IMAGE}:sha-${COMMIT_SHA}."
+                exit 1
+              fi
+              sleep 20
+            done
+          else
+            # Commit sin cambios en backend/**: se usa la ultima imagen publicada por CI.
+            IMG_SHA="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+              --branch desarrollo --event push --status success --limit 1 \
+              --json headSha --jq '.[0].headSha // empty')"
+            [ -n "$IMG_SHA" ] && DIGEST="$(resolve_digest "$IMG_SHA")" || true
+            echo "ci.yml no corrio para ${COMMIT_SHA}; se usa la imagen del commit ${IMG_SHA:-?} (ultimo CI exitoso en desarrollo)." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           case "$DIGEST" in
             sha256:*) ;;
-            *) echo "::error::No se pudo resolver el digest de la imagen."; exit 1 ;;
+            *) echo "::error::No se encontro una imagen de AulaViva para firmar o verificar."; exit 1 ;;
           esac
 
-          echo "skip=false" >> "$GITHUB_OUTPUT"
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
-          echo "Imagen a firmar: ${IMAGE}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "img_sha=${IMG_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Imagen: ${IMAGE}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comprobar si la imagen ya esta firmada
+        id: precheck
+        if: env.SIGN == 'true'
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          if cosign verify \
+               --certificate-identity "${IDENTITY}" \
+               --certificate-oidc-issuer "${OIDC_ISSUER}" \
+               "${IMAGE}@${DIGEST}" > /dev/null 2>&1; then
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "La imagen ya estaba firmada por este workflow; no se vuelve a firmar."
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Firmar la imagen por digest (Cosign keyless)
-        if: steps.image.outputs.skip != 'true'
+        if: env.SIGN == 'true' && steps.precheck.outputs.signed != 'true'
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
         run: cosign sign --yes "${IMAGE}@${DIGEST}"
 
       - name: Extraer provenance SLSA de la imagen
-        if: steps.image.outputs.skip != 'true'
+        if: env.SIGN == 'true' && steps.precheck.outputs.signed != 'true'
         id: provenance
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
@@ -296,7 +332,7 @@ jobs:
           fi
 
       - name: Adjuntar attestation SLSA nivel 2
-        if: steps.image.outputs.skip != 'true'
+        if: env.SIGN == 'true' && steps.precheck.outputs.signed != 'true'
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
           PREDICATE_TYPE: ${{ steps.provenance.outputs.type }}
@@ -306,8 +342,30 @@ jobs:
             --predicate provenance.json \
             "${IMAGE}@${DIGEST}"
 
+      - name: Esperar la firma (solo en PR)
+        if: env.SIGN != 'true'
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+          IMG_SHA: ${{ steps.image.outputs.img_sha }}
+        run: |
+          # Si el push a desarrollo que firma esta imagen sigue en curso, esperarlo.
+          for _ in $(seq 1 30); do
+            if cosign verify \
+                 --certificate-identity "${IDENTITY}" \
+                 --certificate-oidc-issuer "${OIDC_ISSUER}" \
+                 "${IMAGE}@${DIGEST}" > /dev/null 2>&1; then
+              exit 0
+            fi
+            STATUS="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow security.yml \
+              --commit "$IMG_SHA" --event push --limit 1 --json status --jq '.[0].status // "none"')"
+            case "$STATUS" in
+              completed|none) exit 0 ;;   # nada que esperar: la verificacion de abajo decide
+            esac
+            echo "El push que firma ${IMG_SHA} sigue en curso (${STATUS}); reintentando..."
+            sleep 20
+          done
+
       - name: Verificar firma (cosign verify)
-        if: steps.image.outputs.skip != 'true'
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
         run: |
@@ -317,21 +375,27 @@ jobs:
             "${IMAGE}@${DIGEST}"
 
       - name: Verificar attestation SLSA (cosign verify-attestation)
-        if: steps.image.outputs.skip != 'true'
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
-          PREDICATE_TYPE: ${{ steps.provenance.outputs.type }}
         run: |
-          cosign verify-attestation \
-            --type "${PREDICATE_TYPE}" \
-            --certificate-identity "${IDENTITY}" \
-            --certificate-oidc-issuer "${OIDC_ISSUER}" \
-            "${IMAGE}@${DIGEST}" > /dev/null
+          set -euo pipefail
+          VERIFIED=""
+          for TYPE in slsaprovenance slsaprovenance1; do
+            if cosign verify-attestation \
+                 --type "$TYPE" \
+                 --certificate-identity "${IDENTITY}" \
+                 --certificate-oidc-issuer "${OIDC_ISSUER}" \
+                 "${IMAGE}@${DIGEST}" > /dev/null; then
+              VERIFIED="$TYPE"
+              break
+            fi
+          done
+          [ -n "$VERIFIED" ] || { echo "::error::No hay attestation SLSA verificable para ${IMAGE}@${DIGEST}."; exit 1; }
 
           {
             echo "### Supply chain verificada"
             echo "- Imagen: \`${IMAGE}@${DIGEST}\`"
             echo "- Firma Cosign (keyless): OK"
-            echo "- Attestation \`${PREDICATE_TYPE}\`: OK"
+            echo "- Attestation \`${VERIFIED}\`: OK"
             echo "- Identidad: \`${IDENTITY}\`"
           } >> "$GITHUB_STEP_SUMMARY"
