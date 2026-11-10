@@ -26,8 +26,8 @@
         <!-- Versiones minimas que corrigen los HIGH/CRITICAL que reporta Trivy en la
              imagen (container-scan, S10). Quitar cada override cuando la version de
              Spring Boot ya gestione una igual o superior.
-             Tomcat NO se fija: la correccion (10.1.58) aun no esta en Maven Central y
-             se usa la version que gestiona Spring Boot (ver .trivyignore). -->
+             Tomcat 10.1.61: ultima 10.1.x publicada; Spring Boot 3.5.14 trae 10.1.54. -->
+        <tomcat.version>10.1.61</tomcat.version>
         <jackson-bom.version>2.21.7</jackson-bom.version>
         <micrometer.version>1.15.12</micrometer.version>
         <spring-framework.version>6.2.19</spring-framework.version>
