@@ -1,0 +1,106 @@
+# Reglas Falco propias de AulaViva (S10).
+#
+# Contexto: el backend (y, hoy, el Tutor IA/RAG que vive dentro del monolito)
+# maneja datos de estudiantes (menores de edad) y claves del proveedor LLM.
+# La imagen es distroless (sin shell) y corre con filesystem de solo lectura
+# (k8s/deployment.yaml): una shell, una escritura en /etc o una salida de red
+# fuera de lo previsto indican un compromiso, no un uso normal.
+#
+# Los outputs NO incluyen la linea de comandos (%proc.cmdline) para no enviar a
+# Slack/PagerDuty tokens ni datos de estudiantes que pudieran ir en argumentos.
+#
+# Severidad: CRITICAL y ERROR = "High" -> generan incidente (ver
+# docs/qa/s10-falco-alertas.md).
+
+# --- Listas y macros -------------------------------------------------------
+
+- list: aulaviva_namespaces
+  items: [equipo-aulaviva, equipo-aulaviva-dev, equipo-aulaviva-prod]
+
+- list: aulaviva_shells
+  items: [sh, bash, dash, ash, zsh, ksh, csh, tcsh, fish]
+
+# Puertos de salida permitidos del Tutor IA/RAG:
+#   53 DNS | 443 HTTPS (LLM, S3, Cognito, MINEDUC) | 5432 PostgreSQL/pgvector
+#   8080 trafico interno del cluster | 9092/9094/9096/9098 Kafka (MSK)
+# Ajustar si cambia la arquitectura.
+- list: aulaviva_tutor_allowed_ports
+  items: [53, 443, 5432, 8080, 9092, 9094, 9096, 9098]
+
+- macro: aulaviva_workload
+  condition: (container.id != host and k8s.ns.name in (aulaviva_namespaces))
+
+# Tutor IA/RAG: hoy corre dentro del pod del backend. Cuando se separe como
+# servicio propio (aulaviva-tutor-ia) la regla ya lo cubre.
+- macro: aulaviva_tutor_workload
+  condition: >
+    (aulaviva_workload and
+     (k8s.pod.name startswith "aulaviva-backend" or
+      k8s.pod.name startswith "aulaviva-tutor-ia"))
+
+- macro: aulaviva_spawned_process
+  condition: (evt.type in (execve, execveat) and evt.dir = <)
+
+- macro: aulaviva_open_write
+  condition: >
+    (evt.type in (open, openat, openat2) and evt.is_open_write = true and
+     fd.typechar = 'f' and fd.num >= 0)
+
+- macro: aulaviva_outbound
+  condition: >
+    (evt.type = connect and evt.dir = < and
+     (fd.typechar = 4 or fd.typechar = 6) and
+     fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8" and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
+
+# --- Reglas ----------------------------------------------------------------
+
+# 1) Shell en contenedor
+- rule: AulaViva - Shell en contenedor
+  desc: >
+    Se ejecuto una shell dentro de un contenedor de AulaViva. Las imagenes son
+    distroless (sin shell): indica acceso interactivo no previsto (kubectl
+    exec/debug o ejecucion remota de codigo) en un pod con datos de estudiantes.
+  condition: >
+    aulaviva_spawned_process and aulaviva_workload and
+    proc.name in (aulaviva_shells)
+  output: >
+    AulaViva-SHELL: shell en contenedor (ns=%k8s.ns.name pod=%k8s.pod.name
+    container=%container.name image=%container.image.repository
+    shell=%proc.name parent=%proc.pname user=%user.name tty=%proc.tty)
+  priority: CRITICAL
+  tags: [aulaviva, container, shell, mitre_execution]
+
+# 2) Escritura en /etc
+- rule: AulaViva - Escritura en /etc
+  desc: >
+    Un proceso abrio para escritura un archivo bajo /etc dentro de un contenedor
+    de AulaViva. Con readOnlyRootFilesystem esto no deberia ocurrir; alterar /etc
+    permite persistencia o cambiar resolucion de nombres y credenciales.
+  condition: >
+    aulaviva_open_write and aulaviva_workload and
+    fd.name startswith "/etc/" and
+    not proc.name startswith "runc"
+  output: >
+    AulaViva-ETC: escritura en /etc (ns=%k8s.ns.name pod=%k8s.pod.name
+    container=%container.name image=%container.image.repository
+    file=%fd.name proc=%proc.name parent=%proc.pname user=%user.name)
+  priority: ERROR
+  tags: [aulaviva, container, filesystem, mitre_persistence]
+
+# 3) Conexion saliente inesperada del Tutor IA/RAG (adaptada al servicio)
+- rule: AulaViva - Conexion saliente inesperada del Tutor IA
+  desc: >
+    El Tutor IA/RAG abrio una conexion hacia un puerto fuera de la lista
+    permitida (DNS, HTTPS al proveedor LLM/S3/Cognito, PostgreSQL/pgvector,
+    Kafka, trafico interno). Posible exfiltracion de consultas, embeddings o
+    datos de estudiantes, o uso de las claves del servicio desde otro destino.
+  condition: >
+    aulaviva_outbound and aulaviva_tutor_workload and
+    not fd.sport in (aulaviva_tutor_allowed_ports)
+  output: >
+    AulaViva-EGRESS: conexion saliente inesperada del Tutor IA (ns=%k8s.ns.name
+    pod=%k8s.pod.name container=%container.name dest=%fd.sip:%fd.sport
+    proto=%fd.l4proto proc=%proc.name user=%user.name)
+  priority: CRITICAL
+  tags: [aulaviva, tutor-ia, network, mitre_exfiltration]
