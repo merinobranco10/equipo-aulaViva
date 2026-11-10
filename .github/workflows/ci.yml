@@ -232,6 +232,23 @@ jobs:
             --certificate-identity "${IDENTITY}" \
             --certificate-oidc-issuer "${OIDC_ISSUER}" \
             "${IMAGE}@${DIGEST}"
+
+
+    # ---------------------------------------------------------
+  # DAST - OWASP ZAP (Escaneo dinámico)
+  # ---------------------------------------------------------
+  dast:
+    name: DAST - OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/desarrollo'
+    steps:
+      - name: Escaneo de seguridad dinámico (ZAP)
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'https://aulaviva-staging.example.com' 
+          fail_action: true
+          cmd_options: '-a'  
   
   promote:
     name: Promote - GitOps
