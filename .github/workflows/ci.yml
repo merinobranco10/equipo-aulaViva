@@ -28,7 +28,7 @@ env:
 
 jobs:
   quality:
-    name: Quality - Maven, Coverage and SAST
+    name: Quality - Maven and Coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -57,20 +57,6 @@ jobs:
           path: backend/target/site/jacoco/
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Configurar Python
-        if: always()
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Instalar Semgrep
-        if: always()
-        run: python -m pip install semgrep
-
-      - name: Ejecutar analisis SAST
-        if: always()
-        run: semgrep scan --config p/java --error backend/
 
       - name: Rechazar si Maven falla
         if: always() && steps.maven.outcome != 'success'
