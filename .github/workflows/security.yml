@@ -185,6 +185,66 @@ jobs:
             --exit-code=2
 
   # ---------------------------------------------------------------------------
+  # IaC Scan (S10) - Checkov sobre terraform/
+  # Gate bloqueante: soft_fail false -> cualquier check fallido hace fallar el job.
+  # Excepciones (skip_check): solo mediante PR con ADR de justificacion
+  # (ver docs/adr/0006-supply-chain.md, seccion 5.2). Hoy no hay ninguna.
+  # ---------------------------------------------------------------------------
+  iac-scan:
+    name: IaC Scan - Checkov (Terraform)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Analizar Terraform con Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/
+          framework: terraform
+          soft_fail: false
+          quiet: true
+
+  # ---------------------------------------------------------------------------
+  # Container Scan (S10) - Trivy sobre la imagen construida
+  # Construye la imagen del backend SIN publicarla (post-build, pre-push) y la
+  # analiza: OS y librerias. Gate bloqueante en HIGH/CRITICAL con parche
+  # disponible (ignore-unfixed, mismo criterio que el SCA de la S09).
+  # ---------------------------------------------------------------------------
+  container-scan:
+    name: Container Scan - Trivy (imagen)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen para analisis
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          load: true
+          tags: aulaviva-backend:scan
+
+      - name: Analizar imagen con Trivy
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: image
+          image-ref: aulaviva-backend:scan
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+  # ---------------------------------------------------------------------------
   # Supply chain (S10) - Firma Cosign keyless + attestation SLSA nivel 2
   #
   # Corre en TODOS los disparadores de este workflow (push a desarrollo y PR
@@ -204,7 +264,7 @@ jobs:
   sign-and-attest:
     name: Supply chain - Firma Cosign y attestation SLSA
     runs-on: ubuntu-latest
-    needs: [sast, sca, secrets]
+    needs: [sast, sca, secrets, iac-scan, container-scan]
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/desarrollo') ||
       github.event_name == 'pull_request'
