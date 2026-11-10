@@ -74,14 +74,13 @@ Antes de firmar, `security.yml` ejecuta dos controles bloqueantes que `sign-and-
 ### 5.2. Excepciones de los escaneos
 
 - **IaC (Checkov):** sin excepciones. Todo `skip_check` requiere agregar su justificación en este ADR.
-- **Contenedor (Trivy):** tras el primer análisis se corrigió la imagen base (Debian 13) y se actualizaron Spring Boot (3.5.14), Jackson, Micrometer y Spring Framework en `backend/pom.xml`. Los CVE sin corrección disponible se listan en `.trivyignore`, con fecha de vencimiento (`exp:`). Vencida la fecha, Trivy vuelve a bloquear.
+- **Contenedor (Trivy):** tras el primer análisis se corrigió la imagen base (Debian 13) y se actualizaron Spring Boot (3.5.14), Tomcat (10.1.61), Jackson, Micrometer y Spring Framework en `backend/pom.xml`. Los CVE sin corrección disponible se listan en `.trivyignore`, con fecha de vencimiento (`exp:`). Vencida la fecha, Trivy vuelve a bloquear.
 
 | CVE | Componente | Por qué no se corrige | Estado |
 |---|---|---|---|
 | CVE-2026-47884, CVE-2026-47890 | `spring-webmvc` 6.2.x | La corrección existe solo en Spring Framework 7 (requiere migrar a Spring Boot 4). | En análisis. Vence 10-12-2026. |
-| CVE-2026-65182, CVE-2026-65905, CVE-2026-68525 | `tomcat-embed-core` 10.1.x | La corrección (10.1.58) aún no está publicada en Maven Central. | En análisis. Vence 17-11-2026. |
 
-La aplicación no usa las funciones afectadas (vistas XSLT, SSE, autenticación DIGEST/FORM de Tomcat), pero la decisión final sobre estas excepciones queda sujeta a análisis del equipo antes de su vencimiento.
+La aplicación no usa las funciones afectadas (vistas XSLT y SSE), pero la decisión final sobre estas excepciones queda sujeta a análisis del equipo antes de su vencimiento.
 
 ### 5.3. Admisión en el clúster (Kyverno)
 
