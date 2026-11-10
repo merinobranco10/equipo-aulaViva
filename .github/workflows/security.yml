@@ -1,39 +1,47 @@
 name: AulaViva - Security Analysis
 
-# Solo corre cuando cambia algo que afecta a la seguridad del software entregado
-# (codigo, dependencias, Terraform, manifiestos k8s, politicas y configuracion de
-# los propios escaneos). NO corre por cambios en documentacion (*.md, ADR, docs/),
-# imagenes/evidencias (png, jpg...) ni otros archivos sin efecto en la imagen.
+# Corre ante CUALQUIER cambio, salvo que todos los archivos modificados sean
+# documentacion en Markdown (README, ADR, *.md) o imagenes/evidencias. Si un
+# commit o PR mezcla un .md con codigo, Terraform, k8s, workflows, etc., corre
+# completo. Los patrones distinguen mayusculas: por eso se repiten .JPG/.PNG.
 on:
   push:
     branches:
       - desarrollo
-    paths:
-      - "backend/**"
-      - "terraform/**"
-      - "k8s/**"
-      - ".semgrep/**"
-      - ".zap/**"
-      - ".trivyignore"
-      - ".gitleaksignore"
-      - ".github/workflows/security.yml"
-      - ".github/workflows/ci.yml"   # ci.yml publica la imagen que se firma y escanea aqui
+    paths-ignore:
+      - "**.md"
+      - "**.png"
+      - "**.PNG"
+      - "**.jpg"
+      - "**.JPG"
+      - "**.jpeg"
+      - "**.JPEG"
+      - "**.gif"
+      - "**.webp"
+      - "**.svg"
+      - "**.ico"
+      - "**.bmp"
+      - "docs/qa/**"
 
   pull_request:
     branches:
       - main
       - desarrollo
-    paths:
-      - "backend/**"
-      - "terraform/**"
-      - "k8s/**"
-      - ".semgrep/**"
-      - ".zap/**"
-      - ".trivyignore"
-      - ".gitleaksignore"
-      - ".github/workflows/security.yml"
-      - ".github/workflows/ci.yml"
-      
+    paths-ignore:
+      - "**.md"
+      - "**.png"
+      - "**.PNG"
+      - "**.jpg"
+      - "**.JPG"
+      - "**.jpeg"
+      - "**.JPEG"
+      - "**.gif"
+      - "**.webp"
+      - "**.svg"
+      - "**.ico"
+      - "**.bmp"
+      - "docs/qa/**"
+
   workflow_dispatch:
 
 permissions:
@@ -42,7 +50,7 @@ permissions:
 # Un push nuevo a un PR cancela la ejecucion anterior de ese PR. En push a
 # `desarrollo` NUNCA se cancela: podria cortar una firma o attestation a medias.
 concurrency:
-  group: security-${{ github.event.pull_request.number || github.ref }}
+  group: security-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -128,6 +136,7 @@ jobs:
           vuln-type: library
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          trivyignores: .trivyignore
           exit-code: "1"
           format: table
 
@@ -282,7 +291,7 @@ jobs:
   # hacia main/desarrollo) y siempre termina verificando con `cosign verify`:
   # si la imagen no esta firmada y con attestation, el check falla.
   #
-  #  - push a `desarrollo` -> firma + attestation (si aun no existen) y verifica.
+  #  - push a `desarrollo` -> firma + attestation (lo que falte) y verifica.
   #  - pull_request        -> solo verifica. Nunca firma: desde un PR la
   #                           identidad OIDC seria refs/pull/N/merge y no la
   #                           autorizada (refs/heads/desarrollo).
@@ -383,7 +392,10 @@ jobs:
           echo "img_sha=${IMG_SHA}" >> "$GITHUB_OUTPUT"
           echo "Imagen: ${IMAGE}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Comprobar si la imagen ya esta firmada
+      # Firma y attestation se comprueban POR SEPARADO: si una ejecucion anterior
+      # firmo pero fallo al adjuntar la attestation, la siguiente completa solo
+      # lo que falta (antes quedaba la imagen firmada sin attestation para siempre).
+      - name: Comprobar firma y attestation existentes
         id: precheck
         if: env.SIGN == 'true'
         env:
@@ -394,10 +406,24 @@ jobs:
                --certificate-oidc-issuer "${OIDC_ISSUER}" \
                "${IMAGE}@${DIGEST}" > /dev/null 2>&1; then
             echo "signed=true" >> "$GITHUB_OUTPUT"
-            echo "La imagen ya estaba firmada por este workflow; no se vuelve a firmar."
+            echo "La imagen ya estaba firmada por este workflow."
           else
             echo "signed=false" >> "$GITHUB_OUTPUT"
           fi
+
+          ATTESTED=false
+          for TYPE in slsaprovenance slsaprovenance1; do
+            if cosign verify-attestation \
+                 --type "$TYPE" \
+                 --certificate-identity "${IDENTITY}" \
+                 --certificate-oidc-issuer "${OIDC_ISSUER}" \
+                 "${IMAGE}@${DIGEST}" > /dev/null 2>&1; then
+              ATTESTED=true
+              echo "La imagen ya tenia attestation ${TYPE}."
+              break
+            fi
+          done
+          echo "attested=${ATTESTED}" >> "$GITHUB_OUTPUT"
 
       - name: Firmar la imagen por digest (Cosign keyless)
         if: env.SIGN == 'true' && steps.precheck.outputs.signed != 'true'
@@ -406,7 +432,7 @@ jobs:
         run: cosign sign --yes "${IMAGE}@${DIGEST}"
 
       - name: Extraer provenance SLSA de la imagen
-        if: env.SIGN == 'true' && steps.precheck.outputs.signed != 'true'
+        if: env.SIGN == 'true' && steps.precheck.outputs.attested != 'true'
         id: provenance
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
@@ -426,7 +452,7 @@ jobs:
           fi
 
       - name: Adjuntar attestation SLSA nivel 2
-        if: env.SIGN == 'true' && steps.precheck.outputs.signed != 'true'
+        if: env.SIGN == 'true' && steps.precheck.outputs.attested != 'true'
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
           PREDICATE_TYPE: ${{ steps.provenance.outputs.type }}
@@ -497,9 +523,10 @@ jobs:
   # ---------------------------------------------------------------------------
   # DAST (S10) - OWASP ZAP baseline contra staging
   # Staging = la imagen firmada y verificada por sign-and-attest, levantada en
-  # el runner (http://localhost:8080) con datos sinteticos (ver
-  # docs/qa/s10-dast-y-admision.md). Falla si ZAP reporta riesgo Medium o
-  # superior; los falsos positivos se registran en .zap/rules.tsv.
+  # el runner (http://localhost:8080) con las restricciones de k8s/deployment.yaml
+  # y solo datos sinteticos (ver docs/qa/s10-dast-y-admision.md). Falla si ZAP
+  # reporta riesgo Medium o superior; los falsos positivos se registran como
+  # IGNORE en .zap/rules.tsv. Timeout del job: < 10 min.
   # ---------------------------------------------------------------------------
   dast:
     name: DAST - ZAP baseline (staging)
@@ -530,6 +557,9 @@ jobs:
         run: |
           set -euo pipefail
           docker run -d --name aulaviva-staging -p 8080:8080 \
+            --read-only --tmpfs /tmp \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
             "${IMAGE}@${DIGEST}"
 
           for _ in $(seq 1 30); do
@@ -548,7 +578,7 @@ jobs:
         with:
           target: http://localhost:8080
           rules_file_name: .zap/rules.tsv
-          cmd_options: "-m 2 -T 5"
+          cmd_options: "-m 1 -T 3"   # spider 1 min, espera pasiva max 3 min (cabe en 9)
           fail_action: false
           allow_issue_writing: false
           artifact_name: zap-baseline-report
@@ -559,12 +589,13 @@ jobs:
           REPORT=report_json.json
           [ -f "$REPORT" ] || { echo "::error::ZAP no genero $REPORT."; exit 1; }
 
-          COUNT="$(jq '[.site[].alerts[] | select((.riskcode | tonumber) >= 2)] | length' "$REPORT")"
+          # riskcode: 0 Informational, 1 Low, 2 Medium, 3 High
+          FILTER='(.site // [])[] | (.alerts // [])[] | select((.riskcode | tonumber) >= 2)'
+          COUNT="$(jq "[${FILTER}] | length" "$REPORT")"
           echo "Hallazgos Medium o superior: ${COUNT}" >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$COUNT" -gt 0 ]; then
-            jq -r '.site[].alerts[] | select((.riskcode | tonumber) >= 2)
-                   | "- [" + .riskdesc + "] " + .name + " (regla " + .pluginid + ")"' "$REPORT" \
+            jq -r "${FILTER} | \"- [\" + .riskdesc + \"] \" + (.name // .alert) + \" (regla \" + .pluginid + \")\"" "$REPORT" \
               | tee -a "$GITHUB_STEP_SUMMARY"
             echo "::error::ZAP encontro hallazgos de riesgo Medium o superior."
             exit 1
@@ -572,4 +603,6 @@ jobs:
 
       - name: Detener staging
         if: always()
-        run: docker rm -f aulaviva-staging || true
+        run: |
+          docker logs aulaviva-staging || true
+          docker rm -f aulaviva-staging || true
