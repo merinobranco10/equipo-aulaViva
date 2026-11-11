@@ -87,9 +87,11 @@ Completar con lo observado.
 
 | Regla | Comando | Alerta en Falco | Slack | Incidente PagerDuty | Evidencia |
 |---|---|---|---|---|---|
-| Shell en contenedor | `exec … sh -c` | _pendiente_ | _pendiente_ | _pendiente_ | `docs/qa/evidence/s10/falco-01-shell.png` |
-| Escritura en /etc | `exec … touch /etc/…` | _pendiente_ | _pendiente_ | _pendiente_ | `docs/qa/evidence/s10/falco-02-etc.png` |
-| Conexión saliente | `exec … wget` | _pendiente_ | _pendiente_ | _pendiente_ | `docs/qa/evidence/s10/falco-03-egress.png` |
+| Shell en contenedor | `kubectl -n equipo-aulaviva exec aulaviva-tutor-ia-falco-test -- sh -c "echo prueba"` | `AulaViva - Shell en contenedor` (Critical) | _pendiente_ | _pendiente_ | `docs/qa/evidence/s10/08-falco-shell.png` |
+| Escritura en /etc | `kubectl -n equipo-aulaviva exec aulaviva-tutor-ia-falco-test -- touch /etc/falco-test` | `AulaViva - Escritura en /etc` (Error) | _pendiente_ | _pendiente_ | `docs/qa/evidence/s10/09-falco-etc.png` |
+| Conexión saliente | `kubectl -n equipo-aulaviva exec aulaviva-tutor-ia-falco-test -- wget -T 3 -q -O /dev/null http://example.com` | `AulaViva - Conexion saliente inesperada del Tutor IA` (Critical) | _pendiente_ | _pendiente_ | `docs/qa/evidence/s10/10-falco-egress.png` |
+
+---
 
 ## 8. Limitaciones
 
