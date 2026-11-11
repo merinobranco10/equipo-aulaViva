@@ -39,7 +39,7 @@
       k8s.pod.name startswith "aulaviva-tutor-ia"))
 
 - macro: aulaviva_spawned_process
-  condition: (evt.type in (execve, execveat) and evt.dir = <)
+  condition: (evt.type in (execve, execveat))
 
 - macro: aulaviva_open_write
   condition: >
@@ -48,7 +48,7 @@
 
 - macro: aulaviva_outbound
   condition: >
-    (evt.type = connect and evt.dir = < and
+    (evt.type = connect and
      (fd.typechar = 4 or fd.typechar = 6) and
      fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8" and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
