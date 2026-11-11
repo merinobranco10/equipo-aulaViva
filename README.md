@@ -213,7 +213,7 @@ Si aparecen hallazgos High, el PR debe incluir un plan de remediación o la just
 
 ### Remediación realizada en el primer run
 
-El primer análisis SCA falló por dos vulnerabilidades HIGH en `spring-boot-starter-actuator` 3.5.6 (CVE-2026-22731 y CVE-2026-22733), ambas con corrección en 3.5.12. Se actualizó Spring Boot a **3.5.12** en `backend/pom.xml` y el siguiente run quedó en verde. El detalle está en [docs/qa/s09-security-validation.md](docs/qa/s09-security-validation.md).
+El primer análisis SCA falló por dos vulnerabilidades HIGH en `spring-boot-starter-actuator` 3.5.6 (CVE-2026-22731 y CVE-2026-22733), ambas con corrección en 3.5.12. Se actualizó Spring Boot a **3.5.12** en `backend/pom.xml` y el siguiente run quedó en verde. 
 
 ### Modelo de amenazas
 

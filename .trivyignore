@@ -1,0 +1,9 @@
+# Excepciones del escaneo de contenedor/dependencias (Trivy).
+# Cada linea requiere su fila en docs/adr/0006-supply-chain.md (seccion 5.2),
+# con justificacion y fecha de vencimiento (exp:). Vencida la fecha, Trivy
+# vuelve a bloquear.
+
+# spring-webmvc 6.2.x: solo corregido en Spring Framework 7.0.9 (requiere Spring Boot 4).
+# AulaViva no usa XsltView ni Server-Sent Events.
+CVE-2026-47884 exp:2026-12-10
+CVE-2026-47890 exp:2026-12-10

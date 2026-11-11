@@ -1,19 +1,57 @@
 name: AulaViva - Security Analysis
 
+# Corre ante CUALQUIER cambio, salvo que todos los archivos modificados sean
+# documentacion en Markdown (README, ADR, *.md) o imagenes/evidencias. Si un
+# commit o PR mezcla un .md con codigo, Terraform, k8s, workflows, etc., corre
+# completo. Los patrones distinguen mayusculas: por eso se repiten .JPG/.PNG.
 on:
   push:
     branches:
       - desarrollo
+    paths-ignore:
+      - "**.md"
+      - "**.png"
+      - "**.PNG"
+      - "**.jpg"
+      - "**.JPG"
+      - "**.jpeg"
+      - "**.JPEG"
+      - "**.gif"
+      - "**.webp"
+      - "**.svg"
+      - "**.ico"
+      - "**.bmp"
+      - "docs/qa/**"
 
   pull_request:
     branches:
       - main
       - desarrollo
+    paths-ignore:
+      - "**.md"
+      - "**.png"
+      - "**.PNG"
+      - "**.jpg"
+      - "**.JPG"
+      - "**.jpeg"
+      - "**.JPEG"
+      - "**.gif"
+      - "**.webp"
+      - "**.svg"
+      - "**.ico"
+      - "**.bmp"
+      - "docs/qa/**"
 
   workflow_dispatch:
 
 permissions:
   contents: read
+
+# Un push nuevo a un PR cancela la ejecucion anterior de ese PR. En push a
+# `desarrollo` NUNCA se cancela: podria cortar una firma o attestation a medias.
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
 
@@ -98,6 +136,7 @@ jobs:
           vuln-type: library
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          trivyignores: .trivyignore
           exit-code: "1"
           format: table
 
@@ -183,3 +222,387 @@ jobs:
             --redact \
             --verbose \
             --exit-code=2
+
+  # ---------------------------------------------------------------------------
+  # IaC Scan (S10) - Checkov sobre terraform/
+  # Gate bloqueante: soft_fail false -> cualquier check fallido hace fallar el job.
+  # Excepciones (skip_check): solo mediante PR con ADR de justificacion
+  # (ver docs/adr/0006-supply-chain.md, seccion 5.2). Hoy no hay ninguna.
+  # ---------------------------------------------------------------------------
+  iac-scan:
+    name: IaC Scan - Checkov (Terraform)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Analizar Terraform con Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/
+          framework: terraform
+          soft_fail: false
+          quiet: true
+
+  # ---------------------------------------------------------------------------
+  # Container Scan (S10) - Trivy sobre la imagen construida
+  # Construye la imagen del backend SIN publicarla (post-build, pre-push) y la
+  # analiza: OS y librerias. Gate bloqueante en HIGH/CRITICAL con parche
+  # disponible (ignore-unfixed, mismo criterio que el SCA de la S09).
+  # ---------------------------------------------------------------------------
+  container-scan:
+    name: Container Scan - Trivy (imagen)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen para analisis
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          load: true
+          tags: aulaviva-backend:scan
+
+      - name: Analizar imagen con Trivy
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: image
+          image-ref: aulaviva-backend:scan
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "1"
+          format: table
+
+  # ---------------------------------------------------------------------------
+  # Supply chain (S10) - Firma Cosign keyless + attestation SLSA nivel 2
+  #
+  # Corre en TODOS los disparadores de este workflow (push a desarrollo y PR
+  # hacia main/desarrollo) y siempre termina verificando con `cosign verify`:
+  # si la imagen no esta firmada y con attestation, el check falla.
+  #
+  #  - push a `desarrollo` -> firma + attestation (lo que falte) y verifica.
+  #  - pull_request        -> solo verifica. Nunca firma: desde un PR la
+  #                           identidad OIDC seria refs/pull/N/merge y no la
+  #                           autorizada (refs/heads/desarrollo).
+  #
+  # Imagen objetivo: la que ci.yml publico para el commit (tag sha-<commit>).
+  # Si ese commit no toco backend/** y CI no corrio, se usa la ultima imagen
+  # publicada con exito en `desarrollo`. Este job NO reconstruye la imagen y
+  # trabaja siempre sobre `imagen@sha256:...`.
+  # ---------------------------------------------------------------------------
+  sign-and-attest:
+    name: Supply chain - Firma Cosign y attestation SLSA
+    runs-on: ubuntu-latest
+    needs: [sast, sca, secrets, iac-scan, container-scan]
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/desarrollo') ||
+      github.event_name == 'pull_request'
+    timeout-minutes: 30
+
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+
+    permissions:
+      contents: read
+      packages: write   # adjuntar firma y attestation al registro OCI (GHCR)
+      id-token: write   # token OIDC para la firma keyless (Sigstore)
+      actions: read     # consultar los runs de ci.yml y security.yml
+
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/equipo-aulaviva-backend
+      OIDC_ISSUER: https://token.actions.githubusercontent.com
+      # Identidad autorizada: la de ESTE workflow ejecutado en `desarrollo`.
+      IDENTITY: https://github.com/${{ github.repository }}/.github/workflows/security.yml@refs/heads/desarrollo
+      # En un PR, github.sha es el commit de merge; el codigo es el head del PR.
+      COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      SIGN: ${{ github.event_name == 'push' }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Instalar Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Iniciar sesion en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolver digest de la imagen construida por CI
+        id: image
+        run: |
+          set -euo pipefail
+
+          resolve_digest() {
+            docker buildx imagetools inspect "${IMAGE}:sha-$1" \
+              --format '{{.Manifest.Digest}}' 2>/dev/null
+          }
+
+          # 1) Run de ci.yml para este commit (puede tardar unos segundos en aparecer).
+          RUN_ID=""
+          for _ in $(seq 1 12); do
+            RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+              --commit "$COMMIT_SHA" --event push --limit 1 \
+              --json databaseId --jq '.[0].databaseId // empty')"
+            [ -n "$RUN_ID" ] && break
+            sleep 10
+          done
+
+          DIGEST=""
+          IMG_SHA="$COMMIT_SHA"
+          if [ -n "$RUN_ID" ]; then
+            # 2) Esperar a que CI publique la imagen de este commit.
+            for _ in $(seq 1 45); do
+              if DIGEST="$(resolve_digest "$COMMIT_SHA")" && [ -n "$DIGEST" ]; then break; fi
+              DIGEST=""
+              STATUS="$(gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json status --jq '.status')"
+              if [ "$STATUS" = "completed" ]; then
+                echo "::error::ci.yml termino sin publicar ${IMAGE}:sha-${COMMIT_SHA}."
+                exit 1
+              fi
+              sleep 20
+            done
+          else
+            # Commit sin cambios en backend/**: se usa la ultima imagen publicada por CI.
+            IMG_SHA="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+              --branch desarrollo --event push --status success --limit 1 \
+              --json headSha --jq '.[0].headSha // empty')"
+            [ -n "$IMG_SHA" ] && DIGEST="$(resolve_digest "$IMG_SHA")" || true
+            echo "ci.yml no corrio para ${COMMIT_SHA}; se usa la imagen del commit ${IMG_SHA:-?} (ultimo CI exitoso en desarrollo)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          case "$DIGEST" in
+            sha256:*) ;;
+            *) echo "::error::No se encontro una imagen de AulaViva para firmar o verificar."; exit 1 ;;
+          esac
+
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "img_sha=${IMG_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Imagen: ${IMAGE}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+
+      # Firma y attestation se comprueban POR SEPARADO: si una ejecucion anterior
+      # firmo pero fallo al adjuntar la attestation, la siguiente completa solo
+      # lo que falta (antes quedaba la imagen firmada sin attestation para siempre).
+      - name: Comprobar firma y attestation existentes
+        id: precheck
+        if: env.SIGN == 'true'
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          if cosign verify \
+               --certificate-identity "${IDENTITY}" \
+               --certificate-oidc-issuer "${OIDC_ISSUER}" \
+               "${IMAGE}@${DIGEST}" > /dev/null 2>&1; then
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "La imagen ya estaba firmada por este workflow."
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          ATTESTED=false
+          for TYPE in slsaprovenance slsaprovenance1; do
+            if cosign verify-attestation \
+                 --type "$TYPE" \
+                 --certificate-identity "${IDENTITY}" \
+                 --certificate-oidc-issuer "${OIDC_ISSUER}" \
+                 "${IMAGE}@${DIGEST}" > /dev/null 2>&1; then
+              ATTESTED=true
+              echo "La imagen ya tenia attestation ${TYPE}."
+              break
+            fi
+          done
+          echo "attested=${ATTESTED}" >> "$GITHUB_OUTPUT"
+
+      - name: Firmar la imagen por digest (Cosign keyless)
+        if: env.SIGN == 'true' && steps.precheck.outputs.signed != 'true'
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: cosign sign --yes "${IMAGE}@${DIGEST}"
+
+      - name: Extraer provenance SLSA de la imagen
+        if: env.SIGN == 'true' && steps.precheck.outputs.attested != 'true'
+        id: provenance
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools inspect "${IMAGE}@${DIGEST}" \
+            --format '{{json .Provenance.SLSA}}' > provenance.json
+
+          # slsaprovenance = SLSA v0.2 (buildx por defecto); slsaprovenance1 = SLSA v1.
+          if jq -e '.builder.id and .buildType and (.materials | type == "array")' provenance.json > /dev/null; then
+            echo "type=slsaprovenance" >> "$GITHUB_OUTPUT"
+          elif jq -e '.buildDefinition and .runDetails' provenance.json > /dev/null; then
+            echo "type=slsaprovenance1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::La imagen no trae una provenance SLSA valida (revisar provenance de build-push-action en ci.yml)."
+            exit 1
+          fi
+
+      - name: Adjuntar attestation SLSA nivel 2
+        if: env.SIGN == 'true' && steps.precheck.outputs.attested != 'true'
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+          PREDICATE_TYPE: ${{ steps.provenance.outputs.type }}
+        run: |
+          cosign attest --yes \
+            --type "${PREDICATE_TYPE}" \
+            --predicate provenance.json \
+            "${IMAGE}@${DIGEST}"
+
+      - name: Esperar la firma (solo en PR)
+        if: env.SIGN != 'true'
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+          IMG_SHA: ${{ steps.image.outputs.img_sha }}
+        run: |
+          # Si el push a desarrollo que firma esta imagen sigue en curso, esperarlo.
+          for _ in $(seq 1 30); do
+            if cosign verify \
+                 --certificate-identity "${IDENTITY}" \
+                 --certificate-oidc-issuer "${OIDC_ISSUER}" \
+                 "${IMAGE}@${DIGEST}" > /dev/null 2>&1; then
+              exit 0
+            fi
+            STATUS="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow security.yml \
+              --commit "$IMG_SHA" --event push --limit 1 --json status --jq '.[0].status // "none"')"
+            case "$STATUS" in
+              completed|none) exit 0 ;;   # nada que esperar: la verificacion de abajo decide
+            esac
+            echo "El push que firma ${IMG_SHA} sigue en curso (${STATUS}); reintentando..."
+            sleep 20
+          done
+
+      - name: Verificar firma (cosign verify)
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          cosign verify \
+            --certificate-identity "${IDENTITY}" \
+            --certificate-oidc-issuer "${OIDC_ISSUER}" \
+            "${IMAGE}@${DIGEST}"
+
+      - name: Verificar attestation SLSA (cosign verify-attestation)
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          VERIFIED=""
+          for TYPE in slsaprovenance slsaprovenance1; do
+            if cosign verify-attestation \
+                 --type "$TYPE" \
+                 --certificate-identity "${IDENTITY}" \
+                 --certificate-oidc-issuer "${OIDC_ISSUER}" \
+                 "${IMAGE}@${DIGEST}" > /dev/null; then
+              VERIFIED="$TYPE"
+              break
+            fi
+          done
+          [ -n "$VERIFIED" ] || { echo "::error::No hay attestation SLSA verificable para ${IMAGE}@${DIGEST}."; exit 1; }
+
+          {
+            echo "### Supply chain verificada"
+            echo "- Imagen: \`${IMAGE}@${DIGEST}\`"
+            echo "- Firma Cosign (keyless): OK"
+            echo "- Attestation \`${VERIFIED}\`: OK"
+            echo "- Identidad: \`${IDENTITY}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # DAST (S10) - OWASP ZAP baseline contra staging
+  # Staging = la imagen firmada y verificada por sign-and-attest, levantada en
+  # el runner (http://localhost:8080) con las restricciones de k8s/deployment.yaml
+  # y solo datos sinteticos (ver docs/qa/s10-dast-y-admision.md). Falla si ZAP
+  # reporta riesgo Medium o superior; los falsos positivos se registran como
+  # IGNORE en .zap/rules.tsv. Timeout del job: < 10 min.
+  # ---------------------------------------------------------------------------
+  dast:
+    name: DAST - ZAP baseline (staging)
+    runs-on: ubuntu-latest
+    needs: sign-and-attest
+    timeout-minutes: 9   # < 10 min
+
+    permissions:
+      contents: read
+      packages: read
+
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/equipo-aulaviva-backend
+      DIGEST: ${{ needs.sign-and-attest.outputs.digest }}
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Iniciar sesion en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Levantar staging (imagen firmada por digest)
+        run: |
+          set -euo pipefail
+          docker run -d --name aulaviva-staging -p 8080:8080 \
+            --read-only --tmpfs /tmp \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            "${IMAGE}@${DIGEST}"
+
+          for _ in $(seq 1 30); do
+            if curl -fs http://localhost:8080/actuator/health/readiness > /dev/null; then
+              echo "Staging listo: ${IMAGE}@${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 5
+          done
+          docker logs aulaviva-staging
+          echo "::error::El staging no quedo listo a tiempo."
+          exit 1
+
+      - name: Ejecutar ZAP baseline
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://localhost:8080
+          rules_file_name: .zap/rules.tsv
+          cmd_options: "-m 1 -T 3"   # spider 1 min, espera pasiva max 3 min (cabe en 9)
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: zap-baseline-report
+
+      - name: Gate DAST (falla en riesgo Medium o superior)
+        run: |
+          set -euo pipefail
+          REPORT=report_json.json
+          [ -f "$REPORT" ] || { echo "::error::ZAP no genero $REPORT."; exit 1; }
+
+          # riskcode: 0 Informational, 1 Low, 2 Medium, 3 High
+          FILTER='(.site // [])[] | (.alerts // [])[] | select((.riskcode | tonumber) >= 2)'
+          COUNT="$(jq "[${FILTER}] | length" "$REPORT")"
+          echo "Hallazgos Medium o superior: ${COUNT}" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$COUNT" -gt 0 ]; then
+            jq -r "${FILTER} | \"- [\" + .riskdesc + \"] \" + (.name // .alert) + \" (regla \" + .pluginid + \")\"" "$REPORT" \
+              | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "::error::ZAP encontro hallazgos de riesgo Medium o superior."
+            exit 1
+          fi
+
+      - name: Detener staging
+        if: always()
+        run: |
+          docker logs aulaviva-staging || true
+          docker rm -f aulaviva-staging || true
