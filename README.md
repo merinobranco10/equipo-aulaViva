@@ -43,6 +43,30 @@ El canal principal de comunicación del equipo es Discord.
 
 Las decisiones importantes del proyecto se documentan en GitHub mediante Issues, Pull Requests o documentos dentro del repositorio.
 
+## Ejecutar en local (S18 · Día 1)
+
+Backend con H2 en memoria: no requiere Docker (apto para PC de 8 GB).
+
+```bash
+cd backend
+export DEMO_PASSWORD='<tu-clave>'   # en PowerShell: $env:DEMO_PASSWORD='<tu-clave>'
+mvn -B verify                                   # tests + cobertura (gate 70 %)
+java -Xmx512m -jar target/app.jar --spring.profiles.active=h2,demo
+```
+
+En otra terminal (Git Bash): `DEMO_PASSWORD='<tu-clave>' ./scripts/demo-dia1.sh`
+
+| Endpoint | Rol | Descripción |
+|---|---|---|
+| `POST /v1/evaluations` | TEACHER | Crea una evaluación (header `Idempotency-Key` obligatorio) |
+| `GET /v1/evaluations/{id}` | TEACHER del curso, STUDENT inscrito, COORDINATOR | Evaluación sin respuestas correctas |
+| `POST /v1/evaluations/{id}/submissions` | STUDENT inscrito | Corrige y devuelve nota (1,0–7,0) y feedback por pregunta |
+| `GET /v1/students/{id}/progress` | GUARDIAN, TEACHER, COORDINATOR, el propio STUDENT | Avance del estudiante |
+| `GET /v1/me`, `GET /v1/me/evaluations` | Cualquiera autenticado | Contexto del usuario para la UI |
+| `POST /v1/tutor/questions` | STUDENT | Stub (501) hasta el Día 4 |
+
+Aislamiento multi-tenant: el colegio (tenant) se toma siempre del usuario autenticado; un recurso de otro colegio responde 404. Lo verifica `SeguridadTest`.
+
 ## Despliegue en Kubernetes (S07)
 
 Servicio principal: `backend/` (Spring Boot 3.5, Java 21).
