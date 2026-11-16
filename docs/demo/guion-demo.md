@@ -27,11 +27,27 @@
 
 ## Probar hoy (Día 1, sin UI)
 
-```bash
-DEMO_PASSWORD='tu-clave' ./scripts/demo-dia1.sh
+Ventana 1 (dejarla abierta):
+
+```powershell
+cd backend
+$env:DEMO_PASSWORD = '<tu-clave>'
+java -Xmx512m -jar target\app.jar --spring.profiles.active=h2,demo
 ```
 
-El script recorre los pasos 1, 2, 5 y 6 con curl y falla si el aislamiento entre colegios no responde 404.
+Ventana 2, en PowerShell:
+
+```powershell
+.\scripts\demo-dia1.ps1 -Password '<tu-clave>'
+```
+
+O en Git Bash / Codespaces:
+
+```bash
+DEMO_PASSWORD='<tu-clave>' ./scripts/demo-dia1.sh
+```
+
+Ambos scripts recorren los pasos 1, 2, 5 y 6 y fallan si el aislamiento entre colegios no responde 404.
 
 ## Pendiente (Día 2 · Matías)
 

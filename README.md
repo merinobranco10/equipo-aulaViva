@@ -54,7 +54,10 @@ mvn -B verify                                   # tests + cobertura (gate 70 %)
 java -Xmx512m -jar target/app.jar --spring.profiles.active=h2,demo
 ```
 
-En otra terminal (Git Bash): `DEMO_PASSWORD='<tu-clave>' ./scripts/demo-dia1.sh`
+En otra terminal, con la app corriendo:
+
+- PowerShell: `.\scripts\demo-dia1.ps1 -Password '<tu-clave>'`
+- Git Bash / Codespaces: `DEMO_PASSWORD='<tu-clave>' ./scripts/demo-dia1.sh`
 
 | Endpoint | Rol | Descripción |
 |---|---|---|
