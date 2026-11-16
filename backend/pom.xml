@@ -31,10 +31,23 @@
         <jackson-bom.version>2.21.7</jackson-bom.version>
         <micrometer.version>1.15.12</micrometer.version>
         <spring-framework.version>6.2.19</spring-framework.version>
-        <!-- S18 Dia 1: pgjdbc 42.7.10 (gestionado por Spring Boot) tiene CVE-2026-42198 (HIGH),
-             corregido en 42.7.11. Quitar cuando Spring Boot gestione 42.7.11 o superior. -->
-        <postgresql.version>42.7.11</postgresql.version>
+        <!-- S18 Dia 1: pgjdbc 42.7.10 (gestionado por Spring Boot) tiene CVE-2026-42198 y
+             42.7.11 tiene CVE-2026-54291 (ambos HIGH); 42.7.12 corrige los dos.
+             Quitar cuando Spring Boot gestione 42.7.12 o superior. -->
+        <postgresql.version>42.7.12</postgresql.version>
     </properties>
+
+    <!-- S18 Dia 1: spring-data-commons 3.5.11 (via Spring Boot 3.5.14) tiene CVE-2026-41695 y
+         CVE-2026-41716 (HIGH), corregidos en 3.5.12. Quitar cuando Spring Boot lo gestione. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-commons</artifactId>
+                <version>3.5.12</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- API REST -->
