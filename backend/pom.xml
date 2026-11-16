@@ -31,6 +31,9 @@
         <jackson-bom.version>2.21.7</jackson-bom.version>
         <micrometer.version>1.15.12</micrometer.version>
         <spring-framework.version>6.2.19</spring-framework.version>
+        <!-- S18 Dia 1: pgjdbc 42.7.10 (gestionado por Spring Boot) tiene CVE-2026-42198 (HIGH),
+             corregido en 42.7.11. Quitar cuando Spring Boot gestione 42.7.11 o superior. -->
+        <postgresql.version>42.7.11</postgresql.version>
     </properties>
 
     <dependencies>
