@@ -1,0 +1,4 @@
+# Reglas de ZAP baseline (formato: <id_regla>\t<IGNORE|WARN|FAIL>\t<comentario>)
+# Un falso positivo solo se agrega aqui despues de revisarlo y registrarlo en
+# docs/qa/s10-dast-y-admision.md (seccion "Falsos positivos").
+# Hoy no hay ninguno.
