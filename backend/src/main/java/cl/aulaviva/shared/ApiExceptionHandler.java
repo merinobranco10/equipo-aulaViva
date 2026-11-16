@@ -3,6 +3,8 @@ package cl.aulaviva.shared;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +14,15 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
-/** Traduce excepciones a ProblemDetails (application/problem+json). */
+/**
+ * Traduce excepciones a ProblemDetails (application/problem+json). Tiene prioridad sobre el
+ * manejador generico de Spring Boot (spring.mvc.problemdetails), que responderia 400 a los
+ * errores de validacion; el contrato usa 422.
+ */
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApiExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
@@ -29,6 +37,21 @@ public class ApiExceptionHandler {
         List<Map<String, String>> errors = ex.getBindingResult().getFieldErrors().stream()
             .map(e -> Map.of(
                 "field", e.getField(),
+                "message", e.getDefaultMessage() == null ? "inválido" : e.getDefaultMessage()))
+            .toList();
+        ProblemDetail problem = Problems.of(HttpStatus.UNPROCESSABLE_ENTITY, "validation-error",
+            "Datos de entrada inválidos", "Uno o más campos no cumplen las reglas.", request);
+        problem.setProperty("errors", errors);
+        return ResponseEntity.unprocessableEntity().body(problem);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ProblemDetail> handleMethodValidation(
+            HandlerMethodValidationException ex, HttpServletRequest request) {
+        List<Map<String, String>> errors = ex.getAllErrors().stream()
+            .map(e -> Map.of(
+                "field", e.getCodes() == null || e.getCodes().length == 0
+                    ? "request" : e.getCodes()[e.getCodes().length - 1],
                 "message", e.getDefaultMessage() == null ? "inválido" : e.getDefaultMessage()))
             .toList();
         ProblemDetail problem = Problems.of(HttpStatus.UNPROCESSABLE_ENTITY, "validation-error",
