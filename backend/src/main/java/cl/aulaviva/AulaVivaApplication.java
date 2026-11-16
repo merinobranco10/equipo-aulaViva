@@ -14,16 +14,11 @@ public class AulaVivaApplication {
         SpringApplication.run(AulaVivaApplication.class, args);
     }
 
+    /**
+     * Endpoint publico de estado. La raiz "/" queda libre para la UI estatica (Dia 2).
+     */
     @RestController
     static class ApiController {
-
-        @GetMapping("/")
-        public Map<String, String> home() {
-            return Map.of(
-                "service", "aulaviva-backend",
-                "message", "API principal de AulaViva en ejecución"
-            );
-        }
 
         @GetMapping("/api/v1/status")
         public Map<String, String> status() {
