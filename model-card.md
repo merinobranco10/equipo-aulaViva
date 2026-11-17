@@ -83,6 +83,8 @@ Deben revisarse y validarse contra los objetivos curriculares oficiales antes de
 
 ## 10. Evaluación
 
+Se propone utilizar `golden-set.jsonl` como conjunto inicial de pruebas.
+
 El conjunto contempla 36 casos: 32 preguntas con respuesta en los apuntes, 1 fuera de tema, 1 de otro colegio y 2 intentos de manipulación (prompt injection).
 
 Criterios de evaluación:
