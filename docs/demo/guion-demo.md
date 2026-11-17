@@ -10,7 +10,7 @@
 | Colegio Los Andes (`colegio-a`) | Matemática 8° básico A (`matematica-8a`) | `docente.a`, `estudiante.a`, `apoderado.a` |
 | Colegio Pacífico (`colegio-b`) | Ciencias Naturales 8° básico B (`ciencias-8b`) | `docente.b`, `estudiante.b`, `coordinador.b` |
 
-- La contraseña de los usuarios es la variable `DEMO_PASSWORD` (Codespaces/GitHub secret). **No se escribe en este documento.**
+- Cada persona define su propia contraseña con `DEMO_PASSWORD` al levantar la app; en staging compartido se usa el secret del repositorio. **No se escribe en este documento.**
 - Al iniciar, `estudiante.a` ya tiene "Números enteros" rendida (nota 4,5) y "Potencias de base entera" pendiente.
 - Todos los nombres son ficticios.
 
@@ -27,14 +27,34 @@
 
 ## Probar hoy (Día 1, sin UI)
 
-```bash
-DEMO_PASSWORD='tu-clave' ./scripts/demo-dia1.sh
+Ventana 1 (dejarla abierta):
+
+```powershell
+cd backend
+$env:DEMO_PASSWORD = '<tu-clave>'
+java -Xmx512m -jar target\app.jar --spring.profiles.active=h2,demo
 ```
 
-El script recorre los pasos 1, 2, 5 y 6 con curl y falla si el aislamiento entre colegios no responde 404.
+Ventana 2, en PowerShell:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\demo-dia1.ps1 -Password '<tu-clave>'
+```
+
+O en Git Bash / Codespaces:
+
+```bash
+DEMO_PASSWORD='<tu-clave>' ./scripts/demo-dia1.sh
+```
+
+Ambos scripts recorren los pasos 1, 2, 5 y 6 y fallan si el aislamiento entre colegios no responde 404.
+
+- Manual completo de pruebas: [AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf](../qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf)
+- Evidencia de la demo: [01-demo-dia1.png](../qa/evidence/s18/01-demo-dia1.png)
 
 ## Pendiente (Día 2 · Matías)
 
-- [ ] Reemplazar curl por la UI (`index.html`, `docente.html`, `estudiante.html`, `apoderado.html`).
+- [ ] Reemplazar los scripts por la UI (`index.html`, `docente.html`, `estudiante.html`, `apoderado.html`).
 - [ ] URL de staging y orden de pestañas.
 - [ ] Tiempo real de cada paso tras probarlo 2 veces.
