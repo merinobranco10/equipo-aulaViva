@@ -42,7 +42,7 @@ El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir co
 | CI/CD y GitOps con Argo CD (S08) | ✅ | [CI/CD](#cicd-y-gitops-s08) |
 | DevSecOps: SAST, SCA, SBOM, secretos, IaC, firma, Kyverno, DAST, Falco (S09–S10) | ✅ | [Seguridad](#seguridad-devsecops--s09s10) |
 | **Backend funcional (S18 · Día 1):** multi-tenant, RBAC, evaluaciones, progreso, outbox, datos de demo | ✅ | PR #60 · 25 tests · cobertura ≥ 70 % |
-| Demo del Día 1 por script (PowerShell y bash) | ✅ | [guion](docs/demo/guion-demo.md) · `scripts/` |
+| Demo del Día 1 por script (PowerShell y bash) | ✅ | [guion](docs/demo/guion-demo.md) · [manual de pruebas](docs/qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf) · [captura](docs/qa/evidence/s18/01-demo-dia1.png) |
 | UI web, C4 L3, ADRs 0007–0008, corpus y golden set | ⏳ Día 2 | — |
 | Tests de contrato y seguridad ampliados, staging en Codespaces | ⏳ Día 3 | — |
 | Tutor IA con guardrails, evaluación y model card | ⏳ Día 4 | — |
@@ -80,6 +80,11 @@ Con la app corriendo, en otra terminal:
 
 - PowerShell: `.\scripts\demo-dia1.ps1 -Password '<tu-clave>'`
 - Git Bash / Codespaces: `DEMO_PASSWORD='<tu-clave>' ./scripts/demo-dia1.sh`
+  
+Manual completo con todas las pruebas paso a paso (PowerShell y bash): [docs/qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf](docs/qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf)
+
+![Demo del Día 1](docs/qa/evidence/s18/01-demo-dia1.png)
+
 
 | Perfil | Uso |
 |---|---|
