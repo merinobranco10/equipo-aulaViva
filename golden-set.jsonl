@@ -1,4 +1,3 @@
-
 {"id":"GS01","courseId":"matematica-8a","question":"¿Qué son los números enteros?","expected_behavior":"answer","expected_answer_contains":["positivos","negativos","cero"],"source":"01-numeros-enteros.md"}
 {"id":"GS02","courseId":"matematica-8a","question":"¿El cero es positivo o negativo?","expected_behavior":"answer","expected_answer_contains":["no es positivo ni negativo"],"source":"01-numeros-enteros.md"}
 {"id":"GS03","courseId":"matematica-8a","question":"¿Dónde se ubican los números negativos en la recta numérica?","expected_behavior":"answer","expected_answer_contains":["izquierda","cero"],"source":"01-numeros-enteros.md"}
