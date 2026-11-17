@@ -23,7 +23,7 @@ El sistema utiliza recuperación aumentada por generación (RAG) para fundamenta
 1. El estudiante envía una pregunta y el identificador del curso.
 2. El backend valida la identidad y los permisos del estudiante.
 3. El sistema identifica el tenant y el curso autorizado.
-4. El componente RAG recupera fragmentos relevantes del corpus correspondiente.
+4. El componente RAG busca por palabras clave los fragmentos más relevantes en los apuntes del curso.
 5. El LLM genera una respuesta utilizando el contexto recuperado.
 6. El backend entrega la respuesta y las fuentes utilizadas.
 
@@ -68,7 +68,7 @@ Deben revisarse y validarse contra los objetivos curriculares oficiales antes de
 - El sistema puede recuperar fragmentos poco relevantes.
 - Un LLM puede generar respuestas incorrectas o imprecisas.
 - La recuperación RAG no garantiza por sí sola que una respuesta sea correcta.
-- El proveedor y modelo definitivo aún deben confirmarse.
+- El proveedor es Anthropic (Claude) con el modelo `claude-haiku-5-5`. La búsqueda por palabras clave puede fallar si la pregunta usa palabras distintas a las del apunte.
 - El endpoint actual del backend es un stub que responde HTTP 501 hasta la implementación del Día 4.
 
 ## 9. Seguridad y privacidad
@@ -114,4 +114,4 @@ La evaluación debe ser ejecutada y registrada antes de considerar el sistema ap
 
 Este documento describe el diseño y los criterios previstos para el Tutor IA.
 
-No representa una integración productiva terminada. La selección definitiva del proveedor, el modelo, la base vectorial, la evaluación real y la implementación del endpoint deben completarse y validarse por el equipo.
+Proveedor y modelo definidos: Anthropic (Claude), `claude-haiku-5-5`. La integración en el backend y la ejecución real del golden set se hacen en el Día 4. Hasta entonces el endpoint responde HTTP 501.
