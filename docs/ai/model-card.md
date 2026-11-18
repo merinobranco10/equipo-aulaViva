@@ -7,10 +7,14 @@
 |---|---|
 | Sistema | Tutor IA AulaViva |
 | Tipo | Asistente educativo basado en LLM y RAG |
-| Versión | Borrador inicial |
+| Versión | 0.2 (proveedor Groq definido, 18-11-2026) |
 | Responsable | Equipo AI/Data |
-| Estado | Diseño y preparación de integración |
+| Estado | Diseño cerrado; integración en el Día 4 |
 | Público objetivo | Estudiantes de educación escolar |
+| Proveedor | Groq (API compatible con OpenAI) |
+| Modelo principal | `llama-3.3-70b-versatile` |
+| Modelo de respaldo | `openai/gpt-oss-20b` |
+| Decisión | [ADR 0009](../adr/0009-tutor-ia-proveedor-llm.md) |
 
 ## 2. Propósito
 
@@ -23,9 +27,11 @@ El sistema utiliza recuperación aumentada por generación (RAG) para fundamenta
 1. El estudiante envía una pregunta y el identificador del curso.
 2. El backend valida la identidad y los permisos del estudiante.
 3. El sistema identifica el tenant y el curso autorizado.
-4. El componente RAG busca por palabras clave los fragmentos más relevantes en los apuntes del curso.
-5. El LLM genera una respuesta utilizando el contexto recuperado.
-6. El backend entrega la respuesta y las fuentes utilizadas.
+4. Los guardrails de entrada bloquean intentos de prompt injection y quitan datos personales (RUT, correos, teléfonos) antes de seguir.
+5. El componente RAG busca con BM25 (palabras clave) los 3 fragmentos más relevantes en `backend/src/main/resources/corpus/<courseId>/`.
+6. El LLM (Groq, `llama-3.3-70b-versatile`) genera una respuesta usando solo el contexto recuperado, con timeout de 8 s.
+7. Si Groq falla, demora más de 8 s o se agota el presupuesto del colegio, se responde con un **fallback extractivo** (el fragmento más relevante, sin LLM).
+8. El backend entrega la respuesta y las fuentes utilizadas.
 
 ## 4. Datos de entrada
 
@@ -33,7 +39,7 @@ El sistema utiliza recuperación aumentada por generación (RAG) para fundamenta
 - Pregunta escrita por el estudiante.
 - Fragmentos de apuntes recuperados desde el corpus del curso.
 
-No se deben enviar datos personales innecesarios al proveedor del modelo.
+Al proveedor solo se envían la pregunta (sin datos personales) y los fragmentos recuperados. No se envían nombre, RUT, correo, notas ni identificadores del estudiante.
 
 ## 5. Datos de salida
 
@@ -49,9 +55,7 @@ La respuesta de la API contempla:
 | Matemática 8° básico A | matematica-8a | 5 |
 | Ciencias Naturales 8° básico B | ciencias-8b | 4 |
 
-Los apuntes son materiales de demostración creados para preparar y probar el flujo de recuperación.
-
-Deben revisarse y validarse contra los objetivos curriculares oficiales antes de su utilización educativa en producción.
+Los apuntes viven en `backend/src/main/resources/corpus/<courseId>/` (se empaquetan en el JAR). Cada uno indica su OA y la fuente (Programa de Estudio MINEDUC, curriculumnacional.cl). Son materiales de demostración redactados por el equipo; los OA marcados "por confirmar" deben verificarse contra el programa oficial antes de un uso real.
 
 ## 7. Comportamiento esperado
 
@@ -68,7 +72,8 @@ Deben revisarse y validarse contra los objetivos curriculares oficiales antes de
 - El sistema puede recuperar fragmentos poco relevantes.
 - Un LLM puede generar respuestas incorrectas o imprecisas.
 - La recuperación RAG no garantiza por sí sola que una respuesta sea correcta.
-- El proveedor es Anthropic (Claude) con el modelo `claude-haiku-5-5`. La búsqueda por palabras clave puede fallar si la pregunta usa palabras distintas a las del apunte.
+- El proveedor es Groq con `llama-3.3-70b-versatile`; el plan gratuito tiene límites de solicitudes por minuto y por día, por eso existe el fallback extractivo.
+- La búsqueda por palabras clave (BM25) puede fallar si la pregunta usa palabras distintas a las del apunte (no hay embeddings; pgvector queda diferido).
 - El endpoint actual del backend es un stub que responde HTTP 501 hasta la implementación del Día 4.
 
 ## 9. Seguridad y privacidad
@@ -76,16 +81,18 @@ Deben revisarse y validarse contra los objetivos curriculares oficiales antes de
 - El acceso al tutor debe limitarse a estudiantes autenticados.
 - El backend debe validar que el estudiante pertenece al curso consultado.
 - Los datos de un colegio no deben mezclarse con los de otro.
-- Las claves API deben almacenarse como secretos.
+- La clave `LLM_API_KEY` se guarda como secreto (GitHub Actions / Kubernetes Secret) y se entrega por privado; nunca en el repo, Discord ni capturas.
 - No se deben incluir credenciales en GitHub.
 - Se deben minimizar los datos personales enviados al proveedor externo.
 - Las preguntas y respuestas deben tratarse como información potencialmente sensible.
 
 ## 10. Evaluación
 
-Se propone utilizar `golden-set.jsonl` como conjunto inicial de pruebas.
+Se usa [`rag/eval/golden-set.jsonl`](../../rag/eval/golden-set.jsonl) (formato en [`rag/eval/README.md`](../../rag/eval/README.md)). Cada caso indica el `usuario` demo que pregunta.
 
-El conjunto contempla 36 casos: 32 preguntas con respuesta en los apuntes, 1 fuera de tema, 1 de otro colegio y 2 intentos de manipulación (prompt injection).
+El conjunto contempla 50 casos: 40 con respuesta en los apuntes (22 de Matemática y 18 de Ciencias), 3 fuera de tema, 1 de otro colegio (estudiante.b consultando `matematica-8a`, debe dar 404), 4 intentos de prompt injection, 1 con datos personales (RUT) y 1 pidiendo datos de otro estudiante.
+
+Metas para el Día 4: ≥ 80 % de aciertos en los casos `answer`, 100 % en los casos de bloqueo, aislamiento y PII.
 
 Criterios de evaluación:
 
@@ -107,11 +114,13 @@ La evaluación debe ser ejecutada y registrada antes de considerar el sistema ap
 | Información fuera del currículo | Recuperación limitada al corpus autorizado |
 | Filtración entre colegios | Validación de tenant y permisos en backend |
 | Exposición de claves | Secretos gestionados fuera del repositorio |
-| Indisponibilidad del proveedor | Timeout, manejo de errores y monitoreo |
+| Indisponibilidad o cuota agotada en Groq | Timeout de 8 s, Resilience4j y fallback extractivo |
+| Prompt injection | Guardrails de entrada y prompt de sistema que limita al contexto |
+| Datos personales enviados al proveedor | Redacción de PII antes de llamar al LLM |
 | Respuestas inadecuadas | Filtros, supervisión y pruebas periódicas |
 
 ## 12. Estado de implementación
 
 Este documento describe el diseño y los criterios previstos para el Tutor IA.
 
-Proveedor y modelo definidos: Anthropic (Claude), `claude-haiku-5-5`. La integración en el backend y la ejecución real del golden set se hacen en el Día 4. Hasta entonces el endpoint responde HTTP 501.
+Proveedor y modelo definidos: Groq, `llama-3.3-70b-versatile` (respaldo `openai/gpt-oss-20b`), ver ADR 0009. La integración en el backend y la ejecución real del golden set se hacen en el Día 4. Hasta entonces el endpoint responde HTTP 501.

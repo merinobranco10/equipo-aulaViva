@@ -1,3 +1,5 @@
+// Actualizado 18-11-2026: Tutor IA con Groq + BM25 + guardrails + fallback (ADR 0009), corpus en el
+// classpath, sin pgvector; coordinador y revisión de entregas (Día 2).
 workspace "AulaViva - C4 L3" "Arquitectura de componentes del backend AulaViva" {
 
     !identifiers hierarchical
@@ -8,22 +10,24 @@ workspace "AulaViva - C4 L3" "Arquitectura de componentes del backend AulaViva" 
         estudiante = person "Estudiante" "Realiza evaluaciones, consulta su progreso y utiliza el Tutor IA."
         docente = person "Docente" "Gestiona cursos y crea evaluaciones."
         apoderado = person "Apoderado" "Consulta el progreso académico del estudiante asociado."
+        coordinador = person "Coordinador Académico" "Consulta el progreso de cualquier estudiante de su colegio."
 
         // Servicios externos
-        llm = softwareSystem "Proveedor LLM" "Servicio externo que genera respuestas para el Tutor IA." "External"
+        llm = softwareSystem "Proveedor LLM (Groq)" "llama-3.3-70b-versatile (respaldo openai/gpt-oss-20b), API compatible con OpenAI." "External"
 
         // Sistema y contenedores
         aulaviva = softwareSystem "AulaViva" "Plataforma SaaS educativa multi-tenant." {
-        db = container "PostgreSQL" "Almacena datos transaccionales, datos de autorización y datos del Tutor IA (metadatos, fragmentos y embeddings), con aislamiento lógico por tenant." "PostgreSQL 16 + pgvector" "Database"
+            db = container "PostgreSQL" "Datos transaccionales, usuarios y roles, notas y tabla outbox_events, con aislamiento lógico por tenant_id. Sin embeddings (pgvector diferido)." "PostgreSQL 16 / H2 en local" "Database"
 
             backend = container "Backend AulaViva" "Monolito modular que expone la API y coordina los casos de uso." "Spring Boot 3.5 / Java 21" {
                 ui = component "UI estática" "Entrega las vistas web por rol y consume la API REST." "HTML + CSS + JavaScript"
                 identity = component "Identity" "Autentica usuarios, carga su identidad y aplica autorización basada en roles." "Spring Security"
                 tenancy = component "TenantContext" "Resuelve el tenant asociado al usuario autenticado y entrega el contexto de aislamiento." "Java / Spring"
                 academic = component "Gestión Académica" "Provee información de cursos y estudiantes para los casos de uso académicos." "Java / Spring"
-                evaluations = component "Evaluations" "Crea evaluaciones, registra entregas, corrige respuestas y calcula calificaciones." "Java / Spring"
-                progress = component "Progress" "Consulta y consolida el avance académico para el panel del apoderado." "Java / Spring"
-                tutor = component "Tutor IA" "Atiende preguntas académicas y coordina la generación de respuestas con el proveedor LLM." "Java / Spring"
+                evaluations = component "Evaluations" "Crea evaluaciones, registra entregas con Idempotency-Key, corrige, calcula la nota (1,0-7,0, 60 %) y entrega la revisión de la propia entrega." "Java / Spring"
+                progress = component "Progress" "Consolida el avance académico y decide quién puede ver a cada estudiante (estudiante, apoderado, docente, coordinador)." "Java / Spring"
+                tutor = component "Tutor IA" "Guardrails (injection y PII), búsqueda BM25 top-3 en los apuntes del curso, llamada al LLM con timeout de 8 s y fallback extractivo (Resilience4j)." "Java / Spring"
+                corpus = component "Corpus de apuntes" "Apuntes Markdown por curso con su OA (classpath:corpus/<courseId>/)." "Recursos del JAR"
                 outbox = component "Outbox" "Registra eventos de dominio en la misma base transaccional para su publicación posterior." "Java / Spring Data JPA"
                 shared = component "Shared / API Errors" "Centraliza excepciones, respuestas ProblemDetails y manejo común de errores." "Java / Spring"
             }
@@ -33,6 +37,7 @@ workspace "AulaViva - C4 L3" "Arquitectura de componentes del backend AulaViva" 
         estudiante -> aulaviva.backend.ui "Utiliza evaluaciones, progreso y Tutor IA" "HTTPS"
         docente -> aulaviva.backend.ui "Gestiona cursos y evaluaciones" "HTTPS"
         apoderado -> aulaviva.backend.ui "Consulta el progreso del estudiante" "HTTPS"
+        coordinador -> aulaviva.backend.progress "Consulta el progreso de estudiantes de su colegio" "HTTPS / REST"
 
         // UI y seguridad
         aulaviva.backend.ui -> aulaviva.backend.identity "Solicita autenticación y consulta el usuario actual" "HTTP / REST"
@@ -57,7 +62,8 @@ workspace "AulaViva - C4 L3" "Arquitectura de componentes del backend AulaViva" 
         aulaviva.backend.evaluations -> aulaviva.backend.outbox "Registra EvaluationCompleted al completar una evaluación" "Java"
 
         // Tutor IA
-        aulaviva.backend.tutor -> llm "Solicita generación de respuesta con contexto permitido" "HTTPS / API"
+        aulaviva.backend.tutor -> aulaviva.backend.corpus "Busca los 3 fragmentos más relevantes del curso autorizado" "BM25"
+        aulaviva.backend.tutor -> llm "Envía pregunta sin PII + fragmentos; timeout 8 s" "HTTPS / API OpenAI-compatible"
 
         // Manejo transversal de errores
         aulaviva.backend.ui -> aulaviva.backend.shared "Interpreta respuestas de error de la API" "HTTP / ProblemDetails"
@@ -71,6 +77,7 @@ workspace "AulaViva - C4 L3" "Arquitectura de componentes del backend AulaViva" 
             include estudiante
             include docente
             include apoderado
+            include coordinador
             include *
             autoLayout lr
             title "AulaViva - C4 Nivel 3 - Componentes del Backend"

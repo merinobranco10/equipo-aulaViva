@@ -29,7 +29,7 @@ Spring Security con usuarios en base de datos y **HTTP Basic sobre HTTPS** para 
 - (+) Cero infraestructura adicional, fácil de probar con MockMvc y `curl`.
 - (−) La credencial viaja en cada request: exige HTTPS en staging y producción.
 - (−) La UI guarda las credenciales en `sessionStorage` de la pestaña (se pierden al cerrarla). No hay MFA, bloqueo por intentos ni cierre de sesión en el servidor.
-- (−) Todo texto dinámico de la UI se inserta con `textContent`, y se recomienda una Content-Security-Policy estricta.
+- (−) Todo texto dinámico de la UI se inserta con `textContent`. Desde el 18-11-2026 `SecurityConfig` envía una Content-Security-Policy estricta (`default-src 'self'`, sin scripts ni estilos inline), `Permissions-Policy` y `Cross-Origin-Embedder-Policy`, requeridas por el DAST.
 
 
 ## Verificación
@@ -39,3 +39,5 @@ Spring Security con usuarios en base de datos y **HTTP Basic sobre HTTPS** para 
 - `SeguridadTest#tutorEsStubSoloParaEstudiantes` (403 para docente)
 - `FlujoEvaluacionTest#misEvaluacionesYMe` (`/v1/me` no expone el hash de contraseña)
 - Escenarios: `docs/scenarios/rbac.feature`.
+- `SeguridadTest#cabecerasDeSeguridadEnLaUi` (CSP y Permissions-Policy)
+- `RevisionEstudianteTest` (revisión de la propia entrega solo para el estudiante; otro colegio → 404)

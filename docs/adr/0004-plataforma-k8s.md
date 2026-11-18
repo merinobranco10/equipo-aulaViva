@@ -115,34 +115,3 @@ La configuración de producción deberá incorporar controles adicionales de acc
 Esta decisión define la estrategia inicial de desarrollo y gestión declarativa de infraestructura; no implica que la plataforma de producción, un backend remoto externo para Terraform (como S3) o la integración con un gestor externo de secretos ya estén implementados.
 
 La decisión se revisará cuando se seleccione la plataforma cloud de producción, se definan los requisitos de disponibilidad y operación, o se identifiquen necesidades que justifiquen cambiar la distribución de Kubernetes o el alcance de Terraform.
-
-## Actualización 17-11-2026
-
-### Contexto
-
-Durante la implementación del MVP de AulaViva se revisó la necesidad de utilizar una plataforma de mensajería distribuida para gestionar los eventos de dominio.
-
-### Decisión
-
-Para el MVP se utilizará el patrón Transactional Outbox mediante una tabla en la base de datos.
-
-Los eventos de dominio se registrarán en la tabla Outbox dentro de la misma transacción que modifica los datos de negocio.
-
-La incorporación de Apache Kafka queda diferida hasta que exista más de un consumidor real de eventos que justifique su complejidad operativa.
-
-### Alternativas consideradas
-
-| Alternativa | Consistencia | Costo operativo | Complejidad MVP | Veredicto |
-|---|---|---|---|---|
-| Outbox en tabla | Alta, misma transacción | Bajo | Baja | **Elegida** |
-| Apache Kafka | Alta, requiere integración adicional | Alto | Alta | Diferida |
-| Publicación directa de eventos | Riesgo de inconsistencias | Bajo | Baja | Descartada |
-
-### Consecuencias
-
-- Se reduce la complejidad de infraestructura del MVP.
-- Se mantiene la consistencia entre los datos de negocio y los eventos registrados.
-- Se evita operar Kafka antes de necesitarlo.
-- La arquitectura permite incorporar Kafka posteriormente si aparecen nuevos consumidores.
-
-Esta actualización no reemplaza la decisión original, sino que precisa su implementación para el MVP.

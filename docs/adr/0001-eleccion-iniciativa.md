@@ -16,6 +16,16 @@ Además, el modelo SaaS multi-tenant permite que la solución pueda ser utilizad
 
 La propuesta también presenta una oportunidad de diferenciación al incorporar un tutor IA que responde considerando los contenidos del curso y el contexto curricular del MINEDUC, en lugar de funcionar como un chatbot educativo genérico.
 
+**Alternativas consideradas**
+
+| Iniciativa | Valor para el usuario | Riesgo regulatorio y de datos | Complejidad técnica para el curso | Uso de IA | Veredicto |
+|---|---|---|---|---|---|
+| MediTriage | Alto (apoyo a triage clínico) | Muy alto: datos de salud y decisiones clínicas con impacto directo en pacientes | Alta: requiere validación médica que el equipo no puede obtener | Clasificación de urgencia | Descartada |
+| CrediScore | Medio-alto (scoring y fraude) | Alto: datos financieros, sesgo y explicabilidad exigidos para decisiones de crédito | Alta: necesita datos históricos reales para entrenar y validar | Modelos de scoring | Descartada |
+| AulaViva | Alto (estudiantes, docentes, apoderados y colegios) | Medio: datos de menores, mitigables con aislamiento por colegio y minimización | Media: CRUD + multi-tenant + tutor RAG acotado al currículo | Tutor con RAG sobre apuntes del curso | **Elegida** |
+
+> Tabla agregada el 18-11-2026 para dejar explícitas las alternativas; los criterios resumen la discusión original del equipo y deben ser revisados por el equipo.
+
 **Consecuencias**
 
 **Positivas:**

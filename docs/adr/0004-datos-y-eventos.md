@@ -70,6 +70,8 @@ La estrategia inicial utilizará una infraestructura de datos compartida con ais
 
 ### 2.3. Uso de Kafka como broker de eventos
 
+> **Diferido en el MVP (17-11-2026):** ver la actualización al final de este ADR.
+
 Se utilizará Amazon MSK, servicio administrado de Apache Kafka, como broker para transportar eventos de dominio entre los componentes de AulaViva.
 
 Los eventos deberán incluir, como mínimo:
@@ -256,3 +258,36 @@ La decisión podrá revisarse si se presenta alguna de las siguientes condicione
 * Los costos u operación de Amazon MSK dejan de ser adecuados para las necesidades de AulaViva.
 * Los requisitos de aislamiento o cumplimiento requieran bases de datos independientes por tenant.
 * Los requisitos de disponibilidad o recuperación exijan garantías adicionales sobre la publicación y retención de eventos.
+
+## Actualización 17-11-2026
+
+### Contexto
+
+Durante la implementación del MVP de AulaViva se revisó la necesidad de utilizar una plataforma de mensajería distribuida para gestionar los eventos de dominio.
+
+### Decisión
+
+Para el MVP se utilizará el patrón Transactional Outbox mediante una tabla en la base de datos.
+
+Los eventos de dominio se registrarán en la tabla Outbox dentro de la misma transacción que modifica los datos de negocio.
+
+La incorporación de Apache Kafka queda diferida hasta que exista más de un consumidor real de eventos que justifique su complejidad operativa.
+
+### Alternativas consideradas
+
+| Alternativa | Consistencia | Costo operativo | Complejidad MVP | Veredicto |
+|---|---|---|---|---|
+| Outbox en tabla | Alta, misma transacción | Bajo | Baja | **Elegida** |
+| Apache Kafka | Alta, requiere integración adicional | Alto | Alta | Diferida |
+| Publicación directa de eventos | Riesgo de inconsistencias | Bajo | Baja | Descartada |
+
+### Consecuencias
+
+- Se reduce la complejidad de infraestructura del MVP.
+- Se mantiene la consistencia entre los datos de negocio y los eventos registrados.
+- Se evita operar Kafka antes de necesitarlo.
+- La arquitectura permite incorporar Kafka posteriormente si aparecen nuevos consumidores.
+
+Esta actualización no reemplaza la decisión original, sino que precisa su implementación para el MVP.
+
+> Esta actualización se trasladó el 18-11-2026 desde `0004-plataforma-k8s.md`, porque modifica las secciones 2.3 (Kafka/MSK, ahora **diferido**) y 2.4 (Outbox, ahora en tabla `outbox_events`) de este ADR.

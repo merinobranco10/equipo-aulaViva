@@ -1,5 +1,8 @@
 ### Tecnologías tentativas por contenedor
 
+> **Actualización 18-11-2026:** en el MVP no se usa pgvector (el Tutor IA busca con BM25 en apuntes del classpath), Kafka/MSK queda diferido (Outbox en tabla) y el LLM es **Groq** (`llama-3.3-70b-versatile`). Ver ADR 0004 y [ADR 0009](../adr/0009-tutor-ia-proveedor-llm.md). Las menciones a pgvector abajo describen el objetivo de producción.
+
+
 | Contenedor | Tecnología tentativa | Justificación breve |
 |---|---|---|
 | *Aplicación Web* | React + TypeScript | Permite construir una interfaz web modular y mantenible. |

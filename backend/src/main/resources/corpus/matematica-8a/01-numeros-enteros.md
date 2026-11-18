@@ -5,6 +5,8 @@
 - Colegio: Colegio Los Andes (demo)
 - Unidad: Números
 - Tema: Concepto y representación de números enteros
+- OA: Matemática 7° básico OA 1 (enteros: concepto, orden y adición/sustracción) — base para 8° OA 1
+- Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
 Comprender los números enteros y utilizarlos para representar situaciones de la vida cotidiana.

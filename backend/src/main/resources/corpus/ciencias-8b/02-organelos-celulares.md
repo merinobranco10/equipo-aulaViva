@@ -5,6 +5,8 @@
 - Colegio: Colegio Pacífico (demo)
 - Unidad: Organización de los seres vivos
 - Tema: Estructuras y funciones celulares
+- OA: Ciencias Naturales 8° básico OA 2 (organelos y sus funciones) — por confirmar
+- Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
 Identificar los principales organelos celulares y relacionarlos con sus funciones.

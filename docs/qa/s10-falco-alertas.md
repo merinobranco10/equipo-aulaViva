@@ -48,7 +48,7 @@ Falco (DaemonSet) -> Falcosidekick -> Slack  #aulaviva-seguridad   (Warning o su
 1. **Reconocer** el incidente en PagerDuty (objetivo: 15 minutos).
 2. **Preservar evidencia** antes de borrar nada: `kubectl logs` y `kubectl describe pod` del pod afectado.
 3. **Contener**: aislar o eliminar el pod; el Deployment crea uno limpio.
-4. **Evaluar**: si la regla fue la de salida de red o shell en el pod del backend, rotar `AI_API_KEY`, `DB_PASSWORD` y `VECTOR_DB_PASSWORD` y revisar si hubo acceso a datos de estudiantes.
+4. **Evaluar**: si la regla fue la de salida de red o shell en el pod del backend, rotar `LLM_API_KEY` y `DB_PASSWORD` y revisar si hubo acceso a datos de estudiantes.
 5. **Cerrar** el incidente con causa y acción tomada; ajustar la regla si fue un falso positivo.
 
 ## 6. Instalación y pruebas

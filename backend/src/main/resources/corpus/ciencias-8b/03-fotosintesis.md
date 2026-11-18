@@ -5,6 +5,8 @@
 - Colegio: Colegio Pacífico (demo)
 - Unidad: Organización de los seres vivos
 - Tema: Fotosíntesis
+- OA: Ciencias Naturales 8° básico OA 7 (fotosíntesis y respiración celular en el ecosistema)
+- Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
 Comprender el proceso de fotosíntesis y su importancia para los seres vivos.

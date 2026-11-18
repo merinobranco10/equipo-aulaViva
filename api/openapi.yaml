@@ -309,6 +309,67 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /v1/students/{studentId}/evaluations:
+    get:
+      tags:
+        - Evaluations
+      summary: Evaluaciones de un estudiante con estado y nota
+      description: |
+        Mismas reglas de acceso que el progreso: el propio estudiante, su apoderado,
+        un docente de sus cursos o el coordinador de su colegio. Otro colegio recibe 404.
+      operationId: getStudentEvaluations
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: u-estudiante-a
+      responses:
+        '200':
+          description: Lista de evaluaciones del estudiante
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyEvaluationItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/evaluations/{evaluationId}/submissions/me:
+    get:
+      tags:
+        - Evaluations
+      summary: Revisión de la propia entrega (solo estudiante)
+      description: |
+        Devuelve la nota, el puntaje y cada pregunta con la opción marcada, la correcta y
+        la retroalimentación. 404 si la evaluación es de otro colegio o aún no se rinde.
+      operationId: getMySubmissionReview
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entrega corregida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionReviewResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
 
   securitySchemes:
@@ -395,6 +456,52 @@ components:
         grade:
           type: [number, 'null']
           example: 4.5
+
+    SubmissionReviewResponse:
+      type: object
+      required: [evaluationId, title, grade, score, maxScore, questions]
+      properties:
+        evaluationId:
+          type: string
+        title:
+          type: string
+        grade:
+          type: number
+          example: 4.5
+        score:
+          type: integer
+          example: 2
+        maxScore:
+          type: integer
+          example: 3
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewQuestion'
+
+    ReviewQuestion:
+      type: object
+      required: [id, text, options, points, correctOption, correct, message]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        points:
+          type: integer
+        selectedOption:
+          type: [integer, 'null']
+          description: Opción marcada (null si no respondió).
+        correctOption:
+          type: integer
+        correct:
+          type: boolean
+        message:
+          type: string
 
     QuestionFeedback:
       type: object
