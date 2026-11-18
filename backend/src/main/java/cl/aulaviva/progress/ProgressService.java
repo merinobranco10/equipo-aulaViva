@@ -27,8 +27,12 @@ public class ProgressService {
         this.directory = directory;
     }
 
+    /**
+     * Devuelve al estudiante si existe en el tenant del usuario y este tiene permiso para verlo
+     * (404 si es de otro colegio, 403 si no tiene relación con él). Única fuente de esta regla.
+     */
     @Transactional(readOnly = true)
-    public StudentProgressResponse progress(AulaVivaUser user, String studentId) {
+    public AppUser authorizedStudent(AulaVivaUser user, String studentId) {
         AppUser student = users.findByIdAndTenantId(studentId, user.tenantId())
             .filter(u -> u.getRole() == Role.STUDENT)
             .orElseThrow(() -> new NotFoundException("El estudiante no existe."));
@@ -39,8 +43,14 @@ public class ProgressService {
             case COORDINATOR -> true;
         };
         if (!allowed) {
-            throw new ForbiddenException("No tienes acceso al progreso de este estudiante.");
+            throw new ForbiddenException("No tienes acceso a la información de este estudiante.");
         }
+        return student;
+    }
+
+    @Transactional(readOnly = true)
+    public StudentProgressResponse progress(AulaVivaUser user, String studentId) {
+        AppUser student = authorizedStudent(user, studentId);
         int assigned = count(
             "SELECT COUNT(*) FROM evaluations e JOIN enrollments en ON en.course_id = e.course_id"
                 + " WHERE en.student_id = ? AND e.tenant_id = ?",
