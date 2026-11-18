@@ -1,6 +1,6 @@
 # ADR 0006: Política de firma de imágenes y SLSA (Supply Chain)
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada
 - **Fecha:** 10-11-2026
 
 ## 1. Contexto
