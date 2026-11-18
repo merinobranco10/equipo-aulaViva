@@ -40,7 +40,10 @@ public class SecurityConfig {
                     "camera=(), microphone=(), geolocation=(), payment=(), usb=()"))
                 .crossOriginEmbedderPolicy(coep -> coep.policy(
                     org.springframework.security.web.header.writers
-                        .CrossOriginEmbedderPolicyHeaderWriter.CrossOriginEmbedderPolicy.REQUIRE_CORP)))
+                        .CrossOriginEmbedderPolicyHeaderWriter.CrossOriginEmbedderPolicy.REQUIRE_CORP))
+                .crossOriginOpenerPolicy(coop -> coop.policy(
+                    org.springframework.security.web.header.writers
+                        .CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy.SAME_ORIGIN)))
             .httpBasic(basic -> basic.authenticationEntryPoint(handlers))
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(handlers)
