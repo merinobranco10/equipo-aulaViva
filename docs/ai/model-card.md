@@ -57,6 +57,13 @@ La respuesta de la API contempla:
 
 Los apuntes viven en `backend/src/main/resources/corpus/<courseId>/` (se empaquetan en el JAR). Cada uno indica su OA y la fuente (Programa de Estudio MINEDUC, curriculumnacional.cl). Son materiales de demostración redactados por el equipo.
 
+OA verificados en curriculumnacional.cl el 18-11-2026:
+
+| Curso | OA cubiertos |
+|---|---|
+| matematica-8a | MA07 OA 01 (enteros, base), MA08 OA 01 (multiplicación y división de enteros), MA08 OA 03 (potencias; el apunte lo amplía a base entera) |
+| ciencias-8b | CN08 OA 02 (célula y sus partes, organelos), CN08 OA 07 (fotosíntesis y respiración celular) |
+
 ## 7. Comportamiento esperado
 
 - Responder preguntas respaldadas por los apuntes del curso.

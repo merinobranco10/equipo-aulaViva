@@ -5,7 +5,7 @@
 - Colegio: Colegio Pacífico (demo)
 - Unidad: Organización de los seres vivos
 - Tema: La célula y sus características
-- OA: Ciencias Naturales 8° básico OA 2 (modelos de célula y sus partes) — por confirmar
+- OA: Ciencias Naturales 8° básico, CN08 OA 02 (desarrollar modelos que expliquen la relación entre la función de una célula y sus partes)
 - Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo

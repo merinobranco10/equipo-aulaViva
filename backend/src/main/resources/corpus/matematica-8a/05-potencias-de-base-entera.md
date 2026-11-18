@@ -5,7 +5,7 @@
 - Colegio: Colegio Los Andes (demo)
 - Unidad: Números
 - Tema: Potencias con base entera
-- OA: Matemática 8° básico, unidad Números — código OA por confirmar con el programa de estudio
+- OA: Matemática 8° básico, MA08 OA 03 (multiplicación, división y potencias de potencias de base y exponente natural hasta 3); este apunte lo amplía a base entera
 - Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo

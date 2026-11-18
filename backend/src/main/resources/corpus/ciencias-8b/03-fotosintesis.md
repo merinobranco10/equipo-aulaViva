@@ -5,7 +5,7 @@
 - Colegio: Colegio Pacífico (demo)
 - Unidad: Organización de los seres vivos
 - Tema: Fotosíntesis
-- OA: Ciencias Naturales 8° básico OA 7 (fotosíntesis y respiración celular en el ecosistema)
+- OA: Ciencias Naturales 8° básico, CN08 OA 07 (fotosíntesis y respiración celular en el ecosistema)
 - Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo

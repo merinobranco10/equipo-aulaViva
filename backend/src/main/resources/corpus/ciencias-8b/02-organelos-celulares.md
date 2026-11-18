@@ -5,7 +5,7 @@
 - Colegio: Colegio Pacífico (demo)
 - Unidad: Organización de los seres vivos
 - Tema: Estructuras y funciones celulares
-- OA: Ciencias Naturales 8° básico OA 2 (organelos y sus funciones) — por confirmar
+- OA: Ciencias Naturales 8° básico, CN08 OA 02 (relación entre la función de una célula y sus partes: organelos)
 - Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
