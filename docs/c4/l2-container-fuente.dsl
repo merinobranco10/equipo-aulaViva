@@ -1,3 +1,6 @@
+// Actualizado 18-11-2026 (estado del MVP) según ADR 0004 (Outbox en tabla, Kafka diferido), ADR 0008 (HTTP Basic,
+// OIDC futuro) y ADR 0009 (Groq + RAG léxico BM25). Los elementos "Diferido" son objetivo de
+// producción y no existen en el MVP.
 workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
 
     !identifiers hierarchical
@@ -26,7 +29,8 @@ workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
         }
 
         sostenedor = person "Sostenedor" {
-            description "Supervisa la gestión general de los establecimientos asociados a la plataforma."
+            description "Supervisará varios establecimientos. Sin vista ni rol en el MVP."
+            tags "Diferido"
         }
 
 
@@ -34,19 +38,19 @@ workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
         // SISTEMAS EXTERNOS
         // =====================================================
 
-        mineduc = softwareSystem "Sitio Web MINEDUC" {
-            description "Fuente externa de información y referencias del currículo oficial chileno utilizadas por AulaViva."
+        mineduc = softwareSystem "MINEDUC (curriculumnacional.cl)" {
+            description "Referencia del currículo oficial: los OA de los apuntes se toman de sus programas de estudio. Sin integración por API."
             tags "External"
         }
 
-        claude = softwareSystem "Servicio de IA / LLM (Anthropic Claude)" {
-            description "Servicio externo utilizado por el Tutor IA para generar respuestas a partir del contexto académico recuperado mediante RAG."
+        llm = softwareSystem "Proveedor LLM (Groq)" {
+            description "API compatible con OpenAI. Modelo llama-3.3-70b-versatile, respaldo openai/gpt-oss-20b. Recibe solo la pregunta sin datos personales y los fragmentos recuperados."
             tags "External"
         }
 
-        cognito = softwareSystem "Servicio de Identidad (Amazon Cognito)" {
-            description "Servicio gestionado de AWS utilizado para autenticar y gestionar la identidad de los usuarios de AulaViva."
-            tags "External"
+        cognito = softwareSystem "Proveedor de identidad OIDC (Cognito / Keycloak)" {
+            description "Objetivo de producción (ADR 0008). En el MVP la autenticación es HTTP Basic con usuarios en la base de datos."
+            tags "External" "Diferido"
         }
 
 
@@ -57,38 +61,38 @@ workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
         aulaViva = softwareSystem "AulaViva" {
             description "Plataforma SaaS educativa multi-tenant para la gestión académica, evaluaciones, seguimiento del progreso y asistencia mediante Tutor IA."
 
-            web = container "Aplicación Web" {
-                technology "React / TypeScript"
-                description "Interfaz web utilizada por estudiantes, profesores, coordinadores académicos, apoderados y sostenedores para acceder a las funcionalidades de AulaViva."
+            web = container "Interfaz web" {
+                technology "HTML / CSS / JavaScript estático"
+                description "Páginas por rol (docente, estudiante, apoderado) servidas por el mismo backend desde /static. Sin framework ni build aparte; protegidas con CSP estricta."
             }
 
             backend = container "Backend AulaViva" {
                 technology "Java / Spring Boot"
-                description "Monolito modular que implementa la lógica de negocio, autorización multi-tenant, gestión académica, evaluaciones, Tutor IA y coordinación con servicios externos."
+                description "Monolito modular: lógica de negocio, HTTP Basic + RBAC, aislamiento por tenant_id, evaluaciones, Outbox y Tutor IA (BM25 + guardrails + fallback). Incluye los apuntes del curso en el classpath."
             }
 
-            db = container "Amazon RDS for PostgreSQL" {
-                technology "PostgreSQL"
-                description "Persistencia relacional para Gestión Académica, Evaluaciones y Progreso, y datos propios de autorización de AulaViva."
+            db = container "Base de datos relacional" {
+                technology "PostgreSQL 16 (Amazon RDS en producción) / H2 en local"
+                description "Datos académicos, evaluaciones, notas, usuarios y la tabla outbox_events (Transactional Outbox). Toda tabla de negocio lleva tenant_id."
                 tags "Database"
             }
 
             vectorDb = container "PostgreSQL + pgvector" {
                 technology "Amazon RDS for PostgreSQL + pgvector"
-                description "Almacena metadatos, fragmentos y embeddings utilizados para recuperar contexto semántico en el proceso RAG del Tutor IA."
-                tags "Database"
+                description "Diferido (ADR 0009): solo si el corpus crece y BM25 deja de alcanzar."
+                tags "Database" "Diferido"
             }
 
             storage = container "Amazon S3" {
                 technology "Amazon S3"
-                description "Almacena documentos originales, archivos y contenidos educativos utilizados por AulaViva y el Tutor IA."
-                tags "Storage"
+                description "Diferido: documentos subidos por docentes. En el MVP los apuntes van en el classpath."
+                tags "Storage" "Diferido"
             }
 
             broker = container "Amazon MSK (Apache Kafka)" {
                 technology "Amazon MSK / Apache Kafka"
-                description "Broker de eventos utilizado para la comunicación asíncrona y propagación de eventos de dominio entre los módulos de AulaViva."
-                tags "Broker"
+                description "Diferido (ADR 0004): se incorpora cuando exista más de un consumidor real. Hoy los eventos quedan en la tabla outbox_events."
+                tags "Broker" "Diferido"
             }
         }
 
@@ -97,53 +101,63 @@ workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
         // RELACIONES DE LOS USUARIOS
         // =====================================================
 
-        estudiante -> aulaViva.web "Accede a contenidos, evaluaciones, progreso académico y Tutor IA" "HTTPS"
+        estudiante -> aulaViva.web "Rinde evaluaciones, revisa su nota y entrega corregida, y usa el Tutor IA" "HTTPS"
 
-        profesor -> aulaViva.web "Gestiona cursos, contenidos, evaluaciones y seguimiento académico" "HTTPS"
+        profesor -> aulaViva.web "Crea evaluaciones y revisa el avance de sus cursos" "HTTPS"
 
-        coordinador -> aulaViva.web "Supervisa la actividad académica, evaluaciones y progreso" "HTTPS"
+        coordinador -> aulaViva.backend "Consulta el progreso de estudiantes de su colegio (API; sin vista web en el MVP)" "HTTPS/REST"
 
-        apoderado -> aulaViva.web "Consulta el progreso académico y resultados del estudiante" "HTTPS"
+        apoderado -> aulaViva.web "Consulta el progreso y las notas de su pupilo" "HTTPS"
 
-        sostenedor -> aulaViva.web "Supervisa la gestión de los establecimientos" "HTTPS"
+        sostenedor -> aulaViva.web "Supervisará los establecimientos (futuro)" "HTTPS" {
+            tags "Diferido"
+        }
 
 
         // =====================================================
         // APLICACIÓN
         // =====================================================
 
-        aulaViva.web -> aulaViva.backend "Realiza solicitudes a la API de AulaViva" "HTTPS/REST"
+        aulaViva.web -> aulaViva.backend "Llama a la API /v1 con HTTP Basic (mismo origen)" "HTTPS/REST + JSON"
 
 
         // =====================================================
         // PERSISTENCIA
         // =====================================================
 
-        aulaViva.backend -> aulaViva.db "Lee y escribe datos académicos, evaluaciones y autorización" "PostgreSQL"
+        aulaViva.backend -> aulaViva.db "Lee y escribe datos académicos y guarda eventos en outbox_events en la misma transacción" "JDBC"
 
-        aulaViva.backend -> aulaViva.vectorDb "Almacena embeddings y recupera contexto semántico para RAG" "PostgreSQL/pgvector"
+        aulaViva.backend -> aulaViva.vectorDb "Búsqueda semántica (futuro)" "PostgreSQL/pgvector" {
+            tags "Diferido"
+        }
 
-        aulaViva.backend -> aulaViva.storage "Almacena y recupera documentos y contenidos educativos" "Amazon S3 API"
+        aulaViva.backend -> aulaViva.storage "Guarda documentos subidos (futuro)" "Amazon S3 API" {
+            tags "Diferido"
+        }
 
 
         // =====================================================
         // EVENTOS
         // =====================================================
 
-        aulaViva.backend -> aulaViva.broker "Publica eventos de dominio" "Apache Kafka"
-
-        aulaViva.broker -> aulaViva.backend "Entrega eventos de dominio a los consumidores internos" "Apache Kafka"
+        aulaViva.backend -> aulaViva.broker "Publicará los eventos del outbox (futuro)" "Apache Kafka" {
+            tags "Diferido"
+        }
 
 
         // =====================================================
         // SERVICIOS EXTERNOS
         // =====================================================
 
-        aulaViva.backend -> cognito "Solicita autenticación y validación de identidad" "HTTPS"
+        aulaViva.backend -> cognito "Validará tokens OIDC (futuro)" "HTTPS" {
+            tags "Diferido"
+        }
 
-        aulaViva.backend -> claude "Envía contexto RAG y solicita generación de respuestas" "HTTPS/API"
+        aulaViva.backend -> llm "Envía pregunta sin PII + 3 fragmentos; timeout 8 s, fallback extractivo" "HTTPS / API OpenAI-compatible"
 
-        aulaViva.backend -> mineduc "Consulta información y referencias del currículo oficial" "HTTPS"
+        aulaViva.backend -> mineduc "Los apuntes se alinean a sus OA (referencia, sin API)" {
+            tags "Referencia"
+        }
     }
 
 
@@ -170,7 +184,7 @@ workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
             include aulaViva.broker
 
             include mineduc
-            include claude
+            include llm
             include cognito
 
             autoLayout tb 300 300
@@ -220,6 +234,21 @@ workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
             element "External" {
                 background "#999999"
                 color "#ffffff"
+            }
+
+            element "Diferido" {
+                background "#dddddd"
+                color "#555555"
+                border dashed
+            }
+
+            relationship "Diferido" {
+                style dashed
+                color "#999999"
+            }
+
+            relationship "Referencia" {
+                style dotted
             }
         }
     }
