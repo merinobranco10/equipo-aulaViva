@@ -8,7 +8,7 @@ Este directorio contiene los Architecture Decision Records (ADRs) del proyecto A
 
 | # | Título | Estado | Fecha |
 |---|---|---|---|
-| [0001](0001-eleccion-iniciativa.md) | Elección de iniciativa | Aceptada | Pendiente de confirmar |
+| [0001](0001-eleccion-iniciativa.md) | Elección de iniciativa | Aceptada | 21-08-2026 |
 | [0002](0002-estilo-arquitectonico.md) | Estilo arquitectónico: monolito modular | Aceptada | 04-09-2026 |
 | [0003](0003-cloud-style.md) | Proveedor cloud: AWS | Aceptada | 11-09-2026 |
 | [0004](0004-datos-y-eventos.md) | Persistencia y mensajería (actualizada 17-11) | Aceptada | 06-10-2026 |
