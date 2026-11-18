@@ -24,26 +24,26 @@ AulaViva busca mejorar la experiencia de aprendizaje de estudiantes y docentes c
 | Multi-tenancy real: 1 colegio = 1 tenant aislado lógicamente | ✅ Implementado (S18 · Día 1) |
 | Gestión de cursos, docentes y estudiantes con RBAC | ✅ Roles y permisos implementados; gestión vía datos de demo |
 | Evaluaciones auto-corregidas con feedback | ✅ Implementado (S18 · Día 1) |
-| Tutor IA con RAG sobre los apuntes de cada curso | ⏳ Planificado (S18 · Día 4) |
-| Panel del apoderado con seguimiento de avance | ✅ API implementada · UI en Día 2 |
+| Tutor IA con RAG sobre los apuntes de cada curso | ⏳ Diseño cerrado: Groq + BM25 ([ADR 0009](docs/adr/0009-tutor-ia-proveedor-llm.md)); implementación en Día 4 |
+| Panel del apoderado con seguimiento de avance | ✅ API y UI implementadas (S18 · Día 2) |
 
 ## Estado del proyecto
 
-_Actualizado: 16-11-2026._
+_Actualizado: 18-11-2026._
 
 El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir con nota y feedback, ver progreso) con aislamiento entre colegios y control de acceso por rol. La infraestructura (contenedores, Kubernetes, GitOps) y el pipeline DevSecOps están operativos desde S07–S10. El trabajo restante hacia la defensa final (S18) sigue el plan de 7 días.
 
 | Área | Estado | Evidencia |
 |---|---|---|
 | Producto: charter, impact map, backlog, escenarios | ✅ | [CHARTER](CHARTER.md) · [backlog](docs/backlog.md) · [impact map](docs/impact-map.md) · [escenarios](docs/scenarios/) |
-| Arquitectura: C4 L1–L2, ADRs 0001–0006 | ✅ | [C4](docs/c4/) · [ADRs](docs/adr/) |
+| Arquitectura: C4 L1–L2, ADRs 0001–0006 (S01–S10) | ✅ | [C4](docs/c4/) · [ADRs](docs/adr/) |
 | Datos y API: DER, bounded contexts, eventos, OpenAPI 3.1 | ✅ | [docs/data](docs/data/) · [openapi.yaml](api/openapi.yaml) |
 | Contenedores y Kubernetes (S07) | ✅ | [Despliegue](#despliegue-en-kubernetes-s07) |
 | CI/CD y GitOps con Argo CD (S08) | ✅ | [CI/CD](#cicd-y-gitops-s08) |
 | DevSecOps: SAST, SCA, SBOM, secretos, IaC, firma, Kyverno, DAST, Falco (S09–S10) | ✅ | [Seguridad](#seguridad-devsecops--s09s10) |
 | **Backend funcional (S18 · Día 1):** multi-tenant, RBAC, evaluaciones, progreso, outbox, datos de demo | ✅ | PR #60 · 25 tests · cobertura ≥ 70 % |
 | Demo del Día 1 por script (PowerShell y bash) | ✅ | [guion](docs/demo/guion-demo.md) · [manual de pruebas](docs/qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf) · [captura](docs/qa/evidence/s18/01-demo-dia1.png) |
-| UI web, C4 L3, ADRs 0007–0008, corpus y golden set | ⏳ Día 2 | — |
+| UI web, C4 L3, ADRs 0007–0009, corpus y golden set (S18 · Día 2) | ✅ | [UI](backend/src/main/resources/static/) · [C4](docs/c4/) · [ADRs](docs/adr/) · [corpus](backend/src/main/resources/corpus/) · [golden set](rag/eval/golden-set.jsonl) · [model card](docs/ai/model-card.md) |
 | Tests de contrato y seguridad ampliados, staging en Codespaces | ⏳ Día 3 | — |
 | Tutor IA con guardrails, evaluación y model card | ⏳ Día 4 | — |
 | SLOs, DR, game day y post-mortem | ⏳ Día 5 | — |
@@ -121,7 +121,7 @@ Contrato completo en [`api/openapi.yaml`](api/openapi.yaml). Autenticación HTTP
 | Charter del equipo | [CHARTER.md](CHARTER.md) |
 | Impact map y backlog (INVEST, MoSCoW) | [impact-map.md](docs/impact-map.md) · [backlog.md](docs/backlog.md) |
 | Escenarios Gherkin | [docs/scenarios/](docs/scenarios/) |
-| Diagramas C4 (L1, L2) | [docs/c4/](docs/c4/) |
+| Diagramas C4 (L1, L2, L3) | [docs/c4/](docs/c4/) |
 | ADRs | [docs/adr/](docs/adr/) |
 | Atributos de calidad y tecnologías | [docs/arch/](docs/arch/) |
 | DER, bounded contexts y catálogo de eventos | [docs/data/](docs/data/) |
@@ -130,6 +130,7 @@ Contrato completo en [`api/openapi.yaml`](api/openapi.yaml). Autenticación HTTP
 | Modelo de amenazas | [docs/threat-model.md](docs/threat-model.md) |
 | Validaciones QA y evidencias | [docs/qa/](docs/qa/) |
 | Guion de la demo | [docs/demo/guion-demo.md](docs/demo/guion-demo.md) |
+| Tutor IA: proveedor, model card y golden set | [configuración](docs/tutor-ia/configuracion-proveedor.md) · [model card](docs/ai/model-card.md) · [golden set](rag/eval/) |
 
 | ADR | Decisión |
 |---|---|
@@ -140,12 +141,16 @@ Contrato completo en [`api/openapi.yaml`](api/openapi.yaml). Autenticación HTTP
 | [0004](docs/adr/0004-plataforma-k8s.md) | Plataforma Kubernetes e infraestructura como código |
 | [0005](docs/adr/0005-gitops-strategy.md) | GitOps con Argo CD y Kustomize |
 | [0006](docs/adr/0006-supply-chain.md) | Firma de imágenes y SLSA |
+| [0007](docs/adr/0007-estrategia-multi-tenant.md) | Multi-tenant con `tenant_id` y 404 entre colegios |
+| [0008](docs/adr/0008-identidad-y-rbac.md) | HTTP Basic + RBAC en el MVP; OIDC en producción |
+| [0009](docs/adr/0009-tutor-ia-proveedor-llm.md) | Tutor IA con Groq, RAG léxico BM25, guardrails y fallback |
 
 ## Estructura del repositorio
 
 ```text
 backend/            Servicio principal (Spring Boot): código, tests, Dockerfile
 api/                Contrato OpenAPI y ejemplos
+rag/eval/           Golden set del Tutor IA (los apuntes viven en backend/src/main/resources/corpus/)
 docs/               Producto, arquitectura (C4, ADRs), datos, QA y evidencias
 k8s/                Manifiestos Kubernetes (Deployment, Service, Ingress, HPA) y políticas Kyverno
 terraform/          Infraestructura como código (namespace y secrets)

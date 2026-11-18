@@ -3,7 +3,6 @@ package cl.aulaviva.evaluations;
 import static cl.aulaviva.evaluations.FlujoEvaluacionTest.KEY;
 import static cl.aulaviva.evaluations.FlujoEvaluacionTest.PASS;
 import static cl.aulaviva.evaluations.FlujoEvaluacionTest.evaluacionJson;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -106,7 +105,7 @@ class SeguridadTest {
         mvc.perform(get("/v1/students/u-estudiante-b/progress")
                 .with(httpBasic("coordinador.b", PASS)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.averageGrade").value(nullValue()));
+            .andExpect(jsonPath("$.averageGrade").value(7.0));
         mvc.perform(get("/v1/students/u-estudiante-b/progress")
                 .with(httpBasic("docente.a", PASS)))
             .andExpect(status().isNotFound());
@@ -139,5 +138,15 @@ class SeguridadTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"courseId\":\"matematica-8a\",\"question\":\"hola\"}"))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cabecerasDeSeguridadEnLaUi() throws Exception {
+        mvc.perform(get("/index.html"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Security-Policy",
+                org.hamcrest.Matchers.containsString("default-src 'self'")))
+            .andExpect(header().exists("Permissions-Policy"))
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"));
     }
 }

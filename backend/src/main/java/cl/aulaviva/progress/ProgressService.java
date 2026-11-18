@@ -62,15 +62,11 @@ public class ProgressService {
                 + " AND status = 'COMPLETED'",
             student.getId(), user.tenantId());
     
-        BigDecimal average = null;
-    
-        if (user.role() != Role.COORDINATOR) {
-            average = jdbc.queryForObject(
-                "SELECT AVG(g.grade) FROM grades g JOIN submissions s ON s.id = g.submission_id"
-                    + " WHERE s.student_id = ? AND s.tenant_id = ?",
-                BigDecimal.class, student.getId(), user.tenantId());
-        }
-    
+        BigDecimal average = jdbc.queryForObject(
+            "SELECT AVG(g.grade) FROM grades g JOIN submissions s ON s.id = g.submission_id"
+                + " WHERE s.student_id = ? AND s.tenant_id = ?",
+            BigDecimal.class, student.getId(), user.tenantId());
+
         return new StudentProgressResponse(
             completed,
             Math.max(0, assigned - completed),

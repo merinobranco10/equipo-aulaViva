@@ -30,6 +30,17 @@ public class SecurityConfig {
                     "/favicon.ico", "/error", "/api/v1/status", "/actuator/health",
                     "/actuator/health/**", "/actuator/info").permitAll()
                 .anyRequest().authenticated())
+            // Cabeceras para la UI estatica (sin scripts ni estilos inline) y hallazgos del DAST.
+            .headers(h -> h
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+                        + "object-src 'none'; frame-ancestors 'none'; base-uri 'self'; "
+                        + "form-action 'self'"))
+                .permissionsPolicyHeader(pp -> pp.policy(
+                    "camera=(), microphone=(), geolocation=(), payment=(), usb=()"))
+                .crossOriginEmbedderPolicy(coep -> coep.policy(
+                    org.springframework.security.web.header.writers
+                        .CrossOriginEmbedderPolicyHeaderWriter.CrossOriginEmbedderPolicy.REQUIRE_CORP)))
             .httpBasic(basic -> basic.authenticationEntryPoint(handlers))
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(handlers)

@@ -5,6 +5,8 @@
 - Colegio: Colegio Los Andes (demo)
 - Unidad: Números
 - Tema: Potencias con base entera
+- OA: Matemática 8° básico, unidad Números — código OA por confirmar con el programa de estudio
+- Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
 Calcular potencias de base entera y reconocer el signo del resultado.

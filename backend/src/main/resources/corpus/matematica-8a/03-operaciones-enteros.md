@@ -5,6 +5,8 @@
 - Colegio: Colegio Los Andes (demo)
 - Unidad: Números
 - Tema: Adición y sustracción de enteros
+- OA: Matemática 7° básico OA 1 (adición y sustracción de números enteros)
+- Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
 Resolver operaciones de adición y sustracción utilizando números enteros.

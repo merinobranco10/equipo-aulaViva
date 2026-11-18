@@ -29,21 +29,24 @@ Notas:
 
 | Variable | Función | Valor | Clasificación |
 |---|---|---|---|
-| AI_PROVIDER | Proveedor del modelo | anthropic | Configuración |
-| AI_API_KEY | Clave de la API del proveedor | Sin valor | Secreto |
-| AI_MODEL | Modelo utilizado | claude-haiku-5-5 | Configuración |
-| AI_BASE_URL | Dirección de la API | https://api.anthropic.com | Configuración |
-| AI_TIMEOUT_SECONDS | Tiempo máximo de espera | 30 | Configuración |
-| CORPUS_PATH | Carpeta con los apuntes | corpus | Configuración |
+| LLM_BASE_URL | Dirección de la API (Groq, compatible con OpenAI) | https://api.groq.com/openai/v1 | Configuración |
+| LLM_MODEL | Modelo principal | llama-3.3-70b-versatile | Configuración |
+| LLM_FALLBACK_MODEL | Modelo de respaldo | openai/gpt-oss-20b | Configuración |
+| LLM_API_KEY | Clave de la API de Groq | Sin valor | Secreto |
+| LLM_TIMEOUT_SECONDS | Tiempo máximo de espera | 8 | Configuración |
 | RAG_TOP_K | Fragmentos enviados al modelo | 3 | Configuración |
+| TUTOR_DAILY_BUDGET | Preguntas al LLM por colegio y día | 200 | Configuración |
 
-Detalle en `docs/tutor-ia/configuracion-proveedor.md`.
+Los apuntes se leen del classpath (`backend/src/main/resources/corpus/<courseId>/`), por eso ya no existe `CORPUS_PATH`. Sin `LLM_API_KEY` el tutor responde solo con el fallback extractivo.
+
+Detalle en `docs/tutor-ia/configuracion-proveedor.md` y en el ADR 0009.
 
 ## 4. Variables descartadas o diferidas
 
 | Variable | Motivo |
 |---|---|
-| EMBEDDING_MODEL | No se usa: la búsqueda en apuntes es por palabras clave |
+| EMBEDDING_MODEL | No se usa: la búsqueda en apuntes es por palabras clave (BM25) |
+| AI_PROVIDER, AI_API_KEY, AI_MODEL, AI_BASE_URL, AI_TIMEOUT_SECONDS, CORPUS_PATH | Reemplazadas por las variables `LLM_*` al cambiar de Anthropic a Groq (ADR 0009) |
 | VECTOR_DB_HOST, VECTOR_DB_PORT, VECTOR_DB_NAME, VECTOR_DB_USERNAME, VECTOR_DB_PASSWORD | No se usa base vectorial con 9 apuntes |
 | KAFKA_BOOTSTRAP_SERVERS | Kafka no se usa: el outbox solo guarda los eventos en la base de datos (publicación diferida, ver ADR 0004) |
 | AWS_REGION | El código no la lee hoy. Se agrega si se usan servicios de AWS |
@@ -60,13 +63,13 @@ Detalle en `docs/tutor-ia/configuracion-proveedor.md`.
 ## 6. Gestión de secretos
 
 - Las variables de configuración van en ConfigMaps.
-- Las contraseñas y claves (`DB_PASSWORD`, `DEMO_PASSWORD`, `AI_API_KEY`) van en Kubernetes Secrets o en los secrets de GitHub Actions.
+- Las contraseñas y claves (`DB_PASSWORD`, `DEMO_PASSWORD`, `LLM_API_KEY`) van en Kubernetes Secrets o en los secrets de GitHub Actions.
 - No se guardan credenciales reales en el repositorio ni en los manifiestos.
 - Los archivos `.env` con valores reales no se suben a GitHub.
 - Se usan permisos mínimos y se separan los entornos de desarrollo y producción.
 
 ## 7. Pendiente
 
-- [ ] Agregar las variables del tutor a `k8s/configmap.yaml` (las de configuración) y a un Secret (`AI_API_KEY`).
-- [ ] Crear el secret `AI_API_KEY` en GitHub antes del Día 4.
+- [ ] Agregar las variables del tutor a `k8s/configmap.yaml` (las de configuración) y a un Secret (`LLM_API_KEY`).
+- [ ] Crear la cuenta de Groq, generar la clave y entregarla por privado; crear el secret `LLM_API_KEY` en GitHub antes del Día 4.
 - [ ] Confirmar con Matías cómo se inyectan los secrets en staging.

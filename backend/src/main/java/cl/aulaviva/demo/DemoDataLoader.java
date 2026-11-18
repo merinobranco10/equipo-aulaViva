@@ -151,7 +151,7 @@ public class DemoDataLoader implements CommandLineRunner {
                     List.of("Membrana plasmática", "Mitocondria", "Pared celular", "Citoplasma"),
                     2, "La pared celular da rigidez a las células vegetales."))),
             "seed-cie-celula");
-        // Basada en el apunte corpus/ciencias-8b "Respiración celular" (4 preguntas).
+        // Basada en el apunte backend/src/main/resources/corpus/ciencias-8b "Respiración celular" (4 preguntas).
         EvaluationCreatedResponse respiracion = evaluations.create(docenteB,
             new CreateEvaluationRequest(COURSE_B, "Respiración celular", List.of(
                 question("¿Qué es la respiración celular?",

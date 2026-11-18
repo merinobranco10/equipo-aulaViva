@@ -5,6 +5,8 @@
 - Colegio: Colegio Los Andes (demo)
 - Unidad: Números
 - Tema: Valor absoluto de números enteros
+- OA: Matemática 7° básico OA 1 (enteros en la recta numérica) — base para 8° OA 1
+- Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
 Comprender el valor absoluto como la distancia de un número al cero en la recta numérica.

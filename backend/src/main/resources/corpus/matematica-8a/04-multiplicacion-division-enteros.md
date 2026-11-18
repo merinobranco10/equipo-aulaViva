@@ -5,6 +5,8 @@
 - Colegio: Colegio Los Andes (demo)
 - Unidad: Números
 - Tema: Multiplicación y división de enteros
+- OA: Matemática 8° básico OA 1 (multiplicación y división de números enteros)
+- Fuente: Programa de Estudio MINEDUC (curriculumnacional.cl), redactado por el equipo para la demo
 
 ## Objetivo
 Aplicar las reglas de los signos en la multiplicación y división de números enteros.
