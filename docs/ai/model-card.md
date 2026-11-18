@@ -55,7 +55,7 @@ La respuesta de la API contempla:
 | Matemática 8° básico A | matematica-8a | 5 |
 | Ciencias Naturales 8° básico B | ciencias-8b | 4 |
 
-Los apuntes viven en `backend/src/main/resources/corpus/<courseId>/` (se empaquetan en el JAR). Cada uno indica su OA y la fuente (Programa de Estudio MINEDUC, curriculumnacional.cl). Son materiales de demostración redactados por el equipo; los OA marcados "por confirmar" deben verificarse contra el programa oficial antes de un uso real.
+Los apuntes viven en `backend/src/main/resources/corpus/<courseId>/` (se empaquetan en el JAR). Cada uno indica su OA y la fuente (Programa de Estudio MINEDUC, curriculumnacional.cl). Son materiales de demostración redactados por el equipo.
 
 ## 7. Comportamiento esperado
 
