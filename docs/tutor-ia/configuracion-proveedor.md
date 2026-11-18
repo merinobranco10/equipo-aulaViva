@@ -20,7 +20,14 @@ Motivos:
 - La API es compatible con OpenAI: cambiar de proveedor después (por ejemplo a Claude Haiku en producción) solo requiere cambiar `LLM_BASE_URL`, `LLM_MODEL` y la clave.
 - Con 9 apuntes pequeños no se necesita base vectorial; todo corre sin Docker en un PC de 8 GB.
 
-Antes del Día 4, revisar en la consola de Groq los límites vigentes del plan gratuito (solicitudes por minuto y por día).
+Límites del plan gratuito, verificados el 18-11-2026 con la clave del equipo (headers `x-ratelimit-*`):
+
+| Modelo | Solicitudes por día | Tokens por minuto | Latencia en la prueba |
+|---|---|---|---|
+| `openai/gpt-oss-120b` | 1.000 | 8.000 | ~760 ms |
+| `openai/gpt-oss-20b` | 1.000 | 8.000 | ~340 ms |
+
+Con `TUTOR_DAILY_BUDGET=200` por colegio y 2 colegios de demo, el uso diario queda bajo el límite. El golden set (50 casos) cabe en una sola corrida si se espacia para no superar los 8.000 tokens por minuto (por ejemplo, una pregunta cada 5–8 segundos).
 
 ## 2. Variables de entorno
 

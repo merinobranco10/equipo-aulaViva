@@ -11,7 +11,7 @@
 | Responsable | Equipo AI/Data |
 | Estado | Diseño cerrado; integración en el Día 4 |
 | Público objetivo | Estudiantes de educación escolar |
-| Proveedor | Groq (API compatible con OpenAI) |
+| Proveedor | Groq (API compatible con OpenAI), plan gratuito: 1.000 solicitudes/día y 8.000 tokens/min por modelo |
 | Modelo principal | `openai/gpt-oss-120b` |
 | Modelo de respaldo | `openai/gpt-oss-20b` |
 | Decisión | [ADR 0009](../adr/0009-tutor-ia-proveedor-llm.md) |
@@ -72,7 +72,7 @@ Los apuntes viven en `backend/src/main/resources/corpus/<courseId>/` (se empaque
 - El sistema puede recuperar fragmentos poco relevantes.
 - Un LLM puede generar respuestas incorrectas o imprecisas.
 - La recuperación RAG no garantiza por sí sola que una respuesta sea correcta.
-- El proveedor es Groq con `openai/gpt-oss-120b`; el plan gratuito tiene límites de solicitudes por minuto y por día, por eso existe el fallback extractivo.
+- El proveedor es Groq con `openai/gpt-oss-120b`. Límites del plan gratuito, verificados el 18-11-2026 con la clave del equipo: **1.000 solicitudes por día** y **8.000 tokens por minuto** por modelo (igual para `openai/gpt-oss-20b`). Una pregunta del tutor usa unos 160 tokens en una prueba simple; con 3 fragmentos de contexto se estiman 600–900. Al superar el límite se usa el modelo de respaldo y, si también se agota, el fallback extractivo.
 - La búsqueda por palabras clave (BM25) puede fallar si la pregunta usa palabras distintas a las del apunte (no hay embeddings; pgvector queda diferido).
 - El endpoint actual del backend es un stub que responde HTTP 501 hasta la implementación del Día 4.
 
