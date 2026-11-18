@@ -1,6 +1,6 @@
 # ADR 0007 — Estrategia multi-tenant
 
-**Estado:** Aceptada · **Fecha:** 17-11-2026 · 
+**Estado:** Aceptada · **Fecha:** 17-11-2026
 
 ## Contexto
 
