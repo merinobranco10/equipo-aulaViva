@@ -43,7 +43,7 @@ El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir co
 | DevSecOps: SAST, SCA, SBOM, secretos, IaC, firma, Kyverno, DAST, Falco (S09–S10) | ✅ | [Seguridad](#seguridad-devsecops--s09s10) |
 | **Backend funcional (S18 · Día 1):** multi-tenant, RBAC, evaluaciones, progreso, outbox, datos de demo | ✅ | PR #60 · 25 tests · cobertura ≥ 70 % |
 | Demo del Día 1 por script (PowerShell y bash) | ✅ | [guion](docs/demo/guion-demo.md) · [manual de pruebas](docs/qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf) · [captura](docs/qa/evidence/s18/01-demo-dia1.png) |
-| UI web, C4 L1–L3 actualizados, ADRs 0007–0009, corpus y golden set (S18 · Día 2) | ✅ | [UI](backend/src/main/resources/static/) · [C4](docs/c4/) · [ADRs](docs/adr/) · [corpus](backend/src/main/resources/corpus/) · [golden set](rag/eval/golden-set.jsonl) · [model card](docs/ai/model-card.md) |
+| UI web, C4 L3, ADRs 0007–0009, corpus y golden set (S18 · Día 2) | ✅ | [UI](backend/src/main/resources/static/) · [C4](docs/c4/) · [ADRs](docs/adr/) · [corpus](backend/src/main/resources/corpus/) · [golden set](rag/eval/golden-set.jsonl) · [model card](docs/ai/model-card.md) |
 | Tests de contrato y seguridad ampliados, staging en Codespaces | ⏳ Día 3 | — |
 | Tutor IA con guardrails, evaluación y model card | ⏳ Día 4 | — |
 | SLOs, DR, game day y post-mortem | ⏳ Día 5 | — |
