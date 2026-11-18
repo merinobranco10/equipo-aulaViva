@@ -27,9 +27,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Datos de demo (perfil "demo"): 2 colegios, 6 usuarios y 3 evaluaciones con preguntas del
- * temario. Todos los nombres son ficticios. La contrasena llega por DEMO_PASSWORD y se guarda
- * con BCrypt. Si ya hay datos (por ejemplo, PostgreSQL con volumen), no hace nada.
+ * Datos de demo (perfil "demo"): 2 colegios, 6 usuarios y 4 evaluaciones (2 por curso) con
+ * preguntas del temario. Todos los nombres son ficticios: no se usan datos reales de menores
+ * (Ley 21.719). La contrasena llega por DEMO_PASSWORD y se guarda con BCrypt. Si ya hay datos
+ * (por ejemplo, PostgreSQL con volumen), no hace nada.
+ *
+ * <p>Estado inicial que la demo y los tests dan por hecho:
+ * <ul>
+ *   <li>estudiante.a: "Numeros enteros" rendida (nota 4,5, respuestas 1-1-0) y "Potencias"
+ *       pendiente.</li>
+ *   <li>estudiante.b: "Respiracion celular" rendida (nota 7,0, respuestas 2-1-2-1) y
+ *       "La celula" pendiente.</li>
+ * </ul>
  */
 @Component
 @Profile("demo")
@@ -91,8 +100,8 @@ public class DemoDataLoader implements CommandLineRunner {
             Role.GUARDIAN));
         AppUser teacherB = users.save(new AppUser(TEACHER_B, TENANT_B, "docente.b", hash,
             "Andrés Soto", Role.TEACHER));
-        users.save(new AppUser(STUDENT_B, TENANT_B, "estudiante.b", hash, "Martina Vera",
-            Role.STUDENT));
+        AppUser studentB = users.save(new AppUser(STUDENT_B, TENANT_B, "estudiante.b", hash,
+            "Martina Vera", Role.STUDENT));
         users.save(new AppUser(COORDINATOR_B, TENANT_B, "coordinador.b", hash,
             "Rodrigo Pizarro", Role.COORDINATOR));
 
@@ -102,6 +111,7 @@ public class DemoDataLoader implements CommandLineRunner {
         directory.enroll(COURSE_B, STUDENT_B);
         directory.linkGuardian(GUARDIAN_A, STUDENT_A);
 
+        // ---- Colegio A · Matemática 8° básico A (2 evaluaciones) ----
         AulaVivaUser docenteA = AulaVivaUser.from(teacherA);
         EvaluationCreatedResponse enteros = evaluations.create(docenteA,
             new CreateEvaluationRequest(COURSE_A, "Números enteros: multiplicación y división",
@@ -126,7 +136,10 @@ public class DemoDataLoader implements CommandLineRunner {
                 question("¿Cuánto es 5⁰?", List.of("0", "1", "5", "No existe"), 1,
                     "Toda potencia de base distinta de cero y exponente cero es igual a 1."))),
             "seed-mat-potencias");
-        evaluations.create(AulaVivaUser.from(teacherB),
+
+        // ---- Colegio B · Ciencias Naturales 8° básico B (2 evaluaciones) ----
+        AulaVivaUser docenteB = AulaVivaUser.from(teacherB);
+        evaluations.create(docenteB,
             new CreateEvaluationRequest(COURSE_B, "La célula", List.of(
                 question("¿Qué organelo realiza la fotosíntesis?",
                     List.of("Mitocondria", "Cloroplasto", "Ribosoma", "Núcleo"), 1,
@@ -138,20 +151,59 @@ public class DemoDataLoader implements CommandLineRunner {
                     List.of("Membrana plasmática", "Mitocondria", "Pared celular", "Citoplasma"),
                     2, "La pared celular da rigidez a las células vegetales."))),
             "seed-cie-celula");
+        // Basada en el apunte corpus/ciencias-8b "Respiración celular" (4 preguntas).
+        EvaluationCreatedResponse respiracion = evaluations.create(docenteB,
+            new CreateEvaluationRequest(COURSE_B, "Respiración celular", List.of(
+                question("¿Qué es la respiración celular?",
+                    List.of("Un proceso en que la célula se divide para formar dos células",
+                        "Un proceso en que se almacena energía en moléculas orgánicas",
+                        "Un conjunto de procesos en que las células obtienen energía de "
+                            + "moléculas orgánicas, como la glucosa",
+                        "Un proceso en que la célula elimina su material genético"), 2,
+                    "Es un conjunto de procesos mediante los cuales las células obtienen "
+                        + "energía a partir de moléculas orgánicas, como la glucosa."),
+                question("¿En qué organelo ocurre gran parte de la respiración celular en las "
+                        + "células eucariotas?",
+                    List.of("Núcleo", "Mitocondria", "Ribosoma", "Pared celular"), 1,
+                    "En las células eucariotas, gran parte de este proceso ocurre en las "
+                        + "mitocondrias."),
+                question("¿Cuáles son los productos generales de la respiración aeróbica?",
+                    List.of("Oxígeno y glucosa",
+                        "Glucosa, agua y energía",
+                        "Dióxido de carbono, agua y energía utilizable por la célula",
+                        "Solo oxígeno"), 2,
+                    "La respiración aeróbica usa oxígeno y produce dióxido de carbono, agua "
+                        + "y energía utilizable por la célula."),
+                question("¿Qué relación hay entre la fotosíntesis y la respiración celular?",
+                    List.of("Son el mismo proceso con distinto nombre",
+                        "Son procesos diferentes y relacionados: la fotosíntesis almacena "
+                            + "energía y la respiración libera parte de ella",
+                        "La respiración celular almacena la energía que luego libera la "
+                            + "fotosíntesis"), 1,
+                    "La fotosíntesis almacena energía en moléculas orgánicas; la respiración "
+                        + "celular libera parte de esa energía para que la célula la use."))),
+            "seed-cie-respiracion");
 
-        // estudiante.a ya rindio "Numeros enteros" (2 de 3 correctas) y tiene "Potencias"
-        // pendiente: asi el panel del apoderado muestra datos desde el inicio.
-        AulaVivaUser estudianteA = AulaVivaUser.from(studentA);
-        EvaluationResponse rendida = evaluations.get(estudianteA, enteros.id());
-        int[] choices = {1, 1, 0};
-        List<AnswerInput> answers = new ArrayList<>();
-        for (int i = 0; i < rendida.questions().size(); i++) {
-            answers.add(new AnswerInput(rendida.questions().get(i).id(), choices[i]));
-        }
-        evaluations.submit(estudianteA, enteros.id(), new SubmissionRequest(answers),
+        // Cada estudiante ya rindio una evaluacion y tiene otra pendiente: asi los paneles
+        // (estudiante, apoderado, docente) muestran datos desde el inicio.
+        // estudiante.a: "Numeros enteros" (2 de 3 correctas, nota 4,5); "Potencias" pendiente.
+        submitSeed(AulaVivaUser.from(studentA), enteros.id(), new int[] {1, 1, 0},
             "seed-sub-enteros");
+        // estudiante.b: "Respiracion celular" (4 de 4, nota 7,0); "La celula" pendiente.
+        submitSeed(AulaVivaUser.from(studentB), respiracion.id(), new int[] {2, 1, 2, 1},
+            "seed-sub-respiracion");
 
-        LOG.info("Datos de demo cargados: 2 colegios, 6 usuarios, 3 evaluaciones.");
+        LOG.info("Datos de demo cargados: 2 colegios, 6 usuarios, 4 evaluaciones.");
+    }
+
+    /** Rinde una evaluacion como el estudiante: choices[i] = alternativa elegida en la pregunta i. */
+    private void submitSeed(AulaVivaUser student, String evaluationId, int[] choices, String key) {
+        EvaluationResponse view = evaluations.get(student, evaluationId);
+        List<AnswerInput> answers = new ArrayList<>();
+        for (int i = 0; i < view.questions().size(); i++) {
+            answers.add(new AnswerInput(view.questions().get(i).id(), choices[i]));
+        }
+        evaluations.submit(student, evaluationId, new SubmissionRequest(answers), key);
     }
 
     private static QuestionInput question(String text, List<String> options, int correct,

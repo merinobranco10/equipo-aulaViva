@@ -27,8 +27,12 @@ public class ProgressService {
         this.directory = directory;
     }
 
+    /**
+     * Devuelve al estudiante si existe en el tenant del usuario y este tiene permiso para verlo
+     * (404 si es de otro colegio, 403 si no tiene relación con él). Única fuente de esta regla.
+     */
     @Transactional(readOnly = true)
-    public StudentProgressResponse progress(AulaVivaUser user, String studentId) {
+    public AppUser authorizedStudent(AulaVivaUser user, String studentId) {
         AppUser student = users.findByIdAndTenantId(studentId, user.tenantId())
             .filter(u -> u.getRole() == Role.STUDENT)
             .orElseThrow(() -> new NotFoundException("El estudiante no existe."));
@@ -39,21 +43,37 @@ public class ProgressService {
             case COORDINATOR -> true;
         };
         if (!allowed) {
-            throw new ForbiddenException("No tienes acceso al progreso de este estudiante.");
+            throw new ForbiddenException("No tienes acceso a la información de este estudiante.");
         }
+        return student;
+    }
+
+    @Transactional(readOnly = true)
+    public StudentProgressResponse progress(AulaVivaUser user, String studentId) {
+        AppUser student = authorizedStudent(user, studentId);
+    
         int assigned = count(
             "SELECT COUNT(*) FROM evaluations e JOIN enrollments en ON en.course_id = e.course_id"
                 + " WHERE en.student_id = ? AND e.tenant_id = ?",
             student.getId(), user.tenantId());
+    
         int completed = count(
             "SELECT COUNT(*) FROM submissions WHERE student_id = ? AND tenant_id = ?"
                 + " AND status = 'COMPLETED'",
             student.getId(), user.tenantId());
-        BigDecimal average = jdbc.queryForObject(
-            "SELECT AVG(g.grade) FROM grades g JOIN submissions s ON s.id = g.submission_id"
-                + " WHERE s.student_id = ? AND s.tenant_id = ?",
-            BigDecimal.class, student.getId(), user.tenantId());
-        return new StudentProgressResponse(completed, Math.max(0, assigned - completed),
+    
+        BigDecimal average = null;
+    
+        if (user.role() != Role.COORDINATOR) {
+            average = jdbc.queryForObject(
+                "SELECT AVG(g.grade) FROM grades g JOIN submissions s ON s.id = g.submission_id"
+                    + " WHERE s.student_id = ? AND s.tenant_id = ?",
+                BigDecimal.class, student.getId(), user.tenantId());
+        }
+    
+        return new StudentProgressResponse(
+            completed,
+            Math.max(0, assigned - completed),
             average == null ? null : average.setScale(1, RoundingMode.HALF_UP));
     }
 
