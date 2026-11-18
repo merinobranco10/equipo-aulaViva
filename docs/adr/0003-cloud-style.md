@@ -153,4 +153,4 @@ AWS se selecciona por presentar un ecosistema suficientemente amplio para cubrir
 
 ## Actualización 18-11-2026
 
-El proveedor LLM del Tutor IA cambia de Anthropic Claude a **Groq** (`llama-3.3-70b-versatile`) para el MVP. La decisión y sus alternativas están en el [ADR 0009](0009-tutor-ia-proveedor-llm.md). La elección de AWS como nube objetivo no cambia.
+El proveedor LLM del Tutor IA cambia de Anthropic Claude a **Groq** (`openai/gpt-oss-120b`) para el MVP. La decisión y sus alternativas están en el [ADR 0009](0009-tutor-ia-proveedor-llm.md). La elección de AWS como nube objetivo no cambia.

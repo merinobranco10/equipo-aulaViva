@@ -16,9 +16,10 @@ La decisión original (ADR 0003) era Anthropic Claude por API, que es de pago.
 ## Decisión
 
 1. **Proveedor: Groq**, por su API compatible con OpenAI (`https://api.groq.com/openai/v1`).
-   - Modelo principal: `llama-3.3-70b-versatile`.
+   - Modelo principal: `openai/gpt-oss-120b`.
    - Respaldo: `openai/gpt-oss-20b` (ante HTTP 429 o error del principal).
    - Ambos son modelos de producción en Groq, no preview.
+   - Son modelos de razonamiento: se llaman con `reasoning_effort: "low"` y `max_tokens` de al menos 300. Con un límite menor, el razonamiento consume todos los tokens y la respuesta llega vacía (verificado el 18-11-2026).
 2. **Recuperación: BM25 léxico** sobre `backend/src/main/resources/corpus/<courseId>/`, top-k = 3, filtrado siempre por el curso y el colegio del estudiante autenticado. Sin embeddings ni pgvector.
 3. **Guardrails de entrada:** bloqueo de patrones de prompt injection ("ignora tus instrucciones", "actúa como", etiquetas falsas de sistema) y redacción de PII (RUT, correo, teléfono) antes de buscar y de llamar al LLM.
 4. **Prompt de sistema acotado:** responder solo con el contexto entregado; si no está, decir "No tengo información sobre eso en los apuntes del curso".
@@ -31,7 +32,8 @@ La decisión original (ADR 0003) era Anthropic Claude por API, que es de pago.
 
 | Alternativa | Costo | Privacidad | Latencia / RAM | Esfuerzo MVP | Veredicto |
 |---|---|---|---|---|---|
-| **Groq (`llama-3.3-70b-versatile`)** | Plan gratuito sin tarjeta | No entrena con datos de la API | Muy baja latencia; 0 RAM local | Bajo (API estilo OpenAI) | **Elegida** |
+| **Groq (`openai/gpt-oss-120b`)** | Plan gratuito sin tarjeta | No entrena con datos de la API | Muy baja latencia; 0 RAM local | Bajo (API estilo OpenAI) | **Elegida** |
+| Groq `llama-3.3-70b-versatile` | — | — | — | — | Descartada: Groq lo retiró del plan normal el 16-08-2026 (solo Enterprise); la prueba con la clave del equipo dio 404 |
 | Google Gemini (plan gratuito) | Gratis con cuotas | En el plan gratuito los datos pueden usarse para mejorar productos | Baja; 0 RAM local | Bajo | Descartada: uso de datos de menores en el plan gratuito y cuotas reducidas |
 | Anthropic Claude Haiku | De pago por token | No entrena con datos de la API | Baja; 0 RAM local | Bajo | Descartada para el MVP por costo; **opción de producción** (cambiar `LLM_*`) |
 | Modelo local (Ollama, 7-8B) | Gratis | Total, nada sale del equipo | Necesita 8+ GB solo para el modelo | Medio | Descartada: no cabe en PCs de 8 GB junto al backend |
@@ -54,3 +56,7 @@ La decisión original (ADR 0003) era Anthropic Claude por API, que es de pago.
 - Test de integración: estudiante de otro colegio → 404; docente → 403.
 - Test con el proveedor simulado caído o lento (> 8 s): responde el fallback extractivo.
 - Revisar en los logs que no aparezcan la clave ni datos personales.
+
+## Actualización 18-11-2026
+
+La decisión inicial nombraba `llama-3.3-70b-versatile` como modelo principal. Al probar la clave del equipo, ese modelo respondió 404: Groq lo retiró del plan normal el 16-08-2026 y recomienda `openai/gpt-oss-120b`. Se cambia el modelo principal a `openai/gpt-oss-120b`; el de respaldo sigue siendo `openai/gpt-oss-20b`, que respondió correctamente en la prueba.

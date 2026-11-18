@@ -7,7 +7,7 @@
 | Tema | Elección |
 |---|---|
 | Proveedor | Groq, por API (compatible con OpenAI) |
-| Modelo principal | `llama-3.3-70b-versatile` |
+| Modelo principal | `openai/gpt-oss-120b` |
 | Modelo de respaldo | `openai/gpt-oss-20b` (si el principal agota su cuota o falla) |
 | Búsqueda en apuntes | BM25 (palabras clave) sobre `backend/src/main/resources/corpus/<courseId>/`, sin base vectorial |
 | Si Groq no responde | Fallback extractivo: se devuelve el fragmento más relevante del apunte, sin LLM |
@@ -15,7 +15,8 @@
 Motivos:
 
 - Groq tiene plan gratuito sin tarjeta y responde muy rápido, suficiente para la demo y las pruebas del equipo.
-- Ambos modelos son de producción en Groq (no "preview").
+- Ambos modelos son de producción en Groq (no "preview"). `llama-3.3-70b-versatile` ya no sirve: Groq lo retiró del plan normal el 16-08-2026.
+- Son modelos de razonamiento: hay que enviar `reasoning_effort: "low"` y `max_tokens` de 300 o más. Con menos, la respuesta llega vacía.
 - La API es compatible con OpenAI: cambiar de proveedor después (por ejemplo a Claude Haiku en producción) solo requiere cambiar `LLM_BASE_URL`, `LLM_MODEL` y la clave.
 - Con 9 apuntes pequeños no se necesita base vectorial; todo corre sin Docker en un PC de 8 GB.
 
@@ -26,10 +27,12 @@ Antes del Día 4, revisar en la consola de Groq los límites vigentes del plan g
 | Variable | Descripción | Valor |
 |---|---|---|
 | LLM_BASE_URL | URL base de la API | https://api.groq.com/openai/v1 |
-| LLM_MODEL | Modelo principal | llama-3.3-70b-versatile |
+| LLM_MODEL | Modelo principal | openai/gpt-oss-120b |
 | LLM_FALLBACK_MODEL | Modelo de respaldo | openai/gpt-oss-20b |
 | LLM_API_KEY | Clave privada de Groq | **Secreto** |
 | LLM_TIMEOUT_SECONDS | Tiempo máximo de espera | 8 |
+| LLM_MAX_TOKENS | Tokens máximos de respuesta (incluye el razonamiento) | 400 |
+| LLM_REASONING_EFFORT | Esfuerzo de razonamiento | low |
 | RAG_TOP_K | Fragmentos enviados al modelo | 3 |
 | TUTOR_DAILY_BUDGET | Preguntas al LLM por colegio y día (después, solo fallback) | 200 |
 
@@ -41,10 +44,12 @@ Ejemplo de `.env` local (este archivo **no** se sube a GitHub):
 
 ```env
 LLM_BASE_URL=https://api.groq.com/openai/v1
-LLM_MODEL=llama-3.3-70b-versatile
+LLM_MODEL=openai/gpt-oss-120b
 LLM_FALLBACK_MODEL=openai/gpt-oss-20b
 LLM_API_KEY=
 LLM_TIMEOUT_SECONDS=8
+LLM_MAX_TOKENS=400
+LLM_REASONING_EFFORT=low
 RAG_TOP_K=3
 ```
 

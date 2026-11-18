@@ -30,10 +30,12 @@ Notas:
 | Variable | Función | Valor | Clasificación |
 |---|---|---|---|
 | LLM_BASE_URL | Dirección de la API (Groq, compatible con OpenAI) | https://api.groq.com/openai/v1 | Configuración |
-| LLM_MODEL | Modelo principal | llama-3.3-70b-versatile | Configuración |
+| LLM_MODEL | Modelo principal | openai/gpt-oss-120b | Configuración |
 | LLM_FALLBACK_MODEL | Modelo de respaldo | openai/gpt-oss-20b | Configuración |
 | LLM_API_KEY | Clave de la API de Groq | Sin valor | Secreto |
 | LLM_TIMEOUT_SECONDS | Tiempo máximo de espera | 8 | Configuración |
+| LLM_MAX_TOKENS | Tokens máximos de respuesta (incluye razonamiento) | 400 | Configuración |
+| LLM_REASONING_EFFORT | Esfuerzo de razonamiento de gpt-oss | low | Configuración |
 | RAG_TOP_K | Fragmentos enviados al modelo | 3 | Configuración |
 | TUTOR_DAILY_BUDGET | Preguntas al LLM por colegio y día | 200 | Configuración |
 

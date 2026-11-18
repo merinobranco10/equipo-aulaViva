@@ -1,6 +1,6 @@
 # Modelo de amenazas — Tutor IA (STRIDE)
 
-> **Actualización 18-11-2026:** en el MVP no se usa pgvector (el Tutor IA busca con BM25 en apuntes del classpath), Kafka/MSK queda diferido (Outbox en tabla) y el LLM es **Groq** (`llama-3.3-70b-versatile`). Ver ADR 0004 y [ADR 0009](adr/0009-tutor-ia-proveedor-llm.md). Las menciones a pgvector abajo describen el objetivo de producción.
+> **Actualización 18-11-2026:** en el MVP no se usa pgvector (el Tutor IA busca con BM25 en apuntes del classpath), Kafka/MSK queda diferido (Outbox en tabla) y el LLM es **Groq** (`openai/gpt-oss-120b`). Ver ADR 0004 y [ADR 0009](adr/0009-tutor-ia-proveedor-llm.md). Las menciones a pgvector abajo describen el objetivo de producción.
 
 ## 1. Objetivo y alcance
 

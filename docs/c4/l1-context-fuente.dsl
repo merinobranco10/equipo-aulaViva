@@ -13,7 +13,7 @@ workspace "AulaViva" "Arquitectura C4 de AulaViva" {
         aulaViva = softwareSystem "AulaViva" "Plataforma SaaS educativa multi-tenant que gestiona contenidos, evaluaciones, progreso y un tutor IA basado en RAG."
 
         mineduc = softwareSystem "MINEDUC (curriculumnacional.cl)" "Referencia del currículo oficial chileno: los OA de los apuntes se toman de sus programas de estudio. Sin integración por API." "External"
-        ia = softwareSystem "Proveedor LLM (Groq)" "API compatible con OpenAI. Modelo llama-3.3-70b-versatile (respaldo openai/gpt-oss-20b). Recibe solo la pregunta sin datos personales y fragmentos de apuntes." "External"
+        ia = softwareSystem "Proveedor LLM (Groq)" "API compatible con OpenAI. Modelo openai/gpt-oss-120b (respaldo openai/gpt-oss-20b). Recibe solo la pregunta sin datos personales y fragmentos de apuntes." "External"
         identidad = softwareSystem "Proveedor de identidad OIDC" "Objetivo de producción (ADR 0008). En el MVP la autenticación es HTTP Basic dentro de AulaViva." "External,Diferido"
 
         estudiante -> aulaViva "Rinde evaluaciones, revisa su nota y usa el tutor IA"

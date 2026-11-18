@@ -44,7 +44,7 @@ workspace "AulaViva" "Arquitectura C4 Nivel 2 - Contenedores" {
         }
 
         llm = softwareSystem "Proveedor LLM (Groq)" {
-            description "API compatible con OpenAI. Modelo llama-3.3-70b-versatile, respaldo openai/gpt-oss-20b. Recibe solo la pregunta sin datos personales y los fragmentos recuperados."
+            description "API compatible con OpenAI. Modelo openai/gpt-oss-120b, respaldo openai/gpt-oss-20b. Recibe solo la pregunta sin datos personales y los fragmentos recuperados."
             tags "External"
         }
 

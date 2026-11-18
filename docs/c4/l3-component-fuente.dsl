@@ -13,7 +13,7 @@ workspace "AulaViva - C4 L3" "Arquitectura de componentes del backend AulaViva" 
         coordinador = person "Coordinador Académico" "Consulta el progreso de cualquier estudiante de su colegio."
 
         // Servicios externos
-        llm = softwareSystem "Proveedor LLM (Groq)" "llama-3.3-70b-versatile (respaldo openai/gpt-oss-20b), API compatible con OpenAI." "External"
+        llm = softwareSystem "Proveedor LLM (Groq)" "openai/gpt-oss-120b (respaldo openai/gpt-oss-20b), API compatible con OpenAI." "External"
 
         // Sistema y contenedores
         aulaviva = softwareSystem "AulaViva" "Plataforma SaaS educativa multi-tenant." {

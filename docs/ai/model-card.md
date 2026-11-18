@@ -12,7 +12,7 @@
 | Estado | Diseño cerrado; integración en el Día 4 |
 | Público objetivo | Estudiantes de educación escolar |
 | Proveedor | Groq (API compatible con OpenAI) |
-| Modelo principal | `llama-3.3-70b-versatile` |
+| Modelo principal | `openai/gpt-oss-120b` |
 | Modelo de respaldo | `openai/gpt-oss-20b` |
 | Decisión | [ADR 0009](../adr/0009-tutor-ia-proveedor-llm.md) |
 
@@ -29,7 +29,7 @@ El sistema utiliza recuperación aumentada por generación (RAG) para fundamenta
 3. El sistema identifica el tenant y el curso autorizado.
 4. Los guardrails de entrada bloquean intentos de prompt injection y quitan datos personales (RUT, correos, teléfonos) antes de seguir.
 5. El componente RAG busca con BM25 (palabras clave) los 3 fragmentos más relevantes en `backend/src/main/resources/corpus/<courseId>/`.
-6. El LLM (Groq, `llama-3.3-70b-versatile`) genera una respuesta usando solo el contexto recuperado, con timeout de 8 s.
+6. El LLM (Groq, `openai/gpt-oss-120b`) genera una respuesta usando solo el contexto recuperado, con timeout de 8 s.
 7. Si Groq falla, demora más de 8 s o se agota el presupuesto del colegio, se responde con un **fallback extractivo** (el fragmento más relevante, sin LLM).
 8. El backend entrega la respuesta y las fuentes utilizadas.
 
@@ -72,7 +72,7 @@ Los apuntes viven en `backend/src/main/resources/corpus/<courseId>/` (se empaque
 - El sistema puede recuperar fragmentos poco relevantes.
 - Un LLM puede generar respuestas incorrectas o imprecisas.
 - La recuperación RAG no garantiza por sí sola que una respuesta sea correcta.
-- El proveedor es Groq con `llama-3.3-70b-versatile`; el plan gratuito tiene límites de solicitudes por minuto y por día, por eso existe el fallback extractivo.
+- El proveedor es Groq con `openai/gpt-oss-120b`; el plan gratuito tiene límites de solicitudes por minuto y por día, por eso existe el fallback extractivo.
 - La búsqueda por palabras clave (BM25) puede fallar si la pregunta usa palabras distintas a las del apunte (no hay embeddings; pgvector queda diferido).
 - El endpoint actual del backend es un stub que responde HTTP 501 hasta la implementación del Día 4.
 
@@ -123,4 +123,4 @@ La evaluación debe ser ejecutada y registrada antes de considerar el sistema ap
 
 Este documento describe el diseño y los criterios previstos para el Tutor IA.
 
-Proveedor y modelo definidos: Groq, `llama-3.3-70b-versatile` (respaldo `openai/gpt-oss-20b`), ver ADR 0009. La integración en el backend y la ejecución real del golden set se hacen en el Día 4. Hasta entonces el endpoint responde HTTP 501.
+Proveedor y modelo definidos: Groq, `openai/gpt-oss-120b` (respaldo `openai/gpt-oss-20b`), ver ADR 0009. La integración en el backend y la ejecución real del golden set se hacen en el Día 4. Hasta entonces el endpoint responde HTTP 501.
