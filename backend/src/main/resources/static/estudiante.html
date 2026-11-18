@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AulaViva · Estudiante</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="top"><strong>AulaViva</strong><span id="who" class="muted"></span><button id="logout" class="link">Salir</button></header>
+  <nav class="tabs" id="tabs" aria-label="Secciones">
+    <a href="#evaluaciones">Mis evaluaciones</a>
+    <a href="#tutor">Tutor IA</a>
+  </nav>
+  <main>
+    <section class="card" data-view="evaluaciones">
+      <h2>Mis evaluaciones</h2>
+      <div class="filters">
+        <div><label for="f-text">Buscar</label><input id="f-text" type="search" placeholder="Título de la evaluación"></div>
+        <div><label for="f-status">Estado</label>
+          <select id="f-status">
+            <option value="">Todas</option>
+            <option value="PENDING">Pendientes</option>
+            <option value="COMPLETED">Completadas</option>
+          </select></div>
+        <div id="f-course-box"><label for="f-course">Curso</label><select id="f-course"><option value="">Todos</option></select></div>
+      </div>
+      <p id="list-count" class="muted" aria-live="polite"></p>
+      <div id="list-msg" role="alert" hidden></div>
+      <div id="list"></div>
+    </section>
+
+    <section class="card" data-view="rendir" hidden>
+      <a class="back" href="#evaluaciones">← Volver a mis evaluaciones</a>
+      <div id="exam"></div>
+      <div id="eval-msg" role="alert" hidden></div>
+      <div id="result"></div>
+    </section>
+
+    <section class="card" data-view="revision" hidden>
+      <a class="back" href="#evaluaciones">← Volver a mis evaluaciones</a>
+      <div id="review-msg" role="alert" hidden></div>
+      <div id="review-out"></div>
+    </section>
+
+    <section class="card" data-view="tutor" hidden>
+      <h2>Tutor IA</h2>
+      <p class="muted">Responde con los apuntes de tu curso.</p>
+      <label for="t-course">Curso</label>
+      <select id="t-course"></select>
+      <label for="t-question">Tu pregunta</label>
+      <textarea id="t-question" rows="3" maxlength="1000"></textarea>
+      <button id="ask" type="button">Preguntar</button>
+      <div id="tutor-msg" role="alert" hidden></div>
+      <div id="tutor-out"></div>
+    </section>
+  </main>
+
+  <dialog id="confirm" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">Confirmar envío</h2>
+    <div id="confirm-body"></div>
+    <div class="dialog-actions">
+      <button id="confirm-cancel" type="button" class="secondary">Volver a revisar</button>
+      <button id="confirm-ok" type="button">Confirmar envío</button>
+    </div>
+  </dialog>
+
+  <script src="js/api.js"></script>
+  <script src="js/estudiante.js"></script>
+</body>
+</html>

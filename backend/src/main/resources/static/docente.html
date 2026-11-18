@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AulaViva · Docente</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="top"><strong>AulaViva</strong><span id="who" class="muted"></span><button id="logout" class="link">Salir</button></header>
+  <nav class="tabs" id="tabs" aria-label="Secciones">
+    <a href="#crear">Crear evaluación</a>
+    <a href="#evaluaciones">Mis evaluaciones</a>
+    <a href="#consultar">Consultar por ID</a>
+  </nav>
+  <main>
+    <section class="card" data-view="crear">
+      <h2>Crear evaluación</h2>
+      <label for="course">Curso</label>
+      <select id="course"></select>
+      <label for="title">Título</label>
+      <input id="title" maxlength="200">
+      <div id="questions"></div>
+      <div class="actions">
+        <button id="add-q" class="secondary" type="button">+ Agregar pregunta</button>
+        <span id="q-count" class="muted"></span>
+      </div>
+      <button id="create" type="button">Crear evaluación</button>
+      <div id="create-msg" role="alert" hidden></div>
+    </section>
+
+    <section class="card" data-view="evaluaciones" hidden>
+      <h2>Mis evaluaciones</h2>
+      <div class="filters">
+        <div><label for="f-text">Buscar</label><input id="f-text" type="search" placeholder="Título o ID"></div>
+        <div><label for="f-course">Curso</label><select id="f-course"><option value="">Todos</option></select></div>
+        <div><button id="f-clear" type="button" class="secondary">Limpiar filtros</button></div>
+      </div>
+      <p id="list-count" class="muted" aria-live="polite"></p>
+      <div id="list-msg" role="alert" hidden></div>
+      <div id="list"></div>
+    </section>
+
+    <section class="card" data-view="consultar" hidden>
+      <h2>Consultar una evaluación por ID</h2>
+      <p class="muted">Si el ID pertenece a otro colegio, la API responde 404 (aislamiento entre tenants).</p>
+      <label for="lookup-id">ID de la evaluación</label>
+      <input id="lookup-id">
+      <button id="lookup" type="button">Consultar</button>
+      <div id="lookup-msg" role="alert" hidden></div>
+      <div id="lookup-out"></div>
+    </section>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/docente.js"></script>
+</body>
+</html>
