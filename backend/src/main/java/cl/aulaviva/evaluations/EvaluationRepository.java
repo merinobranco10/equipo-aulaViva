@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface EvaluationRepository extends JpaRepository<Evaluation, String> {
 
     Optional<Evaluation> findByIdAndTenantId(String id, String tenantId);
-
     Optional<Evaluation> findByTenantIdAndIdempotencyKey(String tenantId, String idempotencyKey);
 
     List<Evaluation> findByTenantIdAndCourseIdInOrderByCreatedAtDesc(String tenantId,
