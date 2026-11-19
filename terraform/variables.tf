@@ -10,14 +10,4 @@ variable "namespace" {
   default     = "equipo-aulaviva"
 }
 
-variable "env" {
-  description = "Entorno de despliegue (dev, staging, prod)"
-  type        = string
-  default     = "dev"
-}
 
-variable "llm_api_key" {
-  description = "API Key del proveedor LLM (Groq) para el tutor IA"
-  type        = string
-  sensitive   = true
-}
