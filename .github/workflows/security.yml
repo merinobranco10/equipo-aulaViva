@@ -1,46 +1,57 @@
 name: AulaViva - Security Analysis
 
 # Corre ante CUALQUIER cambio, salvo que todos los archivos modificados sean
-# documentacion en Markdown (README, ADR, *.md) o imagenes/evidencias. Si un
+# documentacion en Markdown (README, ADR, *.md) o imagenes/evidencias fuera de
+# backend/. Todo lo que entra en la imagen (backend/**) corre siempre. Si un
 # commit o PR mezcla un .md con codigo, Terraform, k8s, workflows, etc., corre
 # completo. Los patrones distinguen mayusculas: por eso se repiten .JPG/.PNG.
 on:
   push:
     branches:
       - desarrollo
-    paths-ignore:
-      - "**.md"
-      - "**.png"
-      - "**.PNG"
-      - "**.jpg"
-      - "**.JPG"
-      - "**.jpeg"
-      - "**.JPEG"
-      - "**.gif"
-      - "**.webp"
-      - "**.svg"
-      - "**.ico"
-      - "**.bmp"
-      - "docs/qa/**"
+    paths:
+      - "**"
+      - "!**.md"
+      - "!**.png"
+      - "!**.PNG"
+      - "!**.jpg"
+      - "!**.JPG"
+      - "!**.jpeg"
+      - "!**.JPEG"
+      - "!**.gif"
+      - "!**.webp"
+      - "!**.svg"
+      - "!**.ico"
+      - "!**.bmp"
+      - "!docs/qa/**"
+      # Todo lo que va dentro de la imagen se analiza siempre, aunque sea .md
+      # (los apuntes del tutor son .md): si no, el CI publica una imagen que
+      # nadie firma y la verificacion de los PR siguientes falla.
+      - "backend/**"
 
   pull_request:
     branches:
       - main
       - desarrollo
-    paths-ignore:
-      - "**.md"
-      - "**.png"
-      - "**.PNG"
-      - "**.jpg"
-      - "**.JPG"
-      - "**.jpeg"
-      - "**.JPEG"
-      - "**.gif"
-      - "**.webp"
-      - "**.svg"
-      - "**.ico"
-      - "**.bmp"
-      - "docs/qa/**"
+    paths:
+      - "**"
+      - "!**.md"
+      - "!**.png"
+      - "!**.PNG"
+      - "!**.jpg"
+      - "!**.JPG"
+      - "!**.jpeg"
+      - "!**.JPEG"
+      - "!**.gif"
+      - "!**.webp"
+      - "!**.svg"
+      - "!**.ico"
+      - "!**.bmp"
+      - "!docs/qa/**"
+      # Todo lo que va dentro de la imagen se analiza siempre, aunque sea .md
+      # (los apuntes del tutor son .md): si no, el CI publica una imagen que
+      # nadie firma y la verificacion de los PR siguientes falla.
+      - "backend/**"
 
   workflow_dispatch:
 
