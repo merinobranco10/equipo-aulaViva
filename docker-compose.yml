@@ -1,0 +1,23 @@
+{
+  "name": "AulaViva",
+  "image": "mcr.microsoft.com/devcontainers/java:1-21-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": { 
+      "version": "21", 
+      "installMaven": "true" 
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": { 
+    "cpus": 4, 
+    "memory": "16gb" 
+  },
+  "forwardPorts": [8080],
+  "portsAttributes": { 
+    "8080": { 
+      "label": "AulaViva", 
+      "onAutoForward": "notify" 
+    } 
+  },
+  "postCreateCommand": "cd backend && mvn -q -B -DskipTests package"
+}
