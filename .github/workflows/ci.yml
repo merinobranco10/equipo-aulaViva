@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - desarrollo
-   
     paths:
       - "backend/**"
       - ".github/workflows/ci.yml"
