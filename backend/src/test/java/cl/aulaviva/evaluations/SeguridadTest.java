@@ -129,11 +129,12 @@ class SeguridadTest {
     }
 
     @Test
-    void tutorEsStubSoloParaEstudiantes() throws Exception {
+    void tutorSoloParaEstudiantes() throws Exception {
         mvc.perform(post("/v1/tutor/questions").with(httpBasic("estudiante.a", PASS))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"courseId\":\"matematica-8a\",\"question\":\"hola\"}"))
-            .andExpect(status().isNotImplemented());
+                .content("{\"courseId\":\"matematica-8a\",\"question\":\"¿Qué es el valor absoluto?\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.answer").isNotEmpty());
         mvc.perform(post("/v1/tutor/questions").with(httpBasic("docente.a", PASS))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"courseId\":\"matematica-8a\",\"question\":\"hola\"}"))

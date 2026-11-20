@@ -9,6 +9,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
+import cl.aulaviva.tutor.LlmClient;
+import cl.aulaviva.tutor.TutorBudget;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
@@ -27,7 +29,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.yaml.snakeyaml.Yaml;
@@ -40,10 +44,12 @@ import org.yaml.snakeyaml.Yaml;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "demo"})
+@DirtiesContext
 class ContratoOpenApiTest {
 
-    /** Operaciones que aun no se implementan (el tutor llega el Dia 4). */
-    private static final Set<String> FUERA_DE_ALCANCE = Set.of("POST /v1/tutor/questions");
+    /** Operaciones que aun no se implementan. */
+    private static final Set<String> FUERA_DE_ALCANCE = Set.of();
+    private static final String TUTOR = "/v1/tutor/questions";
 
     private static Map<String, Object> spec;
     private final ObjectMapper json = new ObjectMapper();
@@ -51,6 +57,13 @@ class ContratoOpenApiTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private TutorBudget budget;
+
+    /** Sin LLM real: el tutor responde en modo extractivo. */
+    @MockitoBean
+    private LlmClient llm;
 
     @BeforeAll
     static void cargarContrato() throws Exception {
@@ -113,8 +126,28 @@ class ContratoOpenApiTest {
         verificar("GET", "/v1/me/evaluations",
             get("/v1/me/evaluations").with(httpBasic("estudiante.a", PASS)), 200);
 
+        // Tutor IA: respuesta (200), sin sesion (401), rol no estudiante (403),
+        // curso de otro colegio (404), pregunta vacia (422) y presupuesto agotado (429)
+        verificar("POST", TUTOR, tutor("estudiante.a", "matematica-8a", "valor absoluto contrato"), 200);
+        verificar("POST", TUTOR, post(TUTOR).contentType(MediaType.APPLICATION_JSON)
+            .content(tutorJson("matematica-8a", "hola")), 401);
+        verificar("POST", TUTOR, tutor("docente.a", "matematica-8a", "valor absoluto"), 403);
+        verificar("POST", TUTOR, tutor("estudiante.b", "matematica-8a", "valor absoluto"), 404);
+        verificar("POST", TUTOR, tutor("estudiante.a", "matematica-8a", " "), 422);
+        budget.add("colegio-b", 10_000_000);
+        verificar("POST", TUTOR, tutor("estudiante.b", "ciencias-8b", "mitocondria contrato"), 429);
+
         // Toda operacion del contrato (salvo las fuera de alcance) quedo cubierta
         assertThat(cubiertas).containsAll(operacionesDelContrato());
+    }
+
+    private RequestBuilder tutor(String user, String course, String question) throws Exception {
+        return post(TUTOR).with(httpBasic(user, PASS))
+            .contentType(MediaType.APPLICATION_JSON).content(tutorJson(course, question));
+    }
+
+    private String tutorJson(String course, String question) throws Exception {
+        return json.writeValueAsString(Map.of("courseId", course, "question", question));
     }
 
     // ------------------------------------------------------------------ validacion

@@ -4,10 +4,14 @@ import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import cl.aulaviva.tutor.LlmProperties;
+import cl.aulaviva.tutor.TutorProperties;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
+@EnableConfigurationProperties({LlmProperties.class, TutorProperties.class})
 public class AulaVivaApplication {
 
     public static void main(String[] args) {
