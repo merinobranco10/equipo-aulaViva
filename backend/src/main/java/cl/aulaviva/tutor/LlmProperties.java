@@ -10,7 +10,7 @@ public class LlmProperties {
     private String fallbackModel = "openai/gpt-oss-20b";
     private String apiKey = "";
     private String reasoningEffort = "low";
-    private int maxTokens = 800;
+    private int maxTokens = 400;
     private int timeoutSeconds = 8;
 
     public String baseUrl() { return baseUrl; }

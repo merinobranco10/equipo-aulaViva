@@ -13,7 +13,7 @@ Evaluar el consumo de recursos y los costos asociados al funcionamiento del Tuto
 | Proveedor | Groq |
 | Modelo principal | `openai/gpt-oss-120b` |
 | Modelo de respaldo | `openai/gpt-oss-20b` |
-| Límite de tokens de salida base | 800 |
+| Límite de tokens de salida | 400 por defecto; los escenarios 1 y 2 usan 800 como línea base (`LLM_MAX_TOKENS=800`) |
 | Conjunto de evaluación | 50 casos |
 | Script | `rag/eval/run_eval.py` |
 
@@ -23,7 +23,7 @@ Evaluar el consumo de recursos y los costos asociados al funcionamiento del Tuto
 
 - Caché deshabilitada.
 - `top-k = 5`.
-- `max-tokens = 800`.
+- `max-tokens = 800` (levantar la app con `LLM_MAX_TOKENS=800`).
 - Ejecutar dos veces consecutivas el conjunto de evaluación.
 
 ### Escenario 2: Caché habilitada
