@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
+@EnableConfigurationProperties({LlmProperties.class, TutorProperties.class})
 public class AulaVivaApplication {
 
     public static void main(String[] args) {
