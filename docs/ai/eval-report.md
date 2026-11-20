@@ -6,8 +6,8 @@
 **Modelo de respaldo:** `openai/gpt-oss-20b`  
 **Corpus:** 9 apuntes distribuidos en 2 cursos.  
 **Conjunto de evaluación:** 50 casos (`rag/eval/golden-set.jsonl`).  
-**Script:** `rag/eval/run_eval.py` · **Resultados crudos:** `rag/eval/resultados.json` (corrida base con LLM)  
-**Configuración evaluada:** `top-k = 5`, `min-score = 2,0` (corrida con LLM); calibración de `min-score` entre 1,5 y 3,0 sin LLM. Valor elegido: **1,5**.
+**Script:** `rag/eval/run_eval.py` · **Resultados crudos:** `rag/eval/resultados.json` (corrida final con LLM y umbral calibrado)  
+**Configuración final:** `top-k = 5`, `min-score = 1,5`, caché activa, `max-tokens = 400`.
 
 ## 1. Objetivo
 
@@ -48,15 +48,18 @@ Distribución de preguntas académicas:
 
 ## 4. Resultados por curso
 
-Corrida con `openai/gpt-oss-120b`, `top-k = 5`, `min-score = 2,0` (valor previo a la calibración), 50 casos:
+Corrida final (20-11-2026) con `openai/gpt-oss-120b`, `top-k = 5` y `min-score = 1,5`:
 
 | Curso | Hit@3 | Hechos clave | Fidelidad |
 |---|---:|---:|---:|
-| Matemática 8° básico A | 91 % | 91 % | 95 % |
-| Ciencias Naturales 8° básico B | 56 % | 56 % | 56 % |
-| **Total (40 casos)** | **75 %** | **75 %** | **78 %** |
+| Matemática 8° básico A | 91 % | 86 % | 95 % |
+| Ciencias Naturales 8° básico B | 78 % | 78 % | 78 % |
+| **Total (40 casos)** | **85 %** | **82 %** | **88 %** |
+| Meta | ≥ 80 % | ≥ 70 % | ≥ 90 % |
 
-Diferencia entre cursos: 35 puntos en hit@3 y en hechos clave (meta de equidad: < 15). La segunda corrida dio los mismos números.
+Diferencia entre cursos: 13 puntos en hit@3 y 9 en hechos clave (meta de equidad < 15: cumple).
+
+Antes de calibrar (`min-score = 2,0`) el total era 75 % / 75 % / 78 %, con Ciencias en 56 % / 56 % / 56 % y 35 puntos de diferencia entre cursos.
 
 ### 4.1 Calibración de `min-score`
 
@@ -69,7 +72,7 @@ Se corrió el golden set sin clave del LLM (modo extractivo), cambiando solo el 
 | 2,5 | 70 % | 65 % | 80 % | 8 | 100 % |
 | 3,0 | 68 % | 62 % | 75 % | 10 | 100 % |
 
-Con 1,5 se recuperan 6 de las 7 preguntas válidas que 2,0 rechazaba y las 3 preguntas fuera del temario siguen rechazadas. Se fija `aulaviva.tutor.min-score=1.5`. Con ese valor, Ciencias sube a 72 % de hit@3 y la diferencia entre cursos baja a 14 puntos en hit@3 (cumple) y 26 en hechos clave (no cumple).
+Con 1,5 se recuperan 6 de las 7 preguntas válidas que 2,0 rechazaba y las 3 preguntas fuera del temario siguen rechazadas. Se fija `aulaviva.tutor.min-score=1.5` y se confirmó con la corrida final con LLM (sección 4).
 
 ## 5. Resultados de seguridad
 
@@ -85,22 +88,20 @@ Iguales en todas las corridas (con y sin LLM, con cualquier umbral):
 
 Evidencia de la demo (pasos 3 y 4): [`d4-01-tutor-llm-e-injection.png`](../qa/evidence/s18/d4-01-tutor-llm-e-injection.png) (respuesta con LLM y ataque bloqueado) y [`d4-02-tutor-extractivo-sin-clave.png`](../qa/evidence/s18/d4-02-tutor-extractivo-sin-clave.png) (sin clave, modo extractivo).
 
-Latencia observada: mediana de 0,6 s con LLM (p95 ≈ 1,5 s); 2-3 ms para respuestas desde caché, bloqueos y modo extractivo.
+Latencia observada en la corrida final: mediana de 0,8 s con LLM (p95 ≈ 1,1 s); 2-3 ms para respuestas desde caché, bloqueos y modo extractivo.
 
 ## 6. Análisis de fallos
 
-Fallaron 11 de los 40 casos académicos en la corrida con LLM:
+En la corrida base (umbral 2,0) fallaron 11 de 40 casos; 7 eran preguntas cortas de Ciencias («¿Qué es la célula?») que BM25 puntuaba bajo y se rechazaban como fuera del temario. La calibración a 1,5 recuperó 5 de ellas. En la corrida final fallan 8 casos:
 
-| Causa | Casos | Qué se hizo |
+| Causa | Casos | Comentario |
 |---|---|---|
-| Umbral `min-score` demasiado alto: preguntas cortas y generales («¿Qué es la célula?») obtienen poco puntaje BM25 y se tratan como fuera del temario | GS21, GS22, GS23, GS26, GS37, GS39, GS44 | Calibración a 1,5: se recuperan todos salvo GS22 |
-| El LLM respondió «No encuentro eso en tus apuntes» aunque había fragmentos recuperados | GS13, GS43 | Se mantiene: es el comportamiento conservador esperado; revisar los apuntes de operaciones y respiración celular |
-| Recuperación: el apunte esperado no quedó entre los 3 primeros | GS01 | La respuesta fue correcta y con fuente; el caso solo falla hit@3 |
-| La respuesta no incluyó los hechos esperados | GS02 | Búsqueda léxica: el apunte usa otras palabras; candidato para ampliar el corpus |
+| El LLM respondió «No encuentro eso en tus apuntes» aunque había fragmentos recuperados | GS13, GS23, GS39, GS43 | Comportamiento conservador: prefiere no responder antes que inventar. GS23 y GS39 son la misma pregunta (procariota vs. eucariota); conviene reforzar ese apunte |
+| Pregunta rechazada por el umbral | GS22 | Unicelular vs. pluricelular: el puntaje BM25 queda bajo 1,5 |
+| El apunte esperado no quedó entre los 3 primeros | GS01 | La respuesta fue correcta y con fuente; solo falla hit@3 |
+| La respuesta no incluyó los hechos esperados | GS02, GS17 | Búsqueda léxica: el apunte usa otras palabras que la pregunta |
 
-Ciencias concentra los fallos porque sus apuntes usan términos que se repiten en muchas secciones (célula, energía), lo que baja el puntaje BM25 de preguntas cortas. Mejoras propuestas: ampliar los apuntes de Ciencias y, más adelante, búsqueda semántica (ADR 0009, alternativa diferida).
-
-Pendiente recomendado: repetir la corrida con LLM usando `min-score = 1,5` para confirmar las metas de calidad con el umbral final.
+La fidelidad (88 %) queda 2 puntos bajo la meta: los 4 casos en que el LLM dice «No encuentro…» cuentan como no fieles porque no citan fuente, aunque no inventan nada. Mejoras propuestas: ampliar los apuntes de Ciencias (células procariotas/eucariotas y organismos unicelulares) y, más adelante, búsqueda semántica (ADR 0009, alternativa diferida).
 
 ## 7. Metodología
 
@@ -111,6 +112,6 @@ No se utilizó RAGAS. Se emplearon métricas personalizadas para medir recuperac
 ## 8. Conclusión
 
 - Seguridad, privacidad y aislamiento cumplen el 100 % en todas las corridas.
-- Matemática cumple todas las metas de calidad. Ciencias no las cumple con el umbral inicial; la calibración a `min-score = 1,5` deja el total en hit@3 80 %, hechos clave 70 % y fidelidad 98 % (medido en modo extractivo).
-- La equidad entre cursos cumple en hit@3 (14 pts) y no en hechos clave (26 pts): se declara como limitación y como trabajo futuro sobre el corpus de Ciencias.
-- Las respuestas con LLM se generan en menos de un segundo (mediana) y, si el LLM falla, el tutor sigue respondiendo desde los apuntes.
+- Con el umbral calibrado se cumplen hit@3 (85 %), hechos clave (82 %) y equidad entre cursos (13 y 9 puntos).
+- La fidelidad queda en 88 % (meta 90 %): los fallos son respuestas «No encuentro…» sin fuente, no respuestas inventadas.
+- Las respuestas con LLM tardan 0,8 s en mediana y, si el LLM falla, el tutor sigue respondiendo desde los apuntes.

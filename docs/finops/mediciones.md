@@ -100,7 +100,7 @@ Se espera que el caché reduzca las llamadas al proveedor cuando se repiten preg
 
 - La caché es la palanca efectiva: con preguntas repetidas elimina más del 90 % de las llamadas y del costo sin tocar la calidad.
 - Reducir `top-k` ahorra un 18 %, pero baja los hechos clave 7 puntos: no compensa con un corpus tan pequeño.
-- Configuración final: caché activa, `top-k = 5`, `max-tokens = 400`, `min-score = 1,5` (calibrado en `docs/ai/eval-report.md`).
+- Configuración final: caché activa, `top-k = 5`, `max-tokens = 400`, `min-score = 1,5` (calibrado en `docs/ai/eval-report.md`). En la corrida final con esa configuración: 39 llamadas, 20.686 tokens de entrada, 2.767 de salida, USD 0,00476 por ejecución del golden set.
 - Con el presupuesto diario de 50.000 tokens por colegio caben ≈ 80 preguntas sin caché (≈ 610 tokens cada una), y muchas más con caché.
 
 **Fuentes de precios (consultadas el 20-11-2026):**

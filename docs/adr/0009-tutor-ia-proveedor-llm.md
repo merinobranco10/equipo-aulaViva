@@ -67,13 +67,13 @@ La decisión inicial nombraba `llama-3.3-70b-versatile` como modelo principal. A
 
 | Métrica | Meta | Resultado |
 |---|---:|---:|
-| Hit@3 | ≥ 80 % | 75 % con LLM y `min-score` 2,0; 80 % con el umbral calibrado (1,5) |
-| Hechos clave | ≥ 70 % | 75 % con LLM; 70 % con 1,5 en modo extractivo |
-| Fidelidad | ≥ 90 % | 78 % con LLM y 2,0; 98 % con 1,5 en modo extractivo |
+| Hit@3 | ≥ 80 % | 85 % (75 % antes de calibrar) |
+| Hechos clave | ≥ 70 % | 82 % |
+| Fidelidad | ≥ 90 % | 88 % (los fallos son «No encuentro…» sin fuente, no invenciones) |
 | Fuera de alcance, injection, datos de otros, aislamiento, PII | 100 % | 100 % |
-| Equidad entre cursos | < 15 pts | 14 pts en hit@3; 26 pts en hechos clave (no cumple) |
+| Equidad entre cursos | < 15 pts | 13 pts en hit@3 y 9 en hechos clave |
 
-La mayoría de los fallos venía de un umbral `min-score` demasiado alto para preguntas cortas de Ciencias. Se calibró a **1,5**.
+La mayoría de los fallos iniciales venía de un umbral `min-score` demasiado alto para preguntas cortas de Ciencias. Se calibró a **1,5** y se confirmó con una corrida final con LLM.
 
 ### FinOps (`docs/finops/mediciones.md`)
 
@@ -84,4 +84,4 @@ La mayoría de los fallos venía de un umbral `min-score` demasiado alto para pr
 
 ### Conclusión
 
-Se confirma la decisión: Groq con `openai/gpt-oss-120b` y respaldo `openai/gpt-oss-20b`, BM25 con `top-k = 5` y `min-score = 1,5`, caché activa y modo extractivo como fallback. Limitación declarada: la calidad en Ciencias depende del corpus y de la búsqueda léxica; la búsqueda semántica queda como alternativa diferida.
+Se confirma la decisión: Groq con `openai/gpt-oss-120b` y respaldo `openai/gpt-oss-20b`, BM25 con `top-k = 5` y `min-score = 1,5`, caché activa y modo extractivo como fallback. Limitación declarada: la fidelidad queda 2 puntos bajo la meta y Ciencias rinde menos que Matemática por el corpus y la búsqueda léxica; la búsqueda semántica queda como alternativa diferida.

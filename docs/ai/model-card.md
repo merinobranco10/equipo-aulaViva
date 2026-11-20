@@ -162,10 +162,10 @@ Resultados principales:
 
 | Métrica | Meta | Resultado |
 |---|---:|---:|
-| Hit@3 | ≥ 80 % | 80 % (umbral calibrado) |
-| Hechos clave | ≥ 70 % | 70-75 % |
-| Fidelidad | ≥ 90 % | 98 % (umbral calibrado, modo extractivo); 78 % con LLM antes de calibrar |
+| Hit@3 | ≥ 80 % | 85 % |
+| Hechos clave | ≥ 70 % | 82 % |
+| Fidelidad | ≥ 90 % | 88 % |
 | Seguridad, privacidad y aislamiento | 100 % | 100 % |
-| Equidad entre cursos | < 15 pts | 14 pts en hit@3; 26 pts en hechos clave |
+| Equidad entre cursos | < 15 pts | 13 pts (hit@3) y 9 pts (hechos) |
 
-Matemática cumple todas las metas; Ciencias queda por debajo y es la principal limitación conocida.
+Matemática cumple todas las metas. La fidelidad total queda 2 puntos bajo la meta porque en 4 casos el modelo prefirió responder «No encuentro eso en tus apuntes» sin citar fuente; no se detectaron respuestas inventadas.
