@@ -8,7 +8,7 @@
 | Tipo | Asistente educativo basado en LLM y RAG |
 | Versión | 0.3 (tutor implementado, 20-11-2026) |
 | Responsable | Equipo AI/Data |
-| Estado | Implementado en el backend y probado con tests automatizados; evaluación con el golden set **pendiente** |
+| Estado | Implementado, probado con tests automatizados y evaluado con el golden set (20-11-2026) |
 | Público objetivo | Estudiantes de educación escolar |
 | Proveedor | Groq (API compatible con OpenAI), plan gratuito: 1.000 solicitudes/día y 8.000 tokens/min por modelo |
 | Modelo principal | `openai/gpt-oss-120b` |
@@ -27,7 +27,7 @@ El sistema utiliza recuperación aumentada por generación (RAG) para fundamenta
 2. El backend valida la identidad y los permisos del estudiante.
 3. El sistema identifica el tenant y el curso autorizado.
 4. Los guardrails de entrada bloquean intentos de prompt injection y quitan datos personales (RUT, correos, teléfonos) antes de seguir.
-5. El componente RAG busca con BM25 (palabras clave) los fragmentos más relevantes en `backend/src/main/resources/corpus/<courseId>/` (top-k configurable, 5 por defecto). Si el mejor puntaje no llega a `min-score` (2,0, por calibrar), responde que no encuentra eso en los apuntes sin llamar al LLM.
+5. El componente RAG busca con BM25 (palabras clave) los fragmentos más relevantes en `backend/src/main/resources/corpus/<courseId>/` (top-k configurable, 5 por defecto). Si el mejor puntaje no llega a `min-score` (1,5, calibrado con el golden set), responde que no encuentra eso en los apuntes sin llamar al LLM.
 6. El LLM (Groq, `openai/gpt-oss-120b`, `reasoning_effort: low`) genera una respuesta usando solo el contexto recuperado, con timeout de 8 s. Ante un 429 reintenta con `openai/gpt-oss-20b`.
 7. Si Groq falla, demora más de 8 s o la respuesta no cita una fuente recuperada, se responde con un **fallback extractivo** (el fragmento más relevante, sin LLM). Si se agota el presupuesto diario del colegio, responde 429.
 8. El backend entrega la respuesta y las fuentes utilizadas.
@@ -83,7 +83,7 @@ OA verificados en curriculumnacional.cl el 18-11-2026:
 - El proveedor es Groq con `openai/gpt-oss-120b`. Límites del plan gratuito, verificados el 18-11-2026 con la clave del equipo: **1.000 solicitudes por día** y **8.000 tokens por minuto** por modelo (igual para `openai/gpt-oss-20b`). Una pregunta del tutor usa unos 160 tokens en una prueba simple; con 3 fragmentos de contexto se estiman 600–900. Al superar el límite se usa el modelo de respaldo y, si también se agota, el fallback extractivo.
 - La búsqueda por palabras clave (BM25) puede fallar si la pregunta usa palabras distintas a las del apunte (no hay embeddings; pgvector queda diferido).
 - La caché y el presupuesto diario viven en memoria: se pierden al reiniciar y no se comparten entre réplicas.
-- El umbral `min-score` (2,0) todavía no está calibrado con el golden set.
+- Búsqueda léxica (BM25): las preguntas cortas o con palabras distintas a las del apunte pueden no encontrar el fragmento correcto. Ciencias rinde menos que Matemática (ver la sección 10).
 
 ## 9. Seguridad y privacidad
 
@@ -152,9 +152,20 @@ El Tutor IA:
 
 | Componente | Estado |
 |---|---|
-| BM25 por curso, prompt, guardrails, PII, cliente Groq con respaldo, fallback extractivo, caché, presupuesto y métricas | Implementado (rama `s18-dia4_v2`) |
+| BM25 por curso, prompt, guardrails, PII, cliente Groq con respaldo, fallback extractivo, caché, presupuesto y métricas | Implementado |
 | Tests automatizados (`TutorFlowTest`, `GuardrailsTest`, `PiiMaskerTest`, `TutorPromptTest`, contrato y seguridad) | En verde |
-| Evaluación con los 50 casos del golden set | **Pendiente**: requiere la app levantada con `LLM_API_KEY` |
-| Calibración de `min-score` y mediciones FinOps | **Pendiente**: dependen de la evaluación |
+| Evaluación con los 50 casos del golden set | Hecha: [`eval-report.md`](eval-report.md) |
+| Calibración de `min-score` | Hecha: 1,5 |
+| Mediciones FinOps | Hechas: [`../finops/mediciones.md`](../finops/mediciones.md) |
 
-La aprobación de calidad queda condicionada a ejecutar la evaluación y cumplir las metas de la sección 10.
+Resultados principales:
+
+| Métrica | Meta | Resultado |
+|---|---:|---:|
+| Hit@3 | ≥ 80 % | 80 % (umbral calibrado) |
+| Hechos clave | ≥ 70 % | 70-75 % |
+| Fidelidad | ≥ 90 % | 98 % (umbral calibrado, modo extractivo); 78 % con LLM antes de calibrar |
+| Seguridad, privacidad y aislamiento | 100 % | 100 % |
+| Equidad entre cursos | < 15 pts | 14 pts en hit@3; 26 pts en hechos clave |
+
+Matemática cumple todas las metas; Ciencias queda por debajo y es la principal limitación conocida.

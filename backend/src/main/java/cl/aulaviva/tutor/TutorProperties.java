@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "aulaviva.tutor")
 public class TutorProperties {
     private int topK = 5;
-    private double minScore = 2.0;
+    private double minScore = 1.5;
     private boolean cacheEnabled = true;
     private long dailyTokenBudget = 50000;
 

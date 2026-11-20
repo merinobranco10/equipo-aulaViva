@@ -1,6 +1,6 @@
 # Mediciones FinOps — Tutor IA AulaViva
 
-**Fecha:** 19-11-2026
+**Fecha:** 19-11-2026 · **Medido:** 20-11-2026 (Groq, plan gratuito, `min-score = 2,0`)
 
 ## 1. Objetivo
 
@@ -44,14 +44,27 @@ Evaluar el consumo de recursos y los costos asociados al funcionamiento del Tuto
 
 ## 4. Tabla de mediciones
 
+Cada ejecución recorre los 50 casos del golden set (40 llegan al LLM o a la caché; el resto se bloquea antes). Llamadas y tokens se tomaron de `/actuator/prometheus` y de los logs del tutor.
+
 | Escenario | Ejecución | Llamadas LLM | Tokens entrada | Tokens salida | Costo equivalente USD | Hit@3 | Hechos clave |
 |---|---|---:|---:|---:|---:|---:|---:|
-| Base | 1 | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
-| Base | 2 | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
-| Caché | 1 | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
-| Caché | 2 | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
-| Optimizado | 1 | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
-| Optimizado | 2 | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
+| Base | 1 | 34 | 18.290 | 2.375 | 0,00417 | 75 % | 75 % |
+| Base | 2 | 34 | 18.290 | 2.359 | 0,00416 | 75 % | 75 % |
+| Caché | 1 | 33 | 17.627 | 2.317 | 0,00403 | 75 % | 75 % |
+| Caché | 2 | **3** | **1.388** | **184** | **0,00032** | 75 % | 75 % |
+| Optimizado | 1 | 33 | 13.833 | 2.247 | 0,00342 | 72 % | 68 % |
+| Optimizado | 2 | 5 | 1.927 | 324 | 0,00048 | 72 % | 68 % |
+
+Promedio por respuesta con LLM: ≈ 540 tokens de entrada y ≈ 70 de salida; costo equivalente ≈ USD 0,12 por cada 1.000 preguntas sin caché.
+
+### Resultado de cada palanca
+
+| Palanca | Ahorro | Efecto en calidad | Decisión |
+|---|---|---|---|
+| **1. Caché** (segunda ejecución vs. base) | −91 % llamadas, −92 % tokens de entrada, −92 % costo | Ninguno (75 % / 75 %) | **Se adopta** (`cache-enabled=true`) |
+| **2. Contexto acotado** (`top-k = 3`, `max-tokens = 400`; primera ejecución vs. base) | −24 % tokens de entrada, −5 % de salida, −18 % costo | Hit@3 −3 pts, hechos clave **−7 pts** | **No se adopta `top-k = 3`**: supera el límite de 5 puntos. Se mantiene `top-k = 5` |
+
+`max-tokens = 400` se mantiene como tope por defecto: las respuestas usan ≈ 70 tokens de salida, así que bajar de 800 a 400 no cambia el costo ni la calidad, y sigue sobre el mínimo de 300 que necesita gpt-oss para razonar.
 
 ## 5. Fórmula de costo
 
@@ -85,9 +98,10 @@ Se espera que el caché reduzca las llamadas al proveedor cuando se repiten preg
 
 ## 8. Conclusión
 
-Las mediciones permitirán identificar la configuración más eficiente para el Tutor IA, equilibrando calidad de respuesta y consumo de recursos.
-
-La conclusión definitiva queda pendiente de completar después de ejecutar los tres escenarios y registrar los datos reales.
+- La caché es la palanca efectiva: con preguntas repetidas elimina más del 90 % de las llamadas y del costo sin tocar la calidad.
+- Reducir `top-k` ahorra un 18 %, pero baja los hechos clave 7 puntos: no compensa con un corpus tan pequeño.
+- Configuración final: caché activa, `top-k = 5`, `max-tokens = 400`, `min-score = 1,5` (calibrado en `docs/ai/eval-report.md`).
+- Con el presupuesto diario de 50.000 tokens por colegio caben ≈ 80 preguntas sin caché (≈ 610 tokens cada una), y muchas más con caché.
 
 **Fuentes de precios (consultadas el 20-11-2026):**
 
