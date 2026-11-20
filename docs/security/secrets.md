@@ -1,6 +1,6 @@
 # Inventario de secretos
 
-**Responsable:** Valentina León (DevSecOps) · **Actualizado:** 19-11-2026
+**Responsable:** Valentina León (DevSecOps) · **Actualizado:** 20-11-2026
 
 Regla del equipo: ningún secreto se escribe en el repo, en Discord ni en capturas. Las claves se entregan solo por mensaje privado. `gitleaks` (job "Secrets" de `security.yml`) bloquea cualquier commit que traiga uno.
 
@@ -9,8 +9,8 @@ Regla del equipo: ningún secreto se escribe en el repo, en Discord ni en captur
 | Secreto | Para qué | Dónde vive | Quién lo usa | Quién lo crea y rota |
 |---|---|---|---|---|
 | `LLM_API_KEY` | Clave de Groq para el Tutor IA | GitHub → Settings → Secrets → **Actions** (cargado el 18-11) y **Codespaces**; en Kubernetes, Secret `aulaviva-app-secrets` creado por Terraform (`var.llm_api_key`, `sensitive = true`) | Backend (`aulaviva.llm.api-key`) | Branco (dueño de la cuenta Groq) |
-| `DEMO_PASSWORD` | Clave de los 6 usuarios de demo | Variable de entorno local, **Codespaces** secret y `.env` local (no versionado) | `DemoDataLoader` (perfil `demo`) | Cada integrante define la suya |
-| `DB_PASSWORD` | Clave de PostgreSQL | Codespaces secret y `.env` local; en producción, Secret de Kubernetes | `docker-compose.yml` (servicio `db` y `app`) | Valentina |
+| `DEMO_PASSWORD` | Clave de los 6 usuarios de demo | **Codespaces** secret (clave común del equipo para el staging y la defensa); en local, variable de entorno o `.env` (no versionado) | `DemoDataLoader` (perfil `demo`) | Branco crea la del Codespace y la entrega por privado; en local cada uno puede usar la suya |
+| `DB_PASSWORD` | Clave de PostgreSQL | Codespaces secret y `.env` local; en producción, Secret de Kubernetes | `docker-compose.yml` (servicio `db` y `app`) | Branco la crea en Codespaces; Valentina la rota. Nadie necesita escribirla a mano |
 | `GITOPS_TOKEN` | PR automático al repo `equipo-aulaviva-gitops` (promoción por digest) | GitHub → Secrets → Actions | `ci.yml`, job "Promote - GitOps" | Branco (token de grano fino, solo ese repo) |
 | `GITHUB_TOKEN` | Publicar en GHCR y firmar con Cosign keyless | Lo genera GitHub en cada run (no se guarda) | `ci.yml` y `security.yml` | GitHub (expira al terminar el job) |
 | Firma de imágenes | Cosign **keyless** (OIDC de GitHub + Sigstore) | No existe llave privada que guardar (ADR 0006) | `security.yml`, job "Supply chain" | — |
@@ -29,7 +29,7 @@ En los tests no hay secretos: la clave de los usuarios de prueba es el valor fic
 |---|---|---|
 | `LLM_API_KEY` | Si se filtra, si alguien deja el equipo o después de la defensa | console.groq.com → API Keys → revocar y crear otra → actualizar el secret en Actions y Codespaces |
 | `GITOPS_TOKEN` | Al vencer (90 días) o si se filtra | GitHub → Developer settings → token de grano fino nuevo → actualizar el secret |
-| `DEMO_PASSWORD` / `DB_PASSWORD` | Cuando cada uno quiera | Cambiar la variable y recrear los contenedores (`docker compose down -v` borra los datos de demo) |
+| `DEMO_PASSWORD` / `DB_PASSWORD` | Después de la defensa o si se filtran | Cambiar el secret de Codespaces, reiniciar el Codespace y recrear los contenedores con `docker compose down -v` (borra los datos de demo; sin eso PostgreSQL sigue con la clave anterior) |
 
 ## 4. Qué responder en la defensa
 
