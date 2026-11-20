@@ -17,6 +17,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.MethodMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,7 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Flujo completo del tutor con el LLM simulado. Cada prueba usa una pregunta distinta (sufijo
- * qN) para que la caché de una no afecte a otra. La prueba de presupuesto usa el colegio B.
+ * qN) para que la caché de una no afecte a otra. La prueba de presupuesto usa el colegio B
+ * y recrea el contexto al terminar.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -150,7 +153,9 @@ class TutorFlowTest {
         ask("estudiante.a", MAT, " ").andExpect(status().isUnprocessableEntity());
     }
 
+    /** Agota el presupuesto del colegio B: se recrea el contexto para no afectar a otras pruebas. */
     @Test
+    @DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
     void presupuestoAgotadoDa429() throws Exception {
         budget.add("colegio-b", 10_000_000);
 
