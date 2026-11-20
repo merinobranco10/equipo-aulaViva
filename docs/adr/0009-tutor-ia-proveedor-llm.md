@@ -22,7 +22,7 @@ La decisión original (ADR 0003) era Anthropic Claude por API, que es de pago.
    - Son modelos de razonamiento: se llaman con `reasoning_effort: "low"` y `max_tokens` de al menos 300. Con un límite menor, el razonamiento consume todos los tokens y la respuesta llega vacía (verificado el 18-11-2026).
 2. **Recuperación: BM25 léxico** sobre `backend/src/main/resources/corpus/<courseId>/`, top-k = 3, filtrado siempre por el curso y el colegio del estudiante autenticado. Sin embeddings ni pgvector.
 3. **Guardrails de entrada:** bloqueo de patrones de prompt injection ("ignora tus instrucciones", "actúa como", etiquetas falsas de sistema) y redacción de PII (RUT, correo, teléfono) antes de buscar y de llamar al LLM.
-4. **Prompt de sistema acotado:** responder solo con el contexto entregado; si no está, decir "No tengo información sobre eso en los apuntes del curso".
+4. **Prompt de sistema acotado:** responder solo con el contexto entregado; si no está, decir "No encuentro eso en tus apuntes. Pregúntale a tu docente.".
 5. **Resiliencia:** timeout de 8 s, circuit breaker y reintento al modelo de respaldo con Resilience4j. Si todo falla, **fallback extractivo** (se devuelve el fragmento más relevante, sin LLM).
 6. **Presupuesto por colegio** (`TUTOR_DAILY_BUDGET`): al superarlo, solo responde el fallback.
 7. **Minimización de datos:** a Groq solo viajan la pregunta limpia y los fragmentos. Nunca nombre, RUT, notas ni IDs.
@@ -60,3 +60,42 @@ La decisión original (ADR 0003) era Anthropic Claude por API, que es de pago.
 ## Actualización 18-11-2026
 
 La decisión inicial nombraba `llama-3.3-70b-versatile` como modelo principal. Al probar la clave del equipo, ese modelo respondió 404: Groq lo retiró del plan normal el 16-08-2026 y recomienda `openai/gpt-oss-120b`. Se cambia el modelo principal a `openai/gpt-oss-120b`; el de respaldo sigue siendo `openai/gpt-oss-20b`, que respondió correctamente en la prueba.
+
+## Resultados del Día 4 — 19-11-2026
+
+### Evaluación del Tutor IA
+
+Se definió un conjunto de evaluación de 50 casos mediante `rag/eval/golden-set.jsonl`.
+
+La evaluación contempla:
+
+- Preguntas académicas de Matemática y Ciencias.
+- Consultas fuera del contenido disponible.
+- Intentos de prompt injection.
+- Aislamiento entre colegios.
+- Protección de datos personales.
+- Protección de información de otros estudiantes.
+
+El informe de resultados se encuentra en `docs/ai/eval-report.md`.
+
+Los porcentajes y resultados definitivos quedan sujetos a la ejecución del conjunto de pruebas.
+
+### Mediciones FinOps
+
+Se definieron tres escenarios de comparación:
+
+1. Configuración base sin caché.
+2. Configuración con caché habilitada.
+3. Configuración optimizada con `top-k = 3` y `max-tokens = 400`.
+
+Las mediciones consideran llamadas al LLM, tokens de entrada y salida, costo equivalente y métricas de calidad.
+
+El registro de mediciones se encuentra en `docs/finops/mediciones.md`.
+
+### Conclusión
+
+Se mantiene Groq como proveedor del Tutor IA, utilizando `openai/gpt-oss-120b` como modelo principal y `openai/gpt-oss-20b` como respaldo.
+
+La decisión se fundamenta en la integración mediante API compatible con OpenAI, la configuración de modelos de respaldo y la posibilidad de utilizar mecanismos alternativos cuando el proveedor no se encuentre disponible.
+
+La validación definitiva de calidad y eficiencia queda condicionada a completar las pruebas de evaluación y las mediciones FinOps.

@@ -33,7 +33,7 @@ public class TutorPrompt {
     }
 
     public String user(String question) {
-        return question == null ? "" : question;
+        return question == null ? "" : sanitize(question.trim());
     }
 
     /** Compatibilidad con la API anterior de Gerardo. */
