@@ -859,6 +859,15 @@ components:
       required:
         - answer
       properties:
+        mode:
+          type: string
+          enum: [llm, cache, extractivo, bloqueado]
+          description: Cómo se generó la respuesta.
+        guardrail:
+          type: string
+          enum: [injection, fuera_alcance]
+          description: Guardrail que se activó, si hubo.
+          
         answer:
           type: string
           description: Respuesta generada por el Tutor IA
