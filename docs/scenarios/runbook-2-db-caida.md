@@ -1,7 +1,7 @@
-# Runbook: Pérdida de Base de Datos
-**Síntoma:** La app no puede conectar a la BD (Connection Refused). Pods en CrashLoopBackOff.
+# Runbook: Pérdida de Base de Datos (PostgreSQL)
+**Síntoma:** El backend no puede conectar a la BD (Connection refused).
 **Solución:**
-1. Levantar una nueva instancia de base de datos (RDS/Cloud SQL).
-2. Ejecutar `./restore.sh backup_mas_reciente.sql.gz`.
-3. Actualizar el Secret de K8s con la nueva IP/Endpoint de la BD.
-4. Reiniciar los pods de la aplicación.
+1. Verificar el estado del pod/servicio de base de datos en K8s.
+2. Levantar una nueva instancia si está corrupta.
+3. Ejecutar `./scripts/restore.sh backup_mas_reciente.sql.gz`.
+4. Actualizar el Secret de K8s y reiniciar los pods del backend.
