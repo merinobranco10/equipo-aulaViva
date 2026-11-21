@@ -14,8 +14,7 @@ export const options = {
 };
 
 export default function () {
-  // ⚠️ LA URL VA AQUÍ ABAJO: !!!!!!!!!!!! VALE REVISAR
-  const res = http.get('http://localhost:8080/actuator/health'); 
+  const res = http.get('https://congenial-trout-4qj65jvr6rwr35p4-8080.app.github.dev/actuator/health'); 
   check(res, {
     'status is 200': (r) => r.status === 200,
   });
