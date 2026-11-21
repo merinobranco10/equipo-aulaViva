@@ -1,6 +1,6 @@
-# Runbook: LLM Caído
-**Síntoma:** Errores 502/503 en endpoints que usan IA. Los logs muestran "Timeout connecting to LLM API".
+# Runbook: LLM Caído (Tutor IA)
+**Síntoma:** Errores 502/503 en el endpoint `/api/tutor`.
 **Solución:**
-1. Revisar el estado del proveedor (OpenAI Status page).
-2. Activar la flag de feature toggle para usar el LLM de respaldo (ej. cambiar de OpenAI a Anthropic).
-3. Si ambos fallan, devolver una respuesta en caché o un mensaje amigable al usuario (Graceful Degradation).
+1. Revisar el estado del proveedor de IA.
+2. Activar la flag de configuración para usar el modelo de respaldo.
+3. Si ambos fallan, devolver un mensaje amigable al usuario.
