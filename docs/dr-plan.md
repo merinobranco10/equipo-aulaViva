@@ -1,16 +1,16 @@
 # Plan de Recuperación ante Desastres (DR Plan)
 
 ## Objetivos
-- **RTO (Recovery Time Objective):** 2 horas (Tiempo máximo para restaurar el servicio).
-- **RPO (Recovery Point Objective):** 15 minutos (Pérdida máxima de datos aceptable).
+- **RTO (Recovery Time Objective):** 2 horas.
+- **RPO (Recovery Point Objective):** 15 minutos.
 
 ## Escenarios de Desastre
-1. **Caída de la Región Cloud:** Si el proveedor principal falla, se debe desplegar la infraestructura en la región secundaria usando Terraform.
-2. **Corrupción de Base de Datos:** Restaurar el último backup válido en una instancia nueva, verificar integridad y apuntar la aplicación a ella.
-3. **Fallo del LLM (OpenAI/Anthropic):** Conmutar el tráfico al proveedor de respaldo (Fallback) configurado en la aplicación.
+1. **Caída de la Región Cloud:** Desplegar la infraestructura en la región secundaria usando Terraform.
+2. **Corrupción de Base de Datos:** Restaurar el último backup válido usando `scripts/restore.sh`.
+3. **Fallo del LLM (RAG):** Conmutar el tráfico a un proveedor de respaldo o devolver respuestas cacheadas.
 
-## Pasos de Recuperación (Runbook General)
+## Pasos de Recuperación
 1. Declarar el incidente y notificar al equipo.
 2. Evaluar el alcance del fallo.
-3. Ejecutar el script de restauración correspondiente (`restore.sh` o Terraform apply).
+3. Ejecutar el script de restauración correspondiente.
 4. Validar que los SLOs vuelvan a la normalidad.
