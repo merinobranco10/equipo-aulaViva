@@ -14,7 +14,7 @@ export const options = {
 };
 
 export default function () {
-  // ⚠️ CAMBIA ESTA URL POR LA DE TU BACKEND (ej. http://localhost:8080/actuator/health)
+  // ⚠️ LA URL VA AQUÍ ABAJO: !!!!!!!!!!!! VALE REVISAR
   const res = http.get('http://localhost:8080/actuator/health'); 
   check(res, {
     'status is 200': (r) => r.status === 200,
