@@ -1,5 +1,4 @@
 #!/bin/bash
-# Uso: ./restore.sh <archivo_backup.sql.gz>
 BACKUP_FILE=$1
 
 if [ -z "$BACKUP_FILE" ]; then
