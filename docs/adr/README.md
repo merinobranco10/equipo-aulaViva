@@ -1,6 +1,6 @@
 # Índice de Architecture Decision Records (ADRs)
 
-**Última actualización:** 18-11-2026
+**Última actualización:** 21-11-2026
 
 Este directorio contiene los Architecture Decision Records (ADRs) del proyecto AulaViva. Cada ADR documenta una decisión arquitectónica relevante, su contexto, las alternativas consideradas, la decisión adoptada y sus consecuencias.
 
