@@ -3,6 +3,40 @@
 > Versión única (unificada el 18-11-2026 a partir del borrador del Día 1 y la versión del Día 2 con la UI).
 > Duración objetivo: 3 minutos. Demo en vivo; nunca video. La columna "Real" se llena al practicar.
 
+## Orden de ejecución, de principio a fin
+
+Todo lo que se corre, en el orden en que se corre. Las secciones de más abajo explican cada parte en detalle.
+
+### Opción A · Codespace (principal)
+
+| # | Cuándo | Dónde | Qué hacer |
+|---|---|---|---|
+| 1 | 1 h antes | GitHub | **Code → Codespaces → `aulaviva-staging`** (se enciende solo) |
+| 2 | 1 h antes | Terminal del Codespace | `git checkout desarrollo && git pull` (el día de la defensa, `main` o el tag `v1.0.0`) |
+| 3 | 1 h antes | Terminal | `docker compose up -d --build` (≈ 2 min; si ya estaba construido, `docker compose up -d`) |
+| 4 | 1 h antes | Terminal | `./scripts/reset-demo.sh` → datos de la semilla + smoke test: debe terminar en **8/8 OK** |
+| 5 | 1 h antes | Pestaña **PORTS** | Clic derecho en 8080 → **Port Visibility → Public** |
+| 6 | 1 h antes | Terminal | `BASE=https://fluffy-invention-g4wpw679wrvphrgp-8080.app.github.dev ./scripts/smoke.sh` → **8/8 OK** desde la URL pública |
+| 7 | 10 min antes | Navegador (incógnito) | Abrir las 4 pestañas con sus usuarios ([Pestañas](#pestañas-orden)); **no** ensayar más desde aquí: crearía datos |
+| 8 | En la defensa | Navegador | Los 6 pasos del [guion paso a paso](#guion-paso-a-paso) |
+| 9 | Si un paso falla | Navegador | El fallback de ese paso (columna «Fallback si falla») |
+| 10 | Si la web no carga | Terminal | `./scripts/demo-dia1.sh` ([respaldo por API](#anexo--respaldo-por-api-sin-ui)) |
+| 11 | Si el Codespace no responde en 1 min | PC local | Pasar a la opción C |
+| 12 | Después | Terminal | `./scripts/reset-demo.sh` y detener el Codespace (**Code → Codespaces → ⋯ → Stop**) |
+
+### Opción C · PC local con H2 (fallback, PowerShell)
+
+| # | Cuándo | Qué hacer |
+|---|---|---|
+| 1 | El día antes | `cd C:\Users\branc\equipo-aulaViva`, `git pull` y `mvn -B -q -f backend/pom.xml -DskipTests package` |
+| 2 | 1 h antes | `$env:DEMO_PASSWORD = (Read-Host 'Clave demo').Trim()` y `$env:LLM_API_KEY = (Read-Host 'Clave Groq').Trim()` |
+| 3 | 1 h antes | `$app = Start-Process java -ArgumentList '-Xmx512m','-jar','backend/target/app.jar','--spring.profiles.active=h2,demo' -PassThru -WindowStyle Hidden` (≈ 9 s) |
+| 4 | 1 h antes | `.\scripts\smoke.ps1` → **8/8 OK** |
+| 5 | Solo si hubo que ensayar | `Stop-Process -Id $app.Id` y repetir el paso 3: así vuelve a la semilla |
+| 6 | En la defensa | Navegador en `http://localhost:8080`, mismos 6 pasos |
+| 7 | Si la web no carga | `.\scripts\demo-dia1.ps1 -Password $env:DEMO_PASSWORD` |
+| 8 | Después | `Stop-Process -Id $app.Id` |
+
 ## Dónde corre la demo (decisión del Día 7: A y, si falla, C)
 
 | Opción | Dónde | Cómo levantar | Cuándo usarla | Tiempo de arranque |
