@@ -14,6 +14,7 @@ Plataforma SaaS multi-tenant para colegios de la Región Metropolitana: evaluaci
 8. [Despliegue en Kubernetes (S07)](#despliegue-en-kubernetes-s07)
 9. [CI/CD y GitOps (S08)](#cicd-y-gitops-s08)
 10. [Seguridad (DevSecOps · S09–S10)](#seguridad-devsecops--s09s10)
+11. [Índice de evidencia para el panel S18]().
 
 ## Descripción y alcance del MVP
 
@@ -425,3 +426,41 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 | Imagen firmada admitida | ![Imagen firmada](docs/qa/evidence/s10/04-signed-image-test.png) |
 | Reporte ZAP | ![Reporte ZAP](docs/qa/evidence/s10/06-zap-report.png) |
 | Alerta Falco: shell en contenedor | ![Falco shell](docs/qa/evidence/s10/08-falco-shell.png) |
+
+## Índice de evidencia para el panel (S18)
+
+> Revisar que las rutas de Resiliencia, y sustituir los marcadores de Actions, staging y el  reporte JaCoCo por URLs reales.
+
+| Criterio | Evidencia |
+|---|---|
+| Demo | [Guion de demo](docs/demo/guion-demo.md) · **Staging:** `PEGAR_URL_REAL_DE_STAGING` |
+| Arquitectura | [C4 L1–L3](docs/c4/) · [Índice de ADRs](docs/adr/README.md) |
+| DevSecOps | **Último run de Actions:** `PEGAR_URL_REAL_DEL_RUN` · [Secrets](docs/security/secrets.md) · [Threat model](docs/threat-model.md) |
+| IA responsable | [Informe de evaluación](docs/ai/eval-report.md) · [Model card](docs/ai/model-card.md) · [Marco legal](docs/ai/marco-legal.md) |
+| Resiliencia | [SLOs](docs/sre/slos.md) · [Plan DR](docs/sre/dr-plan.md) · [Runbooks](docs/runbooks/) · [Post-mortem](docs/postmortems/) |
+| FinOps | [Costos](docs/finops/costos.md) · [Mediciones](docs/finops/mediciones.md) |
+| Tests | [Trazabilidad](docs/qa/trazabilidad.md) · Reporte JaCoCo: revisar artefacto `jacoco-coverage-report` del último run de CI |
+
+## Lo que no alcanzamos (y por qué)
+
+- **RLS en PostgreSQL:** el aislamiento del MVP se aplica en la capa de aplicación y se valida con pruebas de acceso entre colegios (404). RLS queda como refuerzo en el roadmap.
+- **Kafka/MSK:** se mantiene Outbox en tabla en el MVP; Kafka queda diferido hasta que existan al menos dos consumidores que justifiquen el broker.
+- **pgvector / embeddings:** el Tutor IA usa recuperación léxica BM25 sobre los apuntes empaquetados en el backend; pgvector corresponde a una evolución futura.
+- **Auditoría de fairness amplia:** la evaluación disponible compara dos cursos y 50 casos; es una señal inicial, no una auditoría integral ni representativa de todos los colegios.
+- **Fidelidad del Tutor IA:** el resultado global observado fue 88 %, dos puntos porcentuales bajo la meta de 90 %. Se documentan casos fallidos y mejoras pendientes en el informe de evaluación.
+- **Persistencia distribuida de caché/presupuesto del tutor:** actualmente viven en memoria y se pierden al reiniciar; no se comparten entre réplicas.
+- **Prueba de carga 100×:** se presenta una estrategia de escalamiento, no una capacidad de 100× ya demostrada.
+
+## Roadmap — siguientes dos semanas
+
+1. **Identidad federada (Keycloak/OIDC):** cerrar integración y validación de flujos de autenticación/autorización.
+2. **RLS en PostgreSQL:** reforzar aislamiento por tenant a nivel de base de datos y agregar pruebas negativas.
+3. **Tutor IA con recuperación vectorial (pgvector):** evaluar embeddings frente a BM25 con el golden set y medir calidad, latencia y costo antes de migrar.
+4. **Caché y presupuesto compartidos:** mover estado actualmente en memoria a un componente compartido si las réplicas lo requieren.
+5. **Calidad de recuperación:** abordar los casos fallidos del `eval-report.md`, especialmente fidelidad y consultas de Ciencias.
+6. **Validación de escala:** diseñar y ejecutar pruebas de carga progresivas; no fijar un objetivo 100× sin resultados medidos.
+
+## Defensa — documentos de apoyo
+
+- [Guion de pitch por rol](docs/defensa/guion-pitch.md)
+- [Banco de preguntas y respuestas](docs/defensa/banco-qa.md)
