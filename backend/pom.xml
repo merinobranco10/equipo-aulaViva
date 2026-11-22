@@ -14,7 +14,7 @@
 
     <groupId>cl.aulaviva</groupId>
     <artifactId>aulaviva-backend</artifactId>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
     <name>aulaviva-backend</name>
     <description>Backend de la plataforma AulaViva</description>
 

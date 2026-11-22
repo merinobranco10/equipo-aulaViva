@@ -26,12 +26,12 @@ AulaViva busca mejorar la experiencia de aprendizaje de estudiantes y docentes c
 | Multi-tenancy real: 1 colegio = 1 tenant aislado lógicamente | ✅ Implementado (S18 · Día 1) |
 | Gestión de cursos, docentes y estudiantes con RBAC | ✅ Roles y permisos implementados; gestión vía datos de demo |
 | Evaluaciones auto-corregidas con feedback | ✅ Implementado (S18 · Día 1) |
-| Tutor IA con RAG sobre los apuntes de cada curso | ⏳ Diseño cerrado: Groq + BM25 ([ADR 0009](docs/adr/0009-tutor-ia-proveedor-llm.md)); implementación en Día 4 |
+| Tutor IA con RAG sobre los apuntes de cada curso | ✅ Implementado (S18 · Día 4): Groq + BM25, guardrails y fallback extractivo ([ADR 0009](docs/adr/0009-tutor-ia-proveedor-llm.md)) |
 | Panel del apoderado con seguimiento de avance | ✅ API y UI implementadas (S18 · Día 2) |
 
 ## Estado del proyecto
 
-_Actualizado: 18-11-2026._
+_Actualizado: 22-11-2026._
 
 El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir con nota y feedback, ver progreso) con aislamiento entre colegios y control de acceso por rol. La infraestructura (contenedores, Kubernetes, GitOps) y el pipeline DevSecOps están operativos desde S07–S10. El trabajo restante hacia la defensa final (S18) sigue el plan de 7 días.
 
@@ -46,11 +46,11 @@ El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir co
 | **Backend funcional (S18 · Día 1):** multi-tenant, RBAC, evaluaciones, progreso, outbox, datos de demo | ✅ | PR #60 · 25 tests · cobertura ≥ 70 % |
 | Demo del Día 1 por script (PowerShell y bash) | ✅ | [guion](docs/demo/guion-demo.md) · [manual de pruebas](docs/qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf) · [captura](docs/qa/evidence/s18/01-demo-dia1.png) |
 | UI web, C4 L3, ADRs 0007–0009, corpus y golden set (S18 · Día 2) | ✅ | [UI](backend/src/main/resources/static/) · [C4](docs/c4/) · [ADRs](docs/adr/) · [corpus](backend/src/main/resources/corpus/) · [golden set](rag/eval/golden-set.jsonl) · [model card](docs/ai/model-card.md) |
-| Tests de contrato y seguridad ampliados, staging en Codespaces | ⏳ Día 3 | — |
-| Tutor IA con guardrails, evaluación y model card | ⏳ Día 4 | — |
-| SLOs, DR, game day y post-mortem | ⏳ Día 5 | — |
+| Tests de contrato y seguridad ampliados, staging en Codespaces | ✅ Día 3 | [Trazabilidad](docs/qa/trazabilidad.md) · [devcontainer](.devcontainer/devcontainer.json) · [Codespace arriba](docs/qa/evidence/s18/d3-04-codespace-up.png) |
+| Tutor IA con guardrails, evaluación y model card | ✅ Día 4 | [Eval report](docs/ai/eval-report.md) · [Model card](docs/ai/model-card.md) · [Marco legal](docs/ai/marco-legal.md) |
+| SLOs, DR, game day y post-mortem | ✅ Día 5 | [SLOs](docs/sre/slos.md) · [Plan DR](docs/sre/dr-plan.md) · [Post-mortem](docs/postmortems/2026-11-22-game-day.md) |
 | FinOps, deck y preparación del Q&A | ✅ Día 6 | [Costos](docs/finops/costos.md) · [Deck](docs/defensa/AulaViva_S18_Defensa_Deck.pptx) · [Q&A](docs/defensa/banco-qa.md) |
-| Release v1.0.0 y guion de práctica | ⏳ Día 7 | — |
+| Release v1.0.0 y guion de práctica | ⏳ Día 7 | [Smoke test](scripts/smoke.sh) · [Guion de práctica](docs/defensa/guion-practica.md) · [Guion de demo](docs/demo/guion-demo.md) |
 
 ## Equipo y forma de trabajo
 
@@ -432,7 +432,7 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 
 | Criterio | Evidencia |
 |---|---|
-| Demo | [Guion de demo](docs/demo/guion-demo.md) · **Staging:** Codespace `aulaviva-staging` (se enciende 1 h antes de la defensa; la URL pública se agrega el Día 7) |
+| Demo | [Guion de demo](docs/demo/guion-demo.md) · [Smoke test](scripts/smoke.sh) · **Staging (A):** Codespace `aulaviva-staging`, se enciende 1 h antes de la defensa (URL pública: por agregar) · **Fallback (C):** PC local con H2 |
 | Arquitectura | [C4 L1–L3](docs/c4/) · [Índice de ADRs](docs/adr/README.md) |
 | DevSecOps | [Runs de CI en `desarrollo`](https://github.com/merinobranco10/equipo-aulaViva/actions/workflows/ci.yml?query=branch%3Adesarrollo) · [Runs de seguridad](https://github.com/merinobranco10/equipo-aulaViva/actions/workflows/security.yml?query=branch%3Adesarrollo) · [Secrets](docs/security/secrets.md) · [Threat model](docs/threat-model.md) |
 | IA responsable | [Informe de evaluación](docs/ai/eval-report.md) · [Model card](docs/ai/model-card.md) · [Marco legal](docs/ai/marco-legal.md) |
@@ -462,5 +462,6 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 ## Defensa — documentos de apoyo
 
 - [Guion de pitch por rol](docs/defensa/guion-pitch.md)
+- [Guion de práctica individual (Día 7)](docs/defensa/guion-practica.md) · [PDF](docs/defensa/guion-practica.pdf)
 - [Banco de preguntas y respuestas](docs/defensa/banco-qa.md)
 - [Deck](docs/defensa/AulaViva_S18_Defensa_Deck.pptx)
