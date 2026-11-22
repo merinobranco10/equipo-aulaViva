@@ -29,6 +29,9 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/*.html", "/css/**", "/js/**", "/img/**",
                     "/favicon.ico", "/error", "/api/v1/status", "/actuator/health",
                     "/actuator/health/**", "/actuator/info").permitAll()
+                // Métricas y estado del circuit breaker: solo coordinación (SLOs del Día 5)
+                .requestMatchers("/actuator/prometheus", "/actuator/circuitbreakers")
+                    .hasRole("COORDINATOR")
                 .anyRequest().authenticated())
             // Cabeceras para la UI estatica (sin scripts ni estilos inline) y hallazgos del DAST.
             .headers(h -> h
