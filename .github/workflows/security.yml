@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - desarrollo
+      - s18-dia5
     paths:
       - "**"
       - "!**.md"
