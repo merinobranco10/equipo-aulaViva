@@ -258,7 +258,7 @@ Responde quien construyó esa parte; si no está, responde cualquiera con esta t
 | ¿Por qué 404 y no 403 entre colegios? | Un 403 confirma que el recurso existe; el 404 no revela nada a otro colegio | [ADR 0007](../adr/0007-estrategia-multi-tenant.md) |
 | ¿Quién ve las métricas? | Solo el rol coordinador (`/actuator/prometheus`), desde el Día 5 | [SecurityConfig](../../backend/src/main/java/cl/aulaviva/identity/SecurityConfig.java) |
 | ¿Qué detecta en ejecución? | Falco: shell en contenedor, lectura de `/etc` y conexiones salientes no esperadas | [Falco](../qa/s10-falco-alertas.md) |
-| ¿Está protegida la rama `main`? | Los checks corren en cada PR y la regla del equipo es no mergear en rojo. **Ojo:** a la fecha no hay protección de rama configurada en GitHub; decirlo si preguntan | Settings → Branches |
+| ¿Está protegida la rama `main`? | Sí: un ruleset exige PR (nada de push directo ni borrado) y que pasen «Quality - Maven and Coverage» y «SAST - Semgrep». `desarrollo` no tiene ruleset; ahí la regla del equipo es no mergear en rojo | Settings → Rules → Rulesets |
 
 ### IA
 | Pregunta | Respuesta | Evidencia |
