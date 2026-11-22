@@ -451,7 +451,7 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 - **Persistencia distribuida de caché/presupuesto del tutor:** actualmente viven en memoria y se pierden al reiniciar; no se comparten entre réplicas.
 - **Prueba de carga 100×:** se presenta una estrategia de escalamiento, no una capacidad de 100× ya demostrada.
 
-## Roadmap — siguientes dos semanas
+## Roadmap
 
 1. **Identidad federada (Keycloak/OIDC):** cerrar integración y validación de flujos de autenticación/autorización.
 2. **RLS en PostgreSQL:** reforzar aislamiento por tenant a nivel de base de datos y agregar pruebas negativas.
