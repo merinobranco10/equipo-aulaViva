@@ -461,6 +461,5 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 
 ## Defensa — documentos de apoyo
 
-- [Guion de pitch por rol](docs/defensa/guion-pitch.md)
 - [Banco de preguntas y respuestas](docs/defensa/banco-qa.md)
 - [Deck](docs/defensa/AulaViva_S18_Defensa_Deck.pptx)
