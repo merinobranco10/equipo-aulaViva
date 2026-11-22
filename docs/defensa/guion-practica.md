@@ -15,14 +15,14 @@ No hay ensayo conjunto. Cada integrante practica **solo su bloque** con cronóme
 | Bloque | Inicio–fin | Máximo (−15 s de margen) | Presenta | Respaldo si falta | Lámina |
 |---|---|---|---|---|---|
 | 01 Elevator pitch | 0:00–1:00 | 0:45 | Branco | Matías | 1–2 |
-| 02 Demo en vivo | 1:00–4:00 | 2:45 | Alexander (Branco maneja el navegador) | Branco | 3 |
-| 03 Arquitectura | 4:00–6:30 | 2:15 | Matías | Gerardo | 4–5 |
-| 04 DevSecOps | 6:30–8:30 | 1:45 | Valentina | Alexander | 6 |
-| 05 IA responsable | 8:30–10:30 | 1:45 | Gerardo | Matías | 8–9 |
-| 06 Resiliencia · FinOps | 10:30–11:30 · 11:30–12:30 | 0:45 + 0:45 | Valentina · Branco | Alexander | 10–11 |
-| 07 Roadmap y aprendizajes | 12:30–15:00 | 2:15 | Matías + 1 frase de cada uno | Branco | 12–13 |
+| 02 Demo en vivo | 1:00–4:00 | 2:45 | Alexander (Branco maneja el navegador) | Branco | 13 (respaldo; la demo es en vivo) |
+| 03 Arquitectura | 4:00–6:30 | 2:15 | Matías | Gerardo | 3–4 |
+| 04 DevSecOps | 6:30–8:30 | 1:45 | Valentina | Alexander | 5 |
+| 05 IA responsable | 8:30–10:30 | 1:45 | Gerardo | Matías | 7–8 |
+| 06 Resiliencia · FinOps | 10:30–11:30 · 11:30–12:30 | 0:45 + 0:45 | Valentina · Branco | Alexander | 9–10 |
+| 07 Roadmap y aprendizajes | 12:30–15:00 | 2:15 | Matías + 1 frase de cada uno | Branco | 11–12 |
 
-La lámina 7 (calidad y tests) es de respaldo para el Q&A: se pasa rápido o se salta. Si la suma de los tiempos reportados pasa de 14:30, Branco recorta: primero el roadmap y después una lámina de arquitectura. **La demo no se recorta.**
+La lámina 6 (calidad y tests) es de respaldo para el Q&A: se pasa rápido o se salta. Si la suma de los tiempos reportados pasa de 14:30, Branco recorta: primero el roadmap y después una lámina de arquitectura. **La demo no se recorta.**
 
 ---
 
@@ -101,7 +101,7 @@ La lámina 7 (calidad y tests) es de respaldo para el Q&A: se pasa rápido o se 
 3. Cada cambio importante se guarda junto con su evento en la misma transacción (patrón Outbox); Kafka queda diferido hasta que haya dos consumidores (ADR 0004).
 4. El aislamiento se aplica en la aplicación: el colegio sale del usuario autenticado, nunca del request (ADR 0007).
 
-**En pantalla:** láminas 4 y 5 → [C4 L1–L3](../c4/) → tabla de alternativas de un ADR.
+**En pantalla:** láminas 3 y 4 → [C4 L1–L3](../c4/) → tabla de alternativas de un ADR.
 
 **Salida:** «Valentina cuenta cómo lo protegemos».
 
@@ -126,7 +126,7 @@ La lámina 7 (calidad y tests) es de respaldo para el Q&A: se pasa rápido o se 
 3. La imagen va firmada y Kyverno rechaza en el clúster las que no lo están.
 4. Las vulnerabilidades tienen plazo: críticas menos de 7 días, altas menos de 30.
 
-**En pantalla:** lámina 6 → último run de Actions en verde → [secrets.md](../security/secrets.md).
+**En pantalla:** lámina 5 → último run de Actions en verde → [secrets.md](../security/secrets.md).
 
 **Salida:** «Gerardo explica la IA».
 
@@ -151,7 +151,7 @@ La lámina 7 (calidad y tests) es de respaldo para el Q&A: se pasa rápido o se 
 3. Evaluado con 50 casos: hit@3 85 %, hechos clave 82 %, fidelidad 88 % (meta 90 %: nos faltan 2 puntos y lo decimos).
 4. Seguridad 100 %: 4/4 ataques bloqueados, aislamiento entre colegios y RUT protegido.
 
-**En pantalla:** láminas 8 y 9 → [eval-report](../ai/eval-report.md) → [model card](../ai/model-card.md).
+**En pantalla:** láminas 7 y 8 → [eval-report](../ai/eval-report.md) → [model card](../ai/model-card.md).
 
 **Salida:** «¿Y si algo falla?».
 
@@ -176,7 +176,7 @@ La lámina 7 (calidad y tests) es de respaldo para el Q&A: se pasa rápido o se 
 3. Borramos la base de datos y la restauramos desde el respaldo en 21 s; botamos la app y volvió en 38 s.
 4. Lo que no medimos lo declaramos: RPO y errores durante la caída.
 
-**En pantalla:** lámina 11 → [post-mortem](../postmortems/2026-11-22-game-day.md).
+**En pantalla:** lámina 9 → [post-mortem](../postmortems/2026-11-22-game-day.md).
 
 **Branco (FinOps)**
 1. Producción cuesta USD 684,63 al mes y staging USD 254,94 (AWS, São Paulo).
