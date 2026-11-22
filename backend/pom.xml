@@ -41,11 +41,6 @@
          CVE-2026-41716 (HIGH), corregidos en 3.5.12. Quitar cuando Spring Boot lo gestione. -->
     <dependencyManagement>
         <dependencies>
-                  <dependency>
-                     <groupId>org.springframework.security</groupId>
-                     <artifactId>spring-security-test</artifactId>
-                     <scope>test</scope>
-                 </dependency>
             <dependency>
                 <groupId>org.springframework.data</groupId>
                 <artifactId>spring-data-commons</artifactId>
