@@ -20,7 +20,7 @@ Cada ensayo deja datos nuevos: la evaluación "Demo: enteros", las respuestas de
 
 | Opción | Comando | Tiempo | Qué borra |
 |---|---|---|---|
-| **A · Codespace** | `docker compose down -v && docker compose up -d` | ≈ 1 min (sin `--build`) | El volumen de PostgreSQL completo; al arrancar se recarga la semilla |
+| **A · Codespace** | `./scripts/reset-demo.sh` (hace `docker compose down -v && docker compose up -d`, espera la app y corre el smoke test) | ≈ 1 min (sin `--build`) | El volumen de PostgreSQL completo; al arrancar se recarga la semilla |
 | **C · PC local** | Cerrar la app (`Stop-Process -Id $app.Id` o Ctrl+C) y volver a levantarla | ≈ 9 s | Todo: H2 vive en memoria |
 
 Después de limpiar, comprobar con el smoke test (`./scripts/smoke.sh` o `.\scripts\smoke.ps1`): debe dar **8/8 OK**. En el log de arranque debe aparecer `Datos de demo cargados: 2 colegios, 6 usuarios, 4 evaluaciones.` (en A: `docker compose logs app | grep "Datos de demo"`).
