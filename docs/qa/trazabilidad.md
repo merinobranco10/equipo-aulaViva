@@ -21,7 +21,7 @@ Todos los tests corren en el CI (`AulaViva - CI Quality Gates`, `mvn -B verify` 
 | Cabeceras de seguridad en la UI (CSP, Permissions-Policy) | `/index.html` | `SeguridadTest#cabecerasDeSeguridadEnLaUi` | `d3-03` (DAST en verde) |
 | Contrato: cada respuesta real está documentada en `api/openapi.yaml` | Las 8 operaciones implementadas | `ContratoOpenApiTest#lasRespuestasRealesCumplenElContrato` | Run del CI |
 | Outbox: al rendir se registra `EvaluationCompleted` | `POST /v1/evaluations/{id}/submissions` | `FlujoEvaluacionTest#docenteCreaEstudianteRindeYApoderadoVeProgreso` | Run del CI |
-| HU-4 · Tutor IA responde con los apuntes del curso | `POST /v1/tutor/questions` | Pendiente (Día 4). Hoy: `SeguridadTest#tutorEsStubSoloParaEstudiantes` | — |
+| HU-4 · Tutor IA responde con los apuntes del curso | `POST /v1/tutor/questions` | `TutorFlowTest` (LLM, caché, fallback extractivo, 429), `TutorSeguridadTest` (injection no llega al LLM, otro colegio → 404), `GuardrailsTest`, `PiiMaskerTest`, `TutorPromptTest`, `ContratoOpenApiTest` | Día 4–5 |
 
 ## 2. El test de aislamiento detecta código roto
 
@@ -33,7 +33,7 @@ Para comprobar que los tests de aislamiento no son falsos positivos:
 
 ## 3. Contract test
 
-`ContratoOpenApiTest` lee `api/openapi.yaml` (OpenAPI 3.1) con SnakeYAML, sin dependencias nuevas. Para cada llamada real comprueba que el código de estado esté declarado en la operación y que la respuesta traiga los campos `required` del schema. También falla si una operación del contrato queda sin probar. Solo excluye `POST /v1/tutor/questions` hasta el Día 4.
+`ContratoOpenApiTest` lee `api/openapi.yaml` (OpenAPI 3.1) con SnakeYAML, sin dependencias nuevas. Para cada llamada real comprueba que el código de estado esté declarado en la operación y que la respuesta traiga los campos `required` del schema. También falla si una operación del contrato queda sin probar. Desde el Día 4 también cubre `POST /v1/tutor/questions` (200, 401, 403, 404, 422 y 429).
 
 Se descartó `swagger-request-validator-mockmvc` por su soporte limitado de OpenAPI 3.1 y porque suma dependencias transitivas al escaneo SCA.
 

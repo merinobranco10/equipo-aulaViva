@@ -12,7 +12,7 @@ Si no se controla, un colegio puede gastar mucho y nadie lo ve hasta que llega l
 
 Se adopta un control de costo en 4 partes:
 
-1. **Presupuesto por colegio.** Cada colegio tiene un límite diario de tokens en la app (variable `TUTOR_DAILY_TOKEN_BUDGET`, hoy 50.000). Al pasarse, el tutor responde solo con el fragmento de los apuntes, sin usar el modelo. Hoy el conteo vive en memoria de cada copia de la app; en producción debe pasar a Redis.
+1. **Presupuesto por colegio.** Cada colegio tiene un límite diario de tokens en la app (variable `TUTOR_DAILY_TOKEN_BUDGET`, hoy 50.000). Al pasarse, el tutor responde **HTTP 429** («presupuesto diario agotado») hasta el día siguiente, sin llamar al modelo. Hoy el conteo vive en memoria de cada copia de la app; en producción debe pasar a Redis.
 2. **Caché de respuestas.** Activada (`aulaviva.tutor.cache-enabled=true`). En la medición, con preguntas repetidas bajó 91 % las llamadas y 92 % el costo, sin cambiar la calidad.
 3. **Contexto acotado.** Se mantiene `top-k = 5` y `max-tokens = 400`. Se probó `top-k = 3` (18 % más barato), pero bajó 7 puntos los hechos clave y el límite aceptado es 5, así que se descartó.
 4. **Medición por colegio (showback).** La métrica `tutor.tokens` guarda los tokens por colegio (`tenant`) y por tipo (`prompt` y `completion`). Con ella se calcula cuánto del costo del tutor corresponde a cada colegio. La infraestructura es compartida, así que su costo se reparte por número de estudiantes.
@@ -47,5 +47,5 @@ Se diseña una alerta con AWS Budgets: aviso al llegar al **80 %** y al **100 %*
 ## Verificación
 
 - Los números de ahorro están en [mediciones.md](../finops/mediciones.md) (caché y `top-k`).
-- La métrica `tutor.tokens` se puede ver en `/actuator/prometheus`.
-- El presupuesto por colegio lo prueban los tests del tutor (`TutorFlowTest`).
+- La métrica `tutor.tokens` se puede ver en `/actuator/prometheus` (solo con rol coordinador, desde el Día 5).
+- El presupuesto por colegio lo prueba `TutorFlowTest` (`presupuestoAgotadoDa429`) y el contrato OpenAPI (respuesta 429).

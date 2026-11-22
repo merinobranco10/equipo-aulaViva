@@ -18,7 +18,7 @@ Este directorio contiene los Architecture Decision Records (ADRs) del proyecto A
 | [0007](0007-estrategia-multi-tenant.md) | Estrategia multi-tenant | Aceptada | 17-11-2026 |
 | [0008](0008-identidad-y-rbac.md) | Identidad y RBAC del MVP | Aceptada | 17-11-2026 |
 | [0009](0009-tutor-ia-proveedor-llm.md) | Tutor IA: proveedor LLM (Groq) y RAG léxico | Aceptada | 18-11-2026 |
-| [0010](0010-backups-y-recuperacion.md) | Backups y recuperación (DR) | Aceptada | Día 5 |
+| [0010](0010-resiliencia-dr.md) | Resiliencia y recuperación ante desastres (DR) | Aceptada | 22-11-2026 |
 | [0011](0011-finops.md) | FinOps: control del costo del Tutor IA y de la nube | Aceptada | 21-11-2026 |
 
 ## Convenciones

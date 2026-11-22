@@ -1,17 +1,12 @@
-#!/bin/bash
-BACKUP_FILE=$1
-
-if [ -z "$BACKUP_FILE" ]; then
-  echo "Por favor, proporciona el archivo de backup."
-  exit 1
-fi
-
-echo "Restaurando base de datos desde ${BACKUP_FILE}..."
-gunzip -c $BACKUP_FILE | psql -h $DB_HOST -U $DB_USER -d $DB_NAME
-
-if [ $? -eq 0 ]; then
-  echo "Restauración completada con éxito."
-else
-  echo "Error durante la restauración."
-  exit 1
-fi
+#!/usr/bin/env bash
+# Restaura un respaldo hecho con scripts/backup.sh y espera a que la app quede sana.
+# Uso: ./scripts/restore.sh backups/aulaviva-AAAAMMDD-HHMMSS.dump
+set -euo pipefail
+FILE=${1:?Indica el archivo .dump}
+docker compose up -d db
+until docker compose exec -T db pg_isready -U aulaviva >/dev/null; do sleep 1; done
+docker compose stop app
+docker compose exec -T db pg_restore -U aulaviva -d aulaviva --clean --if-exists < "$FILE"
+docker compose start app
+until curl -sf http://localhost:8080/actuator/health >/dev/null; do sleep 2; done
+echo "Restore completo y app sana"

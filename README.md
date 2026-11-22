@@ -430,17 +430,15 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 
 ## Índice de evidencia para el panel (S18)
 
-> Revisar que las rutas de Resiliencia, y sustituir los marcadores de Actions, staging y el  reporte JaCoCo por URLs reales.
-
 | Criterio | Evidencia |
 |---|---|
-| Demo | [Guion de demo](docs/demo/guion-demo.md) · **Staging:** `PEGAR_URL_REAL_DE_STAGING` |
+| Demo | [Guion de demo](docs/demo/guion-demo.md) · **Staging:** Codespace `aulaviva-staging` (se enciende 1 h antes de la defensa; la URL pública se agrega el Día 7) |
 | Arquitectura | [C4 L1–L3](docs/c4/) · [Índice de ADRs](docs/adr/README.md) |
-| DevSecOps | **Último run de Actions:** `PEGAR_URL_REAL_DEL_RUN` · [Secrets](docs/security/secrets.md) · [Threat model](docs/threat-model.md) |
+| DevSecOps | [Runs de CI en `desarrollo`](https://github.com/merinobranco10/equipo-aulaViva/actions/workflows/ci.yml?query=branch%3Adesarrollo) · [Runs de seguridad](https://github.com/merinobranco10/equipo-aulaViva/actions/workflows/security.yml?query=branch%3Adesarrollo) · [Secrets](docs/security/secrets.md) · [Threat model](docs/threat-model.md) |
 | IA responsable | [Informe de evaluación](docs/ai/eval-report.md) · [Model card](docs/ai/model-card.md) · [Marco legal](docs/ai/marco-legal.md) |
-| Resiliencia | [SLOs](docs/sre/slos.md) · [Plan DR](docs/sre/dr-plan.md) · [Runbooks](docs/runbooks/) · [Post-mortem](docs/postmortems/) |
+| Resiliencia | [SLOs](docs/sre/slos.md) · [Plan DR](docs/sre/dr-plan.md) · [Runbooks](docs/runbooks/) · [Post-mortem](docs/postmortems/2026-11-22-game-day.md) · [ADR 0010](docs/adr/0010-resiliencia-dr.md) |
 | FinOps | [Costos](docs/finops/costos.md) · [Mediciones](docs/finops/mediciones.md) |
-| Tests | [Trazabilidad](docs/qa/trazabilidad.md) · Reporte JaCoCo: revisar artefacto `jacoco-coverage-report` del último run de CI |
+| Tests | [Trazabilidad](docs/qa/trazabilidad.md) · Reporte JaCoCo: artefacto `jacoco-coverage-report` del [último run de CI](https://github.com/merinobranco10/equipo-aulaViva/actions/workflows/ci.yml?query=branch%3Adesarrollo) |
 
 ## Lo que no alcanzamos (y por qué)
 

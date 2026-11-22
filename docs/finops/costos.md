@@ -5,7 +5,7 @@
 ## 1. Cómo se calculó
 
 - **Infraestructura:** AWS Pricing Calculator, región São Paulo (`sa-east-1`), fecha de la consulta 22-11-2026. Link de la estimación: https://calculator.aws/#/estimate?id=3406fc2d6bbf6ad2ced01d54ba3b61e22df6e66e
-- **Servicios usados:** los del [ADR 0003](../adr/0003-cloud-style.md) que sí están en el MVP: Kubernetes (EKS), PostgreSQL (RDS), balanceador (ALB), NAT, S3 (backups, [ADR 0010](../adr/0010-backups-y-recuperacion.md)) y logs (CloudWatch). Mensajería (MSK), identidad (Cognito) y búsqueda vectorial (pgvector) quedaron diferidos el 18-11-2026, por eso no se cobran aquí.
+- **Servicios usados:** los del [ADR 0003](../adr/0003-cloud-style.md) que sí están en el MVP: Kubernetes (EKS), PostgreSQL (RDS), balanceador (ALB), NAT, S3 (backups, [ADR 0010](../adr/0010-resiliencia-dr.md)) y logs (CloudWatch). Mensajería (MSK), identidad (Cognito) y búsqueda vectorial (pgvector) quedaron diferidos el 18-11-2026, por eso no se cobran aquí.
 - **LLM:** tokens medidos el Día 4 ([mediciones.md](mediciones.md)) y precios de pago de Groq.
 
 ## 2. Infraestructura (AWS, por mes, en USD)
