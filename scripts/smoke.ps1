@@ -1,4 +1,4 @@
-# AulaViva - Smoke test de la demo (S18, Día 7) para Windows PowerShell. No crea datos.
+﻿# AulaViva - Smoke test de la demo (S18, Día 7) para Windows PowerShell. No crea datos.
 # Uso:
 #   $env:DEMO_PASSWORD = '<clave>'; .\scripts\smoke.ps1
 #   .\scripts\smoke.ps1 -Base https://<codespace>-8080.app.github.dev
@@ -14,16 +14,27 @@ function Tutor($q) {
   Invoke-RestMethod -Method Post "$Base/v1/tutor/questions" -Headers (Auth 'estudiante.a') -ContentType 'application/json; charset=utf-8' -Body $body
 }
 
-try { if ((Invoke-RestMethod "$Base/actuator/health").status -eq 'UP') { Ok 'health' } else { Ko 'health' } } catch { Ko "health (¿la app está arriba en $Base?)" }
+# Espera hasta 90 s a que la app esté arriba (útil justo después de levantarla)
+$arriba = $false
+for ($i = 0; $i -lt 45 -and -not $arriba; $i++) {
+  try { $arriba = (Invoke-RestMethod "$Base/actuator/health").status -eq 'UP' } catch { Start-Sleep 2 }
+}
+if ($arriba) { Ok 'health' } else { Ko "health (¿la app está arriba en $Base?)" }
 try { if ((Invoke-RestMethod "$Base/v1/me" -Headers (Auth 'docente.a')).role -eq 'TEACHER') { Ok 'login docente.a' } else { Ko 'login docente.a' } } catch { Ko 'login docente.a (¿DEMO_PASSWORD correcta?)' }
 $evalId = $null
-try { $evalId = @(Invoke-RestMethod "$Base/v1/me/evaluations" -Headers (Auth 'estudiante.a'))[0].id; if ($evalId) { Ok 'estudiante.a ve sus evaluaciones' } else { Ko 'estudiante.a ve sus evaluaciones' } } catch { Ko 'estudiante.a ve sus evaluaciones' }
+# En PowerShell 5.1 la lista llega como un solo objeto: se guarda primero en una variable
+try {
+  $lista = Invoke-RestMethod "$Base/v1/me/evaluations" -Headers (Auth 'estudiante.a')
+  $evalId = [string](@($lista)[0].id)
+  if ($evalId -match '^[0-9a-fA-F-]{36}$') { Ok 'estudiante.a ve sus evaluaciones' } else { Ko "estudiante.a ve sus evaluaciones (id: $evalId)" }
+} catch { Ko 'estudiante.a ve sus evaluaciones' }
 try {
   $vista = Invoke-WebRequest "$Base/v1/evaluations/$evalId" -Headers (Auth 'estudiante.a') -UseBasicParsing
   if ($vista.Content -notmatch '"correctOption"') { Ok 'evaluación sin respuestas correctas para el estudiante' } else { Ko 'evaluación sin respuestas correctas para el estudiante' }
 } catch { Ko 'evaluación sin respuestas correctas para el estudiante' }
-try { Invoke-WebRequest "$Base/v1/evaluations/$evalId" -Headers (Auth 'docente.b') -UseBasicParsing | Out-Null; Ko 'aislamiento entre colegios (respondió 200): DETENER LA DEMO' }
-catch { if ($_.Exception.Response.StatusCode.value__ -eq 404) { Ok 'aislamiento entre colegios (docente.b recibe 404)' } else { Ko "aislamiento entre colegios ($($_.Exception.Message))" } }
+if (-not $evalId) { Ko 'aislamiento entre colegios (sin ID de evaluación para probar)' }
+else { try { Invoke-WebRequest "$Base/v1/evaluations/$evalId" -Headers (Auth 'docente.b') -UseBasicParsing | Out-Null; Ko 'aislamiento entre colegios (respondió 200): DETENER LA DEMO' }
+catch { if ($_.Exception.Response.StatusCode.value__ -eq 404) { Ok 'aislamiento entre colegios (docente.b recibe 404)' } else { Ko "aislamiento entre colegios ($($_.Exception.Message))" } } }
 try {
   $modo = (Tutor '¿Qué signo tiene el producto de dos enteros negativos?').mode
   if ($modo -in 'llm','cache') { Ok "tutor responde con IA (modo $modo)" } elseif ($modo -eq 'extractivo') { Ok 'tutor responde sin IA (modo extractivo: revisar LLM_API_KEY si se esperaba IA)' } else { Ko "tutor (modo $modo)" }

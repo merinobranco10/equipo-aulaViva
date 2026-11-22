@@ -7,8 +7,8 @@
 
 | Opción | Dónde | Cómo levantar | Cuándo usarla | Tiempo de arranque |
 |---|---|---|---|---|
-| **A · Staging** | Codespace `aulaviva-staging` (4 núcleos) | `docker compose up -d --build` y puerto 8080 en **Public** | Siempre: es la demo principal | __ (medir) |
-| **C · Fallback** | PC de 8 GB, sin Docker | `java -Xmx512m -jar backend\target\app.jar --spring.profiles.active=h2,demo` | Si el Codespace no carga o la red bloquea `*.app.github.dev` | __ (medir) |
+| **A · Staging** | Codespace `aulaviva-staging` (4 núcleos): https://fluffy-invention-g4wpw679wrvphrgp-8080.app.github.dev | `docker compose up -d --build` y puerto 8080 en **Public** | Siempre: es la demo principal | ≈ 2 min (1 min 59 s medido) |
+| **C · Fallback** | PC de 8 GB, sin Docker | `java -Xmx512m -jar backend\target\app.jar --spring.profiles.active=h2,demo` | Si el Codespace no carga o la red bloquea `*.app.github.dev` | ≈ 9 s con el jar ya compilado (8,6 s medido) |
 
 La opción B (PC de 16 GB con Docker) se descartó el 22-11-2026: C cubre la misma falla sin instalar Docker.
 

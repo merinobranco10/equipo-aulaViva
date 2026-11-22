@@ -432,7 +432,7 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 
 | Criterio | Evidencia |
 |---|---|
-| Demo | [Guion de demo](docs/demo/guion-demo.md) · [Smoke test](scripts/smoke.sh) · **Staging (A):** Codespace `aulaviva-staging`, se enciende 1 h antes de la defensa (URL pública: por agregar) · **Fallback (C):** PC local con H2 |
+| Demo | [Guion de demo](docs/demo/guion-demo.md) · [Smoke test](scripts/smoke.sh) · **Staging (A):** [https://fluffy-invention-g4wpw679wrvphrgp-8080.app.github.dev](https://fluffy-invention-g4wpw679wrvphrgp-8080.app.github.dev) (Codespace `aulaviva-staging`; responde solo cuando está encendido, desde 1 h antes de la defensa) · **Fallback (C):** PC local con H2 |
 | Arquitectura | [C4 L1–L3](docs/c4/) · [Índice de ADRs](docs/adr/README.md) |
 | DevSecOps | [Runs de CI en `desarrollo`](https://github.com/merinobranco10/equipo-aulaViva/actions/workflows/ci.yml?query=branch%3Adesarrollo) · [Runs de seguridad](https://github.com/merinobranco10/equipo-aulaViva/actions/workflows/security.yml?query=branch%3Adesarrollo) · [Secrets](docs/security/secrets.md) · [Threat model](docs/threat-model.md) |
 | IA responsable | [Informe de evaluación](docs/ai/eval-report.md) · [Model card](docs/ai/model-card.md) · [Marco legal](docs/ai/marco-legal.md) |

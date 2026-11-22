@@ -30,8 +30,8 @@ Si la suma de los tiempos reportados pasa de 14:30, Branco recorta: primero el r
 
 | Opción | Dónde | Cómo levantar | Tiempo de arranque |
 |---|---|---|---|
-| **A · Principal** | Codespace `aulaviva-staging` | `docker compose up -d --build`, puerto 8080 en **Public** | __ (medir) |
-| **C · Fallback** | PC de 8 GB de Branco, sin Docker | `java -Xmx512m -jar backend\target\app.jar --spring.profiles.active=h2,demo` | __ (medir) |
+| **A · Principal** | Codespace `aulaviva-staging`: https://fluffy-invention-g4wpw679wrvphrgp-8080.app.github.dev | `docker compose up -d --build`, puerto 8080 en **Public** | ≈ 2 min |
+| **C · Fallback** | PC de 8 GB de Branco, sin Docker | `java -Xmx512m -jar backend\target\app.jar --spring.profiles.active=h2,demo` | ≈ 9 s (jar ya compilado) |
 
 - **1 h antes:** encender A, datos limpios (`docker compose down -v && docker compose up -d`) y `./scripts/smoke.sh` → **8/8 OK**. Dejar C compilado y probado con `.\scripts\smoke.ps1`.
 - **Si A no carga en 1 minuto:** Branco cambia a C. Frase: «Usamos el ambiente local de respaldo: es el mismo código del tag v1.0.0».

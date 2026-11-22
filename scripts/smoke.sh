@@ -19,7 +19,7 @@ curl -sf "$B/actuator/health" | grep -q '"UP"' && ok "health" || ko "health (¿l
 curl -sf -u "docente.a:$P" "$B/v1/me" | grep -q '"TEACHER"' && ok "login docente.a" || ko "login docente.a (¿DEMO_PASSWORD correcta?)"
 
 EVAL=$(curl -sf -u "estudiante.a:$P" "$B/v1/me/evaluations" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
-[ -n "$EVAL" ] && ok "estudiante.a ve sus evaluaciones" || ko "estudiante.a ve sus evaluaciones"
+[[ "$EVAL" =~ ^[0-9a-fA-F-]{36}$ ]] && ok "estudiante.a ve sus evaluaciones" || ko "estudiante.a ve sus evaluaciones (id: $EVAL)"
 
 VISTA=$(curl -sf -u "estudiante.a:$P" "$B/v1/evaluations/$EVAL")
 if [ -n "$VISTA" ] && ! echo "$VISTA" | grep -q '"correctOption"'; then
@@ -28,7 +28,7 @@ else
   ko "evaluación sin respuestas correctas para el estudiante"
 fi
 
-CODE=$(curl -s -o /dev/null -w '%{http_code}' -u "docente.b:$P" "$B/v1/evaluations/$EVAL")
+CODE=$([ -n "$EVAL" ] && curl -s -o /dev/null -w '%{http_code}' -u "docente.b:$P" "$B/v1/evaluations/$EVAL" || echo sin-id)
 [ "$CODE" = "404" ] && ok "aislamiento entre colegios (docente.b recibe 404)" || ko "aislamiento entre colegios (respondió $CODE): DETENER LA DEMO"
 
 R=$(tutor "¿Qué signo tiene el producto de dos enteros negativos?")
