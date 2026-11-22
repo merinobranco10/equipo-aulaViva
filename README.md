@@ -33,12 +33,12 @@ AulaViva busca mejorar la experiencia de aprendizaje de estudiantes y docentes c
 
 _Actualizado: 22-11-2026._
 
-El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir con nota y feedback, ver progreso) con aislamiento entre colegios y control de acceso por rol. La infraestructura (contenedores, Kubernetes, GitOps) y el pipeline DevSecOps están operativos desde S07–S10. El trabajo restante hacia la defensa final (S18) sigue el plan de 7 días.
+El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir con nota y feedback, ver progreso) con aislamiento entre colegios y control de acceso por rol. La infraestructura (contenedores, Kubernetes, GitOps) y el pipeline DevSecOps están operativos desde S07–S10. El plan de 7 días de la S18 está completo: la versión [v1.0.0](https://github.com/merinobranco10/equipo-aulaViva/releases/tag/v1.0.0) está en `main`, que queda congelado para la defensa (solo correcciones de texto).
 
 | Área | Estado | Evidencia |
 |---|---|---|
 | Producto: charter, impact map, backlog, escenarios | ✅ | [CHARTER](CHARTER.md) · [backlog](docs/backlog.md) · [impact map](docs/impact-map.md) · [escenarios](docs/scenarios/) |
-| Arquitectura: C4 L1–L2, ADRs 0001–0006 (S01–S10) | ✅ | [C4](docs/c4/) · [ADRs](docs/adr/) |
+| Arquitectura: C4 L1–L3, 12 ADRs (0001–0011) | ✅ | [C4](docs/c4/) · [Índice de ADRs](docs/adr/README.md) |
 | Datos y API: DER, bounded contexts, eventos, OpenAPI 3.1 | ✅ | [docs/data](docs/data/) · [openapi.yaml](api/openapi.yaml) |
 | Contenedores y Kubernetes (S07) | ✅ | [Despliegue](#despliegue-en-kubernetes-s07) |
 | CI/CD y GitOps con Argo CD (S08) | ✅ | [CI/CD](#cicd-y-gitops-s08) |
@@ -50,7 +50,7 @@ El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir co
 | Tutor IA con guardrails, evaluación y model card | ✅ Día 4 | [Eval report](docs/ai/eval-report.md) · [Model card](docs/ai/model-card.md) · [Marco legal](docs/ai/marco-legal.md) |
 | SLOs, DR, game day y post-mortem | ✅ Día 5 | [SLOs](docs/sre/slos.md) · [Plan DR](docs/sre/dr-plan.md) · [Post-mortem](docs/postmortems/2026-11-22-game-day.md) |
 | FinOps, deck y preparación del Q&A | ✅ Día 6 | [Costos](docs/finops/costos.md) · [Deck](docs/defensa/AulaViva_S18_Defensa_Deck.pptx) · [Q&A](docs/defensa/banco-qa.md) |
-| Release v1.0.0 y guion de práctica | ⏳ Día 7 | [Smoke test](scripts/smoke.sh) · [Guion de práctica](docs/defensa/guion-practica.md) · [Guion de demo](docs/demo/guion-demo.md) |
+| Release v1.0.0, staging y guion de práctica | ✅ Día 7 | [Release v1.0.0](https://github.com/merinobranco10/equipo-aulaViva/releases/tag/v1.0.0) · [Promoción GitOps](docs/qa/evidence/s18/08-gitops-promocion.png) · [Smoke test](scripts/smoke.sh) · [Guion de práctica](docs/defensa/guion-practica.md) · [Guion de demo](docs/demo/guion-demo.md) |
 
 ## Equipo y forma de trabajo
 
