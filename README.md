@@ -14,7 +14,8 @@ Plataforma SaaS multi-tenant para colegios de la Región Metropolitana: evaluaci
 8. [Despliegue en Kubernetes (S07)](#despliegue-en-kubernetes-s07)
 9. [CI/CD y GitOps (S08)](#cicd-y-gitops-s08)
 10. [Seguridad (DevSecOps · S09–S10)](#seguridad-devsecops--s09s10)
-11. [Índice de evidencia para el panel S18](#índice-de-evidencia-para-el-panel-s18).
+11. [Índice de evidencia (S18)](#índice-de-evidencia-para-el-panel-s18)
+12. [Documentos de apoyo](#defensa--documentos-de-apoyo)
 
 ## Descripción y alcance del MVP
 
@@ -464,4 +465,4 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 
 - [Guion de pitch por rol](docs/defensa/guion-pitch.md)
 - [Banco de preguntas y respuestas](docs/defensa/banco-qa.md)
-- [Deck](https://trello.com/1/cards/6afa6d7775d7b8e1fa90508e/attachments/6b028ffdf5fd41435b19cf81/download/AulaViva_S18_Defensa_Deck.pptx).
+- [Deck](https://trello.com/1/cards/6afa6d7775d7b8e1fa90508e/attachments/6b028ffdf5fd41435b19cf81/download/AulaViva_S18_Defensa_Deck.pptx)
