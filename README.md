@@ -49,7 +49,7 @@ El backend ya ejecuta el flujo crítico de la demo (crear evaluación, rendir co
 | Tests de contrato y seguridad ampliados, staging en Codespaces | ⏳ Día 3 | — |
 | Tutor IA con guardrails, evaluación y model card | ⏳ Día 4 | — |
 | SLOs, DR, game day y post-mortem | ⏳ Día 5 | — |
-| FinOps, deck y preparación del Q&A | ⏳ Día 6 | — |
+| FinOps, deck y preparación del Q&A | ✅ Día 6 | [Costos](docs/finops/costos.md) · [Deck](docs/defensa/AulaViva_S18_Defensa_Deck.pptx) · [Q&A](docs/defensa/banco-qa.md) |
 | Release v1.0.0 y guion de práctica | ⏳ Día 7 | — |
 
 ## Equipo y forma de trabajo
@@ -463,4 +463,4 @@ Disponer de un control automatizado para identificar posibles secretos expuestos
 
 - [Guion de pitch por rol](docs/defensa/guion-pitch.md)
 - [Banco de preguntas y respuestas](docs/defensa/banco-qa.md)
-- [Deck](https://trello.com/1/cards/6afa6d7775d7b8e1fa90508e/attachments/6b028ffdf5fd41435b19cf81/download/AulaViva_S18_Defensa_Deck.pptx)
+- [Deck](docs/defensa/AulaViva_S18_Defensa_Deck.pptx)

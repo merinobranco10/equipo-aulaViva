@@ -65,7 +65,7 @@ Presentar el pipeline y sus gates con el último run real de GitHub Actions:
 - Firma/attestation de supply chain cuando corresponda.
 - Mostrar `docs/security/secrets.md` y `docs/threat-model.md`.
 
-**No inventar estado del último run:** abrir el enlace real de Actions durante el ensayo y reemplazar el marcador del deck/README.
+**No inventar estado del último run:** abrir el enlace real de Actions durante el ensayo y confirmar que el run enlazado en el deck y el README siga en verde.
 
 **Transición:** «Gerardo explica la IA».
 

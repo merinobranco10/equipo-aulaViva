@@ -1,0 +1,13 @@
+Prueba de carga k6 · 22-11-2026 ~21:10 UTC · Codespace (docker compose, perfiles pg,demo) · rama s18-dia5-6
+Script: scripts/k6-slo.js · 10 usuarios virtuales · 2 minutos · GET /v1/evaluations/{EVAL_ID} como estudiante.a
+(Transcrito de las capturas gd-04a y gd-04b.)
+
+THRESHOLDS
+  http_req_duration{grupo:eval}  p(95)<500    p(95)=355.61ms   OK
+  http_req_failed                rate<0.005   rate=0.00%       OK
+
+TOTAL RESULTS
+  checks_succeeded: 100.00% (4702 de 4702) · status 200
+  http_req_duration: avg=255.08ms min=85.77ms med=256.18ms max=473.5ms p(90)=330.77ms p(95)=355.61ms
+  http_reqs: 4702 (39.15/s) · iterations: 4702 · vus: 10
+  data_received: 5.3 MB · data_sent: 884 kB
