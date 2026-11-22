@@ -14,7 +14,7 @@ Plataforma SaaS multi-tenant para colegios de la Región Metropolitana: evaluaci
 8. [Despliegue en Kubernetes (S07)](#despliegue-en-kubernetes-s07)
 9. [CI/CD y GitOps (S08)](#cicd-y-gitops-s08)
 10. [Seguridad (DevSecOps · S09–S10)](#seguridad-devsecops--s09s10)
-11. [Índice de evidencia para el panel S18]().
+11. [Índice de evidencia para el panel S18](#índice-de-evidencia-para-el-panel-s18).
 
 ## Descripción y alcance del MVP
 
