@@ -14,7 +14,7 @@
 
     <groupId>cl.aulaviva</groupId>
     <artifactId>aulaviva-backend</artifactId>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
     <name>aulaviva-backend</name>
     <description>Backend de la plataforma AulaViva</description>
 
@@ -31,7 +31,23 @@
         <jackson-bom.version>2.21.7</jackson-bom.version>
         <micrometer.version>1.15.12</micrometer.version>
         <spring-framework.version>6.2.19</spring-framework.version>
+        <!-- S18 Dia 1: pgjdbc 42.7.10 (gestionado por Spring Boot) tiene CVE-2026-42198 y
+             42.7.11 tiene CVE-2026-54291 (ambos HIGH); 42.7.12 corrige los dos.
+             Quitar cuando Spring Boot gestione 42.7.12 o superior. -->
+        <postgresql.version>42.7.12</postgresql.version>
     </properties>
+
+    <!-- S18 Dia 1: spring-data-commons 3.5.11 (via Spring Boot 3.5.14) tiene CVE-2026-41695 y
+         CVE-2026-41716 (HIGH), corregidos en 3.5.12. Quitar cuando Spring Boot lo gestione. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-commons</artifactId>
+                <version>3.5.12</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- API REST -->
@@ -46,12 +62,70 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Persistencia (S18 Día 1): JPA + Flyway; H2 en local/tests y PostgreSQL en compose -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Seguridad y validación (S18 Día 1): login por rol y validación de entradas -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
         <!-- Pruebas automatizadas -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+         <!-- Tutor IA (S18 Día 4): resiliencia, caché y métricas -->
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-aop</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>io.github.resilience4j</groupId>
+             <artifactId>resilience4j-spring-boot3</artifactId>
+             <version>2.3.0</version>
+         </dependency>
+         <dependency>
+             <groupId>com.github.ben-manes.caffeine</groupId>
+             <artifactId>caffeine</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>io.micrometer</groupId>
+             <artifactId>micrometer-registry-prometheus</artifactId>
+         </dependency>
     </dependencies>
 
     <build>

@@ -150,3 +150,7 @@ AWS se selecciona por presentar un ecosistema suficientemente amplio para cubrir
 - Los futuros pipelines CI/CD y mecanismos de observabilidad requerirán mantenimiento y monitoreo.
 - Una futura migración de proveedor requeriría adaptar configuraciones, infraestructura como código y componentes dependientes de servicios específicos de AWS.
 - La futura extracción de módulos hacia microservicios requerirá mantener contratos, interfaces y pruebas de integración adecuadas.
+
+## Actualización 18-11-2026
+
+El proveedor LLM del Tutor IA cambia de Anthropic Claude a **Groq** (`openai/gpt-oss-120b`) para el MVP. La decisión y sus alternativas están en el [ADR 0009](0009-tutor-ia-proveedor-llm.md). La elección de AWS como nube objetivo no cambia.

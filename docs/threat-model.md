@@ -1,5 +1,7 @@
 # Modelo de amenazas — Tutor IA (STRIDE)
 
+> **Actualización 18-11-2026:** en el MVP no se usa pgvector (el Tutor IA busca con BM25 en apuntes del classpath), Kafka/MSK queda diferido (Outbox en tabla) y el LLM es **Groq** (`openai/gpt-oss-120b`). Ver ADR 0004 y [ADR 0009](adr/0009-tutor-ia-proveedor-llm.md). Las menciones a pgvector abajo describen el objetivo de producción.
+
 ## 1. Objetivo y alcance
 
 El objetivo de este documento es identificar y analizar las principales amenazas de seguridad asociadas al microservicio Tutor IA de AulaViva, utilizando la metodología STRIDE.
@@ -203,7 +205,23 @@ El modelo de amenazas se complementa con los controles automatizados del pipelin
 
 Estos controles complementan las medidas de diseño y configuración descritas anteriormente. No reemplazan los controles de autorización, aislamiento entre tenants ni protección de datos que deben implementarse en el servicio.
 
-## 9. Conclusión
+## 9. Amenazas del Tutor IA (OWASP Top 10 para aplicaciones LLM, edición 2025)
+
+**Agregado:** 22-11-2026 (Día 5). Complementa el análisis STRIDE con los riesgos propios del Tutor IA (Groq `openai/gpt-oss-120b`, RAG léxico BM25 por curso; [ADR 0009](adr/0009-tutor-ia-proveedor-llm.md)).
+
+| Riesgo OWASP LLM (2025) | ¿Aplica a AulaViva? | Mitigación implementada | Evidencia |
+|---|---|---|---|
+| **LLM01 Prompt Injection** | Sí | Patrones de ataque que bloquean la pregunta antes de llegar al LLM; los apuntes van entre delimitadores `<apuntes>` y se quitan esas etiquetas de la pregunta y del corpus; reglas fijas en el prompt de sistema | `GuardrailsTest`, `TutorPromptTest`, `TutorSeguridadTest` (el ataque no llama al LLM); demo paso 4; 4/4 ataques bloqueados en [eval-report](ai/eval-report.md) |
+| **LLM02 Sensitive Information Disclosure** | Sí (datos de menores) | RUT, correo y teléfono se enmascaran antes de enviar texto al proveedor y en la respuesta; el contexto solo contiene apuntes del curso, nunca datos de estudiantes; el índice BM25 está separado por curso y colegio (404 para otro colegio) | `PiiMaskerTest`, `TutorSeguridadTest` (curso de otro colegio → 404) |
+| **LLM05 Improper Output Handling** | Sí | La respuesta debe citar una fuente recuperada o se reemplaza por el fragmento del apunte (modo extractivo); la UI inserta el texto con `textContent`, nunca como HTML | `TutorFlowTest` (respuesta sin fuente → extractivo) |
+| **LLM06 Excessive Agency** | No | El tutor no ejecuta acciones ni tiene herramientas: solo devuelve texto | Diseño ([ADR 0009](adr/0009-tutor-ia-proveedor-llm.md)) |
+| **LLM07 System Prompt Leakage** | Bajo | El prompt de sistema no contiene secretos ni datos; la clave de Groq vive en secrets, nunca en el prompt; preguntas que piden el prompt se bloquean | Revisión de código (`TutorPrompt`), [secrets.md](security/secrets.md) |
+| **LLM09 Misinformation** | Sí | Solo responde con los apuntes recuperados; bajo el umbral `min-score` responde «No encuentro eso en tus apuntes»; fidelidad medida 88 % | [eval-report](ai/eval-report.md) |
+| **LLM10 Unbounded Consumption** | Sí | Presupuesto diario de tokens por colegio (HTTP 429 al agotarse), `max-tokens = 400`, pregunta de máximo 500 caracteres, caché de respuestas | `TutorFlowTest` (429), [mediciones FinOps](finops/mediciones.md), [ADR 0011](adr/0011-finops.md) |
+
+**Límites reconocidos:** la detección de injection es por patrones y no cubre todo ataque posible; el presupuesto y la caché viven en memoria de cada réplica; `/actuator/prometheus` queda restringido al rol coordinador desde el Día 5.
+
+## 10. Conclusión
 
 El análisis STRIDE permitió identificar amenazas relacionadas con la identidad, integridad, trazabilidad, confidencialidad y disponibilidad del microservicio Tutor IA.
 

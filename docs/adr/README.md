@@ -1,0 +1,40 @@
+# Índice de Architecture Decision Records (ADRs)
+
+**Última actualización:** 21-11-2026
+
+Este directorio contiene los Architecture Decision Records (ADRs) del proyecto AulaViva. Cada ADR documenta una decisión arquitectónica relevante, su contexto, las alternativas consideradas, la decisión adoptada y sus consecuencias.
+
+## Índice de ADRs
+
+| # | Título | Estado | Fecha |
+|---|---|---|---|
+| [0001](0001-eleccion-iniciativa.md) | Elección de iniciativa | Aceptada | 21-08-2026 |
+| [0002](0002-estilo-arquitectonico.md) | Estilo arquitectónico: monolito modular | Aceptada | 04-09-2026 |
+| [0003](0003-cloud-style.md) | Proveedor cloud: AWS | Aceptada | 11-09-2026 |
+| [0004](0004-datos-y-eventos.md) | Persistencia y mensajería (actualizada 17-11: Outbox en tabla, Kafka diferido) | Aceptada | 06-10-2026 |
+| [0004](0004-plataforma-k8s.md) | Plataforma Kubernetes e IaC | Aceptada | 15-10-2026 |
+| [0005](0005-gitops-strategy.md) | Estrategia GitOps | Aceptada | 22-10-2026 |
+| [0006](0006-supply-chain.md) | Supply chain: firma y SLSA (alternativas agregadas 18-11) | Aceptada | 10-11-2026 |
+| [0007](0007-estrategia-multi-tenant.md) | Estrategia multi-tenant | Aceptada | 17-11-2026 |
+| [0008](0008-identidad-y-rbac.md) | Identidad y RBAC del MVP | Aceptada | 17-11-2026 |
+| [0009](0009-tutor-ia-proveedor-llm.md) | Tutor IA: proveedor LLM (Groq) y RAG léxico | Aceptada | 18-11-2026 |
+| [0010](0010-resiliencia-dr.md) | Resiliencia y recuperación ante desastres (DR) | Aceptada | 22-11-2026 |
+| [0011](0011-finops.md) | FinOps: control del costo del Tutor IA y de la nube | Aceptada | 21-11-2026 |
+
+## Convenciones
+
+- **Aceptada:** decisión aprobada y vigente en la arquitectura.
+- **Propuesta:** decisión pendiente de revisión y aprobación.
+- **Pendiente:** ADR planificado, todavía no documentado o aprobado.
+- Las decisiones pueden actualizarse mediante nuevas secciones de actualización, conservando el historial de la decisión original.
+
+## Estructura de cada ADR
+
+Cada documento debe incluir:
+
+1. Título, estado, fecha y autor.
+2. Contexto y problema que motiva la decisión.
+3. Decisión arquitectónica adoptada.
+4. Alternativas consideradas, con criterios comparativos explícitos.
+5. Consecuencias positivas y negativas.
+6. Verificación mediante pruebas o evidencias.

@@ -23,7 +23,9 @@ servers:
   - url: https://dev-api.aulaviva.cl
     description: Desarrollo
     
+# MVP (ADR 0008): HTTP Basic sobre HTTPS. JWT/OIDC (Keycloak) queda como objetivo.
 security:
+  - basicAuth: []
   - bearerAuth: []
 
 tags:
@@ -33,6 +35,8 @@ tags:
     description: Consulta de progreso académico
   - name: Tutor IA
     description: Consultas al Tutor IA
+  - name: Identity
+    description: Usuario autenticado y su contexto (rol, colegio, cursos)
 
 paths:
 
@@ -250,6 +254,9 @@ paths:
 
         '403':
           $ref: '#/components/responses/Forbidden'
+        
+        '404':
+          $ref: '#/components/responses/NotFound'
 
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
@@ -264,9 +271,115 @@ paths:
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
 
+
+  /v1/me:
+    get:
+      tags:
+        - Identity
+      summary: Datos del usuario autenticado
+      description: |
+        Devuelve rol, colegio (tenant), cursos (docente/estudiante) y pupilos (apoderado).
+        La UI lo usa para redirigir según el rol.
+      operationId: getMe
+      responses:
+        '200':
+          description: Usuario autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/me/evaluations:
+    get:
+      tags:
+        - Evaluations
+      summary: Evaluaciones visibles para el usuario autenticado
+      description: |
+        Estudiante: evaluaciones de sus cursos con estado PENDING o COMPLETED y su nota.
+        Docente: evaluaciones de sus cursos (CREATED). Otros roles: lista vacía.
+      operationId: getMyEvaluations
+      responses:
+        '200':
+          description: Lista de evaluaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyEvaluationItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/students/{studentId}/evaluations:
+    get:
+      tags:
+        - Evaluations
+      summary: Evaluaciones de un estudiante con estado y nota
+      description: |
+        Mismas reglas de acceso que el progreso: el propio estudiante, su apoderado,
+        un docente de sus cursos o el coordinador de su colegio. Otro colegio recibe 404.
+      operationId: getStudentEvaluations
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: u-estudiante-a
+      responses:
+        '200':
+          description: Lista de evaluaciones del estudiante
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyEvaluationItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/evaluations/{evaluationId}/submissions/me:
+    get:
+      tags:
+        - Evaluations
+      summary: Revisión de la propia entrega (solo estudiante)
+      description: |
+        Devuelve la nota, el puntaje y cada pregunta con la opción marcada, la correcta y
+        la retroalimentación. 404 si la evaluación es de otro colegio o aún no se rinde.
+      operationId: getMySubmissionReview
+      parameters:
+        - name: evaluationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entrega corregida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionReviewResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
 
   securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Mecanismo del MVP (ADR 0008), siempre sobre HTTPS.
     bearerAuth:
       type: http
       scheme: bearer
@@ -274,6 +387,136 @@ components:
 
       
   schemas:
+
+    MeResponse:
+      type: object
+      required: [id, username, fullName, role, tenantId, tenantName, courses, students]
+      properties:
+        id:
+          type: string
+          example: u-docente-a
+        username:
+          type: string
+          example: docente.a
+        fullName:
+          type: string
+          example: Camila Rojas
+        role:
+          type: string
+          enum: [STUDENT, TEACHER, COORDINATOR, GUARDIAN]
+        tenantId:
+          type: string
+          example: colegio-a
+        tenantName:
+          type: string
+          example: Colegio Los Andes (demo)
+        courses:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseSummary'
+        students:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentSummary'
+
+    CourseSummary:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          example: matematica-8a
+        name:
+          type: string
+          example: Matemática 8° básico A
+
+    StudentSummary:
+      type: object
+      required: [id, fullName]
+      properties:
+        id:
+          type: string
+          example: u-estudiante-a
+        fullName:
+          type: string
+          example: Tomás Fuentes
+
+    MyEvaluationItem:
+      type: object
+      required: [id, title, courseId, courseName, status]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        courseId:
+          type: string
+        courseName:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, CREATED]
+        grade:
+          type: [number, 'null']
+          example: 4.5
+
+    SubmissionReviewResponse:
+      type: object
+      required: [evaluationId, title, grade, score, maxScore, questions]
+      properties:
+        evaluationId:
+          type: string
+        title:
+          type: string
+        grade:
+          type: number
+          example: 4.5
+        score:
+          type: integer
+          example: 2
+        maxScore:
+          type: integer
+          example: 3
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewQuestion'
+
+    ReviewQuestion:
+      type: object
+      required: [id, text, options, points, correctOption, correct, message]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        points:
+          type: integer
+        selectedOption:
+          type: [integer, 'null']
+          description: Opción marcada (null si no respondió).
+        correctOption:
+          type: integer
+        correct:
+          type: boolean
+        message:
+          type: string
+
+    QuestionFeedback:
+      type: object
+      required: [questionId, correct, message]
+      properties:
+        questionId:
+          type: string
+        correct:
+          type: boolean
+        message:
+          type: string
+          example: 'Incorrecta: la respuesta correcta era "12". Al multiplicar dos enteros con el mismo signo, el resultado es positivo.'
 
     ProblemDetails:
       type: object
@@ -397,6 +640,12 @@ components:
           type: integer
           minimum: 1
           example: 2
+
+        explanation:
+          type: string
+          maxLength: 1000
+          description: Explicación opcional que se muestra en el feedback.
+          example: Santiago es la capital de Chile desde 1541.
 
     EvaluationCreatedResponse:
       type: object
@@ -556,6 +805,11 @@ components:
           enum:
             - COMPLETED
           example: COMPLETED
+        feedback:
+          type: array
+          description: Feedback por pregunta (aditivo, no rompe compatibilidad).
+          items:
+            $ref: '#/components/schemas/QuestionFeedback'
 
     StudentProgressResponse:
       type: object
@@ -575,7 +829,8 @@ components:
           example: 2
 
         averageGrade:
-          type: number
+          description: null si el estudiante aún no rinde evaluaciones.
+          type: [number, 'null']
           format: float
           minimum: 1
           maximum: 7
@@ -604,6 +859,15 @@ components:
       required:
         - answer
       properties:
+        mode:
+          type: string
+          enum: [llm, cache, extractivo, bloqueado]
+          description: Cómo se generó la respuesta.
+        guardrail:
+          type: string
+          enum: [injection, fuera_alcance]
+          description: Guardrail que se activó, si hubo.
+          
         answer:
           type: string
           description: Respuesta generada por el Tutor IA

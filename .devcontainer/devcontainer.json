@@ -1,0 +1,41 @@
+{
+  "name": "AulaViva",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "none",
+      "installMaven": "true"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb"
+  },
+  "secrets": {
+    "DEMO_PASSWORD": {
+      "description": "Clave de los usuarios de demo (la define cada uno; nunca se sube al repo)."
+    },
+    "DB_PASSWORD": {
+      "description": "Clave de PostgreSQL para docker compose."
+    },
+    "LLM_API_KEY": {
+      "description": "Clave de Groq para el Tutor IA. Se pide a Branco por privado; sin ella el tutor usa el modo extractivo."
+    }
+  },
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "AulaViva",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["vscjava.vscode-java-pack", "vmware.vscode-spring-boot"]
+    }
+  },
+  "postCreateCommand": "cd backend && mvn -q -B -DskipTests package"
+}

@@ -20,6 +20,8 @@ La selección se enfoca principalmente en los componentes relacionados con DevSe
 | Servicio de Identidad | Amazon Cognito | AWS | Permite gestionar autenticación e identidad de usuarios sin implementar toda la infraestructura de identidad directamente en la aplicación. |
 | Base de Datos Vectorial | Amazon RDS for PostgreSQL + pgvector | AWS | Permite almacenar embeddings y realizar búsquedas vectoriales para el sistema RAG manteniendo PostgreSQL como tecnología base. |
 
+> **Actualización 18-11-2026:** para el MVP el LLM pasa a **Groq** (`openai/gpt-oss-120b`, respaldo `openai/gpt-oss-20b`) y pgvector, MSK, S3 y Cognito quedan **diferidos**. Ver [ADR 0009](../adr/0009-tutor-ia-proveedor-llm.md), [ADR 0004](../adr/0004-datos-y-eventos.md) y [ADR 0008](../adr/0008-identidad-y-rbac.md). Lo que sigue se mantiene como evidencia del análisis original.
+
 ### Servicio externo de IA seleccionado
 
 Para el componente externo de IA definido en el C4 Nivel 2 se selecciona **Anthropic Claude mediante API** como servicio LLM para el Tutor IA/RAG.

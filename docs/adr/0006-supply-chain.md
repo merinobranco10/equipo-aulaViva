@@ -1,6 +1,6 @@
 # ADR 0006: Política de firma de imágenes y SLSA (Supply Chain)
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada
 - **Fecha:** 10-11-2026
 
 ## 1. Contexto
@@ -101,7 +101,21 @@ La política `require-image-signature` (`k8s/policies/require-signature.yaml`) e
 - La identidad esperada está acoplada al nombre del workflow y a la rama; renombrarlos exige actualizar esta política y la política de admisión.
 - Un commit que no toca `backend/**` no genera imagen nueva; el job firma o verifica la última imagen publicada en `desarrollo`.
 
-## 7. Verificación manual
+## 7. Alternativas consideradas
+
+> Sección agregada el 18-11-2026; la decisión no cambia.
+
+| Alternativa | Qué garantiza | Costo / complejidad | Veredicto |
+|---|---|---|---|
+| Sin firma, solo desplegar por digest | Inmutabilidad de la imagen, pero no quién la construyó | Nulo | Descartada: no prueba el origen ni permite política de admisión por identidad |
+| Docker Content Trust (Notary v1) | Firma de tags | Medio: llaves raíz y de repositorio que custodiar; GHCR no lo soporta | Descartada |
+| Notation (Notary v2) | Firma OCI con certificados X.509 | Medio: requiere PKI o KMS propio | Descartada para el MVP |
+| Cosign con par de llaves | Firma por digest verificable | Medio: la llave privada es un secreto que rotar y puede filtrarse | Descartada |
+| **Cosign keyless (OIDC de GitHub + Sigstore)** | Firma por digest ligada a workflow, rama y emisor; registro en Rekor | Bajo: sin llaves que custodiar | **Elegida** |
+| Firmar en `ci.yml` (mismo job del build) | Igual que la elegida | Bajo, pero mezcla build y seguridad | Descartada: se prefiere concentrar los controles en `security.yml` |
+| Generador SLSA L3 (`slsa-github-generator`) | Provenance no falsificable por el workflow de build | Alto: builder reutilizable aislado y reestructurar `ci.yml` | Diferida: se apunta a L2 en el MVP |
+
+## 8. Verificación manual
 
 ```bash
 cosign verify \
@@ -115,7 +129,7 @@ cosign verify-attestation --type slsaprovenance \
   ghcr.io/merinobranco10/equipo-aulaviva-backend@sha256:<digest>
 ```
 
-## 8. Referencias
+## 9. Referencias
 
 - Workflow: `.github/workflows/security.yml`, job `sign-and-attest`.
 - ADR 0005: estrategia GitOps (promoción por digest).
