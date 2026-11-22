@@ -1,25 +1,24 @@
 # Costo mensual — AulaViva
 
-**Fecha de la estimación:** 21-11-2026 · **Autor:** Gerardo González (AI/Data)
+**Fecha de la estimación:** 22-11-2026 · **Autor:** Gerardo González (AI/Data)
 
 ## 1. Cómo se calculó
 
-- **Infraestructura:** AWS Pricing Calculator, región São Paulo (`sa-east-1`), fecha de la consulta 21-11-2026.
-  - Link de la estimación: COMPLETAR (pegar el link de "Save and share").
+- **Infraestructura:** AWS Pricing Calculator, región São Paulo (`sa-east-1`), fecha de la consulta 22-11-2026. Link de la estimación: https://calculator.aws/#/estimate?id=3406fc2d6bbf6ad2ced01d54ba3b61e22df6e66e
 - **Servicios usados:** los del [ADR 0003](../adr/0003-cloud-style.md) que sí están en el MVP: Kubernetes (EKS), PostgreSQL (RDS), balanceador (ALB), NAT, S3 (backups, [ADR 0010](../adr/0010-backups-y-recuperacion.md)) y logs (CloudWatch). Mensajería (MSK), identidad (Cognito) y búsqueda vectorial (pgvector) quedaron diferidos el 18-11-2026, por eso no se cobran aquí.
 - **LLM:** tokens medidos el Día 4 ([mediciones.md](mediciones.md)) y precios de pago de Groq.
 
 ## 2. Infraestructura (AWS, por mes, en USD)
 
-| Componente | Staging | Producción | Supuesto |
+| Componente (según ADR 0003) | Staging | Producción | Supuesto |
 |---|---:|---:|---|
-| Kubernetes gestionado (EKS) + nodos | COMPLETAR | COMPLETAR | Staging: 1 nodo t3.medium. Producción: 3 nodos t3.medium; la app arranca con mínimo 2 copias y puede llegar a 5 (`k8s/hpa.yaml`) |
-| Base de datos (RDS PostgreSQL) | COMPLETAR | COMPLETAR | Staging: db.t4g.micro, 1 zona, 20 GB. Producción: db.t4g.medium, Multi-AZ, 100 GB |
-| Balanceador (ALB) | COMPLETAR | COMPLETAR | Staging 5 GB al mes. Producción 100 GB al mes |
-| NAT | COMPLETAR | COMPLETAR | Staging: 1 NAT, 10 GB. Producción: 2 NAT, 50 GB cada uno |
-| Almacenamiento (S3) | COMPLETAR | COMPLETAR | Backups de la base: 10 GB en staging y 100 GB en producción |
-| Logs (CloudWatch) | COMPLETAR | COMPLETAR | 5 GB al mes en staging y 30 GB en producción |
-| **Total infraestructura** | **COMPLETAR** | **COMPLETAR** | |
+| Kubernetes gestionado (EKS) + nodos | 125,10 | 229,29 | EKS: 1 cluster por ambiente (73,00). Nodos t3.medium On-Demand: 1 en staging (52,10) y 3 en producción (156,29). La app arranca con mínimo 2 copias y puede llegar a 5 (`k8s/hpa.yaml`) |
+| Base de datos (RDS PostgreSQL) | 31,10 | 254,05 | Staging: db.t4g.micro, 1 zona, 20 GB. Producción: db.t4g.medium, Multi-AZ, 100 GB |
+| Balanceador (ALB) | 24,96 | 24,96 | 1 balanceador por ambiente |
+| NAT | 68,82 | 145,08 | Staging: 1 NAT, 10 GB. Producción: 2 NAT, 50 GB cada uno |
+| Almacenamiento (S3) | 0,43 | 4,07 | Backups de la base: 10 GB en staging y 100 GB en producción |
+| Logs (CloudWatch) | 4,53 | 27,18 | 5 GB al mes en staging y 30 GB en producción |
+| **Total infraestructura** | **254,94** | **684,63** | |
 
 ## 3. Costo del LLM (Tutor IA)
 
@@ -48,17 +47,17 @@
 
 **Costo por estudiante al mes** = (infraestructura staging + infraestructura producción + LLM total) / 3.000
 
-= (COMPLETAR + COMPLETAR + 7,38) / 3.000 = **USD COMPLETAR**
+= (254,94 + 684,63 + 7,38) / 3.000 = 946,95 / 3.000 = **USD 0,32**
 
 **Precio por estudiante (supuesto de negocio):** USD 2 al mes. Es un valor bajo y parejo con otros servicios escolares; cada colegio de 600 estudiantes pagaría USD 1.200 al mes.
 
 **Punto de equilibrio (colegios)** = costo fijo mensual / (precio × estudiantes por colegio − costo variable por colegio)
 
-- Costo fijo mensual = infraestructura staging + producción = USD COMPLETAR
+- Costo fijo mensual = infraestructura staging + producción = USD 939,57
 - Ingreso por colegio = 2 × 600 = USD 1.200
 - Costo variable por colegio (LLM) = USD 1,48
 
-= COMPLETAR / (1.200 − 1,48) = COMPLETAR / 1.198,52 = **COMPLETAR colegios**
+= 939,57 / (1.200 − 1,48) = 939,57 / 1.198,52 = 0,78, es decir, **1 colegio**. Con un solo colegio ya se cubre el costo fijo.
 
 ## 5. Las 2 palancas del Día 4, aplicadas a este escenario
 
