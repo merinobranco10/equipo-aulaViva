@@ -1,6 +1,6 @@
 # Índice de Architecture Decision Records (ADRs)
 
-**Última actualización:** 18-11-2026
+**Última actualización:** 21-11-2026
 
 Este directorio contiene los Architecture Decision Records (ADRs) del proyecto AulaViva. Cada ADR documenta una decisión arquitectónica relevante, su contexto, las alternativas consideradas, la decisión adoptada y sus consecuencias.
 
@@ -18,8 +18,8 @@ Este directorio contiene los Architecture Decision Records (ADRs) del proyecto A
 | [0007](0007-estrategia-multi-tenant.md) | Estrategia multi-tenant | Aceptada | 17-11-2026 |
 | [0008](0008-identidad-y-rbac.md) | Identidad y RBAC del MVP | Aceptada | 17-11-2026 |
 | [0009](0009-tutor-ia-proveedor-llm.md) | Tutor IA: proveedor LLM (Groq) y RAG léxico | Aceptada | 18-11-2026 |
-| 0010 | Resiliencia y Disaster Recovery (DR) | Pendiente | Día 5 |
-| 0011 | FinOps | Pendiente | Día 6 |
+| [0010](0010-backups-y-recuperacion.md) | Backups y recuperación (DR) | Aceptada | Día 5 |
+| [0011](0011-finops.md) | FinOps: control del costo del Tutor IA y de la nube | Aceptada | 21-11-2026 |
 
 ## Convenciones
 
