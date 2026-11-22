@@ -4,6 +4,8 @@
 
 Regla del equipo: ningún secreto se escribe en el repo, en Discord ni en capturas. Las claves se entregan solo por mensaje privado. `gitleaks` (job "Secrets" de `security.yml`) bloquea cualquier commit que traiga uno.
 
+Falsos positivos registrados en `.gitleaksignore` (huella `commit:archivo:regla:línea`): ejemplos JSON de la API y, desde el 22-11-2026, tres comandos `curl`/k6 de los runbooks y de `scripts/k6-slo.js`. La regla `generic-api-key` confunde con una clave la ruta que sigue a `$DEMO_PASSWORD`; la clave real nunca está en el repo, solo la variable de entorno.
+
 ## 1. Dónde vive cada secreto
 
 | Secreto | Para qué | Dónde vive | Quién lo usa | Quién lo crea y rota |
