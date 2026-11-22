@@ -1,4 +1,4 @@
-Prueba de carga k6 · 22-11-2026 ~21:10 UTC · Codespace (docker compose, perfiles pg,demo) · rama s18-dia5-6
+Prueba de carga k6 · 22-11-2026 (antes de E3, hora no registrada) · Codespace (docker compose, perfiles pg,demo) · rama s18-dia5-6
 Script: scripts/k6-slo.js · 10 usuarios virtuales · 2 minutos · GET /v1/evaluations/{EVAL_ID} como estudiante.a
 (Transcrito de las capturas gd-04a y gd-04b.)
 
