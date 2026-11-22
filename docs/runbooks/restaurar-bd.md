@@ -22,8 +22,7 @@ Si el volumen se perdió (`docker volume rm equipo-aulaviva_pgdata`), primero `d
 ## Verificación
 ```bash
 curl -s localhost:8080/actuator/health                                   # {"status":"UP",...}
-curl -s -o /dev/null -w "%{http_code}\n" -u docente.a:$DEMO_PASSWORD \
-  localhost:8080/v1/evaluations/<id-conocido>                              # 200
+curl -s -u estudiante.a:$DEMO_PASSWORD localhost:8080/v1/me/evaluations | grep -o '"title":"[^"]*"'   # las evaluaciones siguen ahí
 ```
 
 ## Escalamiento
