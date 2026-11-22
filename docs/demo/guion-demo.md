@@ -14,7 +14,18 @@ La opción B (PC de 16 GB con Docker) se descartó el 22-11-2026: C cubre la mis
 
 Antes de presentar, en la opción elegida: `./scripts/smoke.sh` (Codespace) o `.\scripts\smoke.ps1` (PC). Debe terminar en **8/8 OK**.
 
-**Datos limpios antes de la defensa (opción A):** PostgreSQL guarda lo que se hizo en los ensayos, así que la evaluación "Demo: enteros" quedaría repetida y cambiarían los números del apoderado. Para volver a la semilla: `docker compose down -v && docker compose up -d`. En la opción C la base H2 se limpia sola al reiniciar.
+### Limpiar los datos que no son de la semilla
+
+Cada ensayo deja datos nuevos: la evaluación "Demo: enteros", las respuestas del estudiante y su nota. Con ellos, el paso 2 diría "ya rendiste esta evaluación" y el apoderado mostraría otros números. La app no tiene botón para borrar evaluaciones: se vuelve a la semilla recreando la base. La semilla es lo que `DemoDataLoader` carga al arrancar con una base vacía: **2 colegios, 6 usuarios y 4 evaluaciones** (tabla de abajo).
+
+| Opción | Comando | Tiempo | Qué borra |
+|---|---|---|---|
+| **A · Codespace** | `docker compose down -v && docker compose up -d` | ≈ 1 min (sin `--build`) | El volumen de PostgreSQL completo; al arrancar se recarga la semilla |
+| **C · PC local** | Cerrar la app (`Stop-Process -Id $app.Id` o Ctrl+C) y volver a levantarla | ≈ 9 s | Todo: H2 vive en memoria |
+
+Después de limpiar, comprobar con el smoke test (`./scripts/smoke.sh` o `.\scripts\smoke.ps1`): debe dar **8/8 OK**. En el log de arranque debe aparecer `Datos de demo cargados: 2 colegios, 6 usuarios, 4 evaluaciones.` (en A: `docker compose logs app | grep "Datos de demo"`).
+
+**Cuándo limpiar:** después de cada ensayo y **justo antes de la defensa**. El smoke test no crea datos, así que se puede correr cuantas veces haga falta. Reiniciar también vacía la caché y el presupuesto del tutor, que viven en memoria.
 
 ### Local (opción C)
 
@@ -112,6 +123,8 @@ En el paso 2 el estudiante responde **a propósito** la pregunta 1 bien (`-15`) 
 - Manual de pruebas del Día 1: [AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf](../qa/AulaViva_S18_Sesion1_Resumen_y_Manual_de_Pruebas.pdf)
 
 ## Anexo · Respaldo por API (sin UI)
+
+**Para qué sirve:** si la app está arriba pero la **interfaz web** falla (el navegador no carga, una pantalla se rompe o se pierde la sesión), la demo se puede mostrar igual desde la terminal. Estos scripts hacen las mismas llamadas a la API que la UI y muestran las respuestas: crear la evaluación (paso 1), rendirla con nota y feedback (paso 2), el progreso del apoderado (paso 5) y el 404 entre colegios (paso 6). Es el último recurso antes de no mostrar nada. **Crean datos**, igual que la demo, así que después hay que limpiar.
 
 Ventana 1 (dejarla abierta):
 
