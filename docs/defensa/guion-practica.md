@@ -18,11 +18,11 @@ No hay ensayo conjunto. Cada integrante practica **solo su bloque** con cronóme
 | 02 Demo en vivo | 1:00–4:00 | 2:45 | Alexander (Branco maneja el navegador) | Branco | 3 |
 | 03 Arquitectura | 4:00–6:30 | 2:15 | Matías | Gerardo | 4–5 |
 | 04 DevSecOps | 6:30–8:30 | 1:45 | Valentina | Alexander | 6 |
-| 05 IA responsable | 8:30–10:30 | 1:45 | Gerardo | Matías | 7–8 |
-| 06 Resiliencia · FinOps | 10:30–11:30 · 11:30–12:30 | 0:45 + 0:45 | Valentina · Branco | Alexander | 9–10 |
-| 07 Roadmap y aprendizajes | 12:30–15:00 | 2:15 | Matías + 1 frase de cada uno | Branco | 11–12 |
+| 05 IA responsable | 8:30–10:30 | 1:45 | Gerardo | Matías | 8–9 |
+| 06 Resiliencia · FinOps | 10:30–11:30 · 11:30–12:30 | 0:45 + 0:45 | Valentina · Branco | Alexander | 10–11 |
+| 07 Roadmap y aprendizajes | 12:30–15:00 | 2:15 | Matías + 1 frase de cada uno | Branco | 12–13 |
 
-Si la suma de los tiempos reportados pasa de 14:30, Branco recorta: primero el roadmap y después una lámina de arquitectura. **La demo no se recorta.**
+La lámina 7 (calidad y tests) es de respaldo para el Q&A: se pasa rápido o se salta. Si la suma de los tiempos reportados pasa de 14:30, Branco recorta: primero el roadmap y después una lámina de arquitectura. **La demo no se recorta.**
 
 ---
 
@@ -151,7 +151,7 @@ Si la suma de los tiempos reportados pasa de 14:30, Branco recorta: primero el r
 3. Evaluado con 50 casos: hit@3 85 %, hechos clave 82 %, fidelidad 88 % (meta 90 %: nos faltan 2 puntos y lo decimos).
 4. Seguridad 100 %: 4/4 ataques bloqueados, aislamiento entre colegios y RUT protegido.
 
-**En pantalla:** láminas 7 y 8 → [eval-report](../ai/eval-report.md) → [model card](../ai/model-card.md).
+**En pantalla:** láminas 8 y 9 → [eval-report](../ai/eval-report.md) → [model card](../ai/model-card.md).
 
 **Salida:** «¿Y si algo falla?».
 
@@ -176,7 +176,7 @@ Si la suma de los tiempos reportados pasa de 14:30, Branco recorta: primero el r
 3. Borramos la base de datos y la restauramos desde el respaldo en 21 s; botamos la app y volvió en 38 s.
 4. Lo que no medimos lo declaramos: RPO y errores durante la caída.
 
-**En pantalla:** lámina 9 → [post-mortem](../postmortems/2026-11-22-game-day.md).
+**En pantalla:** lámina 11 → [post-mortem](../postmortems/2026-11-22-game-day.md).
 
 **Branco (FinOps)**
 1. Producción cuesta USD 684,63 al mes y staging USD 254,94 (AWS, São Paulo).
